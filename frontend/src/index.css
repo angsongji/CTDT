@@ -1,0 +1,46 @@
+@import "tailwindcss";
+:root{
+    --light-pink: #FDF1F1;
+    --medium-pink: #BF8888;
+    --dark-pink: #A87676;
+    --medium-pink2: #CA8787;
+}
+body{
+    font-family: 'Roboto', sans-serif;
+}
+
+.active{
+    color: white;
+    font-size: 18px;
+}
+
+.ant-table-thead > tr > th {
+    background-color: var(--dark-pink) !important;
+    color: white !important;
+    font-weight: bold;
+    
+}
+.ant-table-thead > tr > th,
+.ant-table-tbody > tr > td {
+    text-align: center !important;
+}
+
+.menu-container {
+    overflow-y: auto; /* Kích hoạt thanh cuộn dọc */
+  }
+  
+  /* Tùy chỉnh thanh cuộn trên Chrome, Safari */
+  .menu-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  @keyframes moveUpDown {
+    0% { transform: translateY(-20px); }
+    50% { transform: translateY(5px); } /* Di chuyển lên */
+    100% { transform: translateY(-20px); }
+  }
+  
+  .scroll-icon {
+    animation: moveUpDown 2s infinite ease-in-out;
+  }
+  
