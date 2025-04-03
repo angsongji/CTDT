@@ -17,6 +17,7 @@ import Lecturer from "../pages/admin/Lecturer";
 import GroupOpeningPlan from "../pages/admin/GroupOpeningPlan";
 import TeachingAssignment from "../pages/admin/TeachingAssignment";
 import TrainingCycle from "../pages/admin/TrainingCycle";
+import CreateTrainingCycle from "../pages/admin/CreateTrainingCycle";
 
 const router = createBrowserRouter([
     {
@@ -47,6 +48,7 @@ const router = createBrowserRouter([
             { path: "group-opening-plan", element: <GroupOpeningPlan /> },
             { path: "teaching-assignment", element: <TeachingAssignment /> },
             { path: "training-cycle", element: <TrainingCycle /> },
+            { path: "training-cycle/create", element: <CreateTrainingCycle /> },
         ],
     },
     { path: "*", element: <NotFound /> },
