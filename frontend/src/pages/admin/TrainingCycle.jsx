@@ -1,94 +1,96 @@
 import React from 'react';
 import { FaPlus } from "react-icons/fa6";
 import { Input, Button, Table } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 
-const dataSource = [
-  {
-    key: '1',
-    name: 'Chương trình đạo tạo chu kì 2020-2024',
-    startYear: '2020',
-    endYear: '2024',
-
-  },
-  {
-    key: '2',
-    name: 'Chương trình đạo tạo chu kì 2024-2028',
-    startYear: '2024',
-    endYear: '2028',
-  },
-  {
-    key: '3',
-    name: 'Chương trình đạo tạo chu kì 2024-2028',
-    startYear: '2024',
-    endYear: '2028',
-  },
-  {
-    key: '4',
-    name: 'Chương trình đạo tạo chu kì 2024-2028',
-    startYear: '2024',
-    endYear: '2028',
-  },
-  {
-    key: '5',
-    name: 'Chương trình đạo tạo chu kì 2024-2028',
-    startYear: '2024',
-    endYear: '2028',
-  },
-  {
-    key: '6',
-    name: 'Chương trình đạo tạo chu kì 2024-2028',
-    startYear: '2024',
-    endYear: '2028',
-  },
-  {
-    key: '7',
-    name: 'Chương trình đạo tạo chu kì 2024-2028',
-    startYear: '2024',
-    endYear: '2028',
-  },
-];
-
-const columns = [
-  {
-    title: 'Tên chương trình',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: 'Năm bắt đầu',
-    dataIndex: 'startYear',
-    key: 'startYear',
-  },
-  {
-    title: 'Năm kết thúc',
-    dataIndex: 'endYear',
-    key: 'endYear',
-  },
-  {
-    title: 'Thao tác',
-    dataIndex: 'actions',
-    key: 'actions',
-    render: (_, record) => (
-      <Button
-        type="primary"
-        style={{ backgroundColor: '#8C4F4F', borderColor: '#8C4F4F' }}
-        onClick={() => handleEdit(record)}
-      >
-        Sửa
-      </Button>
-    ),
-  },
-];
-
-const handleEdit = (record) => {
-  console.log('record:', record);
-};
 
 const TrainingCycle = () => {
 
+  const dataSource = [
+    {
+      key: '1',
+      name: 'Chương trình đạo tạo chu kì 2020-2024',
+      startYear: '2020',
+      endYear: '2024',
+  
+    },
+    {
+      key: '2',
+      name: 'Chương trình đạo tạo chu kì 2024-2028',
+      startYear: '2024',
+      endYear: '2028',
+    },
+    {
+      key: '3',
+      name: 'Chương trình đạo tạo chu kì 2024-2028',
+      startYear: '2024',
+      endYear: '2028',
+    },
+    {
+      key: '4',
+      name: 'Chương trình đạo tạo chu kì 2024-2028',
+      startYear: '2024',
+      endYear: '2028',
+    },
+    {
+      key: '5',
+      name: 'Chương trình đạo tạo chu kì 2024-2028',
+      startYear: '2024',
+      endYear: '2028',
+    },
+    {
+      key: '6',
+      name: 'Chương trình đạo tạo chu kì 2024-2028',
+      startYear: '2024',
+      endYear: '2028',
+    },
+    {
+      key: '7',
+      name: 'Chương trình đạo tạo chu kì 2024-2028',
+      startYear: '2024',
+      endYear: '2028',
+    },
+  ];
+  
+  const columns = [
+    {
+      title: 'Tên chương trình',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Năm bắt đầu',
+      dataIndex: 'startYear',
+      key: 'startYear',
+    },
+    {
+      title: 'Năm kết thúc',
+      dataIndex: 'endYear',
+      key: 'endYear',
+    },
+    {
+      title: 'Thao tác',
+      dataIndex: 'actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          style={{ backgroundColor: '#8C4F4F', borderColor: '#8C4F4F' }}
+          onClick={() => handleEdit(record.key)}
+        >
+          Sửa
+        </Button>
+      ),
+    },
+  ];
 
+  const navigate = useNavigate();
+
+  const handleEdit = (id) => {
+    navigate(`/admin/training-cycle/edit/${id}`);
+  };
+  
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Chu kỳ đào tạo</h1>
