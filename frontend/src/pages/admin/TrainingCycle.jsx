@@ -76,7 +76,7 @@ const TrainingCycle = () => {
       render: (_, record) => (
         <Button
           type="primary"
-          style={{ backgroundColor: '#8C4F4F', borderColor: '#8C4F4F' }}
+          style={{ backgroundColor: '#4CAF50', borderColor: '#4CAF50' }}
           onClick={() => handleEdit(record.key)}
         >
           Sửa
