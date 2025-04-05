@@ -210,8 +210,7 @@ const TeachingAssignment = () => {
   ];
 
   const handleEdit = (key) => {
-    console.log('Edit clicked for key:', key);
-    // Xử lý logic sửa ở đây
+    console.log('Edit:', key);
   };
 
   return (
