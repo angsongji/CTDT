@@ -222,7 +222,7 @@ const TeachingAssignment = () => {
             placeholder="Tìm kiếm..."
             style={{ width: '250px', padding: '0.25rem 0.5rem' }} />
 
-          <Link to="/admin/teaching-assignment">
+          <Link to="/admin/teaching-assignment/assignment">
             <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
               <span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'>
                 <FaPlus />Phân công giảng dạy
