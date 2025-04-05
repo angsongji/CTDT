@@ -1,10 +1,12 @@
 import React from 'react';
 import { Input, Button, Table, Tag } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
 
 
 function Assignment() {
+
+    const navigate = useNavigate();
 
     const dataSource = [
         {
@@ -84,8 +86,7 @@ function Assignment() {
     ];
 
     const handleEdit = (key) => {
-        console.log('Edit record with key:', key);
-        // Thêm logic xử lý khi nhấn vào các nút Chi tiết, Sửa, Xóa
+        navigate(`/admin/teaching-assignment/assignment/create`);
     };
 
     return (

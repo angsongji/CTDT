@@ -55,6 +55,11 @@ const TrainingCycle = () => {
   
   const columns = [
     {
+      title: 'STT',
+      dataIndex: 'key',
+      key: 'key',
+    },
+    {
       title: 'Tên chương trình',
       dataIndex: 'name',
       key: 'name',

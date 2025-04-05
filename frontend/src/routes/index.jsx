@@ -21,6 +21,7 @@ import CreateTrainingCycle from "../pages/admin/CreateTrainingCycle";
 import EditTrainingCycle from "../pages/admin/EditTrainingCycle";
 import CreateGroupOpeningPlan from "../pages/admin/CreateGroupOpeningPlan";
 import Assignment from "../pages/admin/Assignment";
+import CreateTeachingAssignment from "../pages/admin/CreateTeachingAssignment";
 
 const router = createBrowserRouter([
     {
@@ -52,6 +53,7 @@ const router = createBrowserRouter([
             { path: "group-opening-plan/create", element: <CreateGroupOpeningPlan /> },
             { path: "teaching-assignment", element: <TeachingAssignment /> },
             { path: "teaching-assignment/assignment", element: <Assignment /> },
+            { path: "teaching-assignment/assignment/create", element: <CreateTeachingAssignment /> },
             { path: "training-cycle", element: <TrainingCycle /> },
             { path: "training-cycle/create", element: <CreateTrainingCycle /> },
             { path: "training-cycle/edit/:id", element: <EditTrainingCycle /> },
