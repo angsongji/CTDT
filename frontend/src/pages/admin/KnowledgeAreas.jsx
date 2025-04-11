@@ -70,7 +70,7 @@ function KnowledgeAreas() {
         <div className='flex flex-col gap-5 mt-10'>
             {/* Hiện tìm kiếm vào các nút thao tác */}
             <div className='flex justify-end'>
-                <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm khối</span></Button>
+                <Button  className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm khối</span></Button>
             </div>
             <TableData />
         </div>
