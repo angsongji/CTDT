@@ -1,5 +1,6 @@
 package com.project.CTDT.entity;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -23,8 +24,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "faculty")
-public class Faculty {
+@Table(name = "knowledge_areas")
+public class KnowledgeAreas {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
@@ -32,19 +34,21 @@ public class Faculty {
 	@Column(name = "name", nullable = false, length = 255)
 	private String name;
 
-	@Column(name = "website", nullable = true, length = 255)
-	private String website;
+	@Column(name = "use")
+	private Integer use = 1;
 
+	// Mỗi quan hệ phản thân
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "TrainingCycle_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_TrainingCycle"))
+	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_Knowledge_areas_parent"))
 	@JsonBackReference
-	private TrainingCycle trainingCycle;
+	private KnowledgeAreas parent;
 
-	// Mối quan hệ 1-N với GeneralInformation
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "faculty", cascade = CascadeType.ALL) // cascade là xóa các row
-	// của bảng khác mà có
-	// tham chiếu đến nó
+	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonManagedReference
-	private Set<GeneralInformation> generalInformations;
+	private Set<KnowledgeAreas> children = new HashSet<>();
 
+	// Mối quan hệ 1-N với Course
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "knowledgeAreas", cascade = CascadeType.ALL)
+	@JsonManagedReference
+	private Set<Course> courses = new HashSet<>();
 }

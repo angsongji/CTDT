@@ -32,9 +32,9 @@ public class LecturerCourse {
 	@JsonBackReference
 	private Lecturer lecturer;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "course_id", nullable = false,  foreignKey = @ForeignKey(name = "fk_course_lecturer"))
-//    @JsonBackReference
-//    private Course course;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_course_lecturer"))
+	@JsonBackReference
+	private Course course;
 
 }
