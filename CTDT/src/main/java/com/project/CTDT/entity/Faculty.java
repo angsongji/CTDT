@@ -35,16 +35,14 @@ public class Faculty {
 	@Column(name = "website", nullable = true, length = 255)
 	private String website;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "TrainingCycle_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_TrainingCycle"))
-    @JsonBackReference("trainingCycle-faculties")
-    private TrainingCycle trainingCycle;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "TrainingCycle_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_TrainingCycle"))
+	@JsonBackReference(value = "trainingCycle-faculty") // Đúng khi Faculty là "nhiều" và TrainingCycle là "một"
+	private TrainingCycle trainingCycle;
 
 	// Mối quan hệ 1-N với GeneralInformation
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "faculty", cascade = CascadeType.ALL) // cascade là xóa các row
-	// của bảng khác mà có
-	// tham chiếu đến nó
-	@JsonManagedReference
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "faculty", cascade = CascadeType.ALL)
+	@JsonManagedReference(value = "faculty-generalInformation") // Đúng khi Faculty là "một" và GeneralInformation là
+																// "nhiều"
 	private Set<GeneralInformation> generalInformations;
-
 }

@@ -34,12 +34,12 @@ public class KnowledgeAreas {
 	@Column(name = "name", nullable = false, length = 255)
 	private String name;
 
-	@Column(name = "use")
-	private Integer use = 1;
+	@Column(name = "usage_count  ")
+	private Integer usage_count = 1;
 
 	// Mỗi quan hệ phản thân
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_Knowledge_areas_parent"))
+	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_Knowledge_areas_parent"), nullable = true)
 	@JsonBackReference
 	private KnowledgeAreas parent;
 
@@ -49,6 +49,6 @@ public class KnowledgeAreas {
 
 	// Mối quan hệ 1-N với Course
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "knowledgeAreas", cascade = CascadeType.ALL)
-	@JsonManagedReference
+	@JsonManagedReference(value = "course-knowledgeAreas")
 	private Set<Course> courses = new HashSet<>();
 }
