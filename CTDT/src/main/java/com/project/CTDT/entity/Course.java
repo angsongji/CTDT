@@ -66,7 +66,7 @@ public class Course {
 	@JsonManagedReference
 	private Set<Course> children = new HashSet<>();
 
-	// Mối quan hệ 1-N với LectecterCourse
+	// Mối quan hệ 1-N với LecturerCourse
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonManagedReference(value = "lecturerCourses-course")
 	private Set<LecturerCourse> lecturerCourses;
@@ -80,4 +80,10 @@ public class Course {
 	// Mối quan hệ N-N với CurriculumFramework
 	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "courses")
 	private Set<CurriculumFramework> curriculumFrameworks = new HashSet<>();
+
+	// Mối quan hệ 1-N với GroupOpeningPlan
+	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@JsonManagedReference(value = "groupPlan-course")
+	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
+
 }
