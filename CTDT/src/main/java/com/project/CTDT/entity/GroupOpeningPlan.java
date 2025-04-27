@@ -40,13 +40,13 @@ public class GroupOpeningPlan {
     @Column(name = "implementationSemester", nullable = false)
     private Integer implementationSemester;
     
-    // N - 1 với Course
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_groupPlan_course"))
-    @JsonBackReference
+    @JsonBackReference(value = "groupPlan-course")
     private Course course;
-    
+
     @OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference(value = "groupPlan-groups")
     private Set<Group> groups = new HashSet<>();
+
 }
