@@ -45,7 +45,7 @@ public class Lecturer {
 	private Integer status = 1;
 
 	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@JsonManagedReference
+	@JsonManagedReference(value = "lecturer-lecturerCourses")
 	private Set<LecturerCourse> lecturerCourses;
 	// cascade = CascadeType.ALL : Khi bạn xóa một phần tử LecturerCourse khỏi danh
 	// sách lecturerCourses, thì Hibernate sẽ tự động xóa record đó khỏi database.

@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,13 +36,13 @@ public class CurriculumFramework {
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "course_curriculum_framework", // tên bảng trung gian
 			joinColumns = @JoinColumn(name = "curriculum_id"), inverseJoinColumns = @JoinColumn(name = "course_id"))
-	@JsonManagedReference
+//	@JsonManagedReference(value = "curriculumFramework-course")
 	private Set<Course> courses = new HashSet<>();
 
 	// Mối quan hệ 1-1 với GeneralInformation
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "generalInformation_id", nullable = false, foreignKey = @ForeignKey(name = "fk_curriculum_general_info"))
-	@JsonBackReference
+	@JsonBackReference(value = "generalInformation-curriculumFramework")
 	private GeneralInformation generalInformation;
 
 }
