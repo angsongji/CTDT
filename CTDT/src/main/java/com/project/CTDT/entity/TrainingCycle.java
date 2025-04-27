@@ -35,9 +35,7 @@ public class TrainingCycle {
 	@Column(name = "endYear", nullable = false)
 	private Integer endYear;
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "trainingCycle", cascade = CascadeType.ALL) // cascade là xóa các row
-																								// của bảng khác mà có
-																								// tham chiếu đến nó
-	@JsonManagedReference
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "trainingCycle", cascade = CascadeType.ALL)
+	@JsonManagedReference(value = "trainingCycle-faculty") // Đúng khi TrainingCycle là "một" và Faculty là "nhiều"
 	private Set<Faculty> faculties;
 }

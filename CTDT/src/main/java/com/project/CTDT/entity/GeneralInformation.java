@@ -54,12 +54,12 @@ public class GeneralInformation {
 	// Mối quan hệ N-1 với Faculty
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "faculty_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_GeneralInformation"))
-	@JsonBackReference
+	@JsonBackReference(value = "faculty-generalInformation")
 	private Faculty faculty;
 
 	// Mối quan hệ 1-1 với CurriculumFramework
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "generalInformation", cascade = CascadeType.ALL)
-	@JsonManagedReference
+	@JsonManagedReference(value = "generalInformation-curriculumFramework")
 	private CurriculumFramework curriculumFramework;
 
 	// Mối quan hệ 1-1 với TeachingPlan

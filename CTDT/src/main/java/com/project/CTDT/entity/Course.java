@@ -50,15 +50,15 @@ public class Course {
 	@Column(name = "weightingFactor", nullable = false)
 	private Double weightingFactor;
 
-	@Column(name = "require", nullable = false)
-	private Integer require = 1; // Default = 1 la tu chon bat buoc
+	@Column(name = "requirement ", nullable = false)
+	private Integer requirement = 1; // Default = 1 la tu chon bat buoc
 
 	@Column(name = "status", nullable = false)
 	private Integer status = 1; // Default = 1
 
 	// Mối quan hệ phản thân với Course (Mối học phần yêu cầu các học phần trước):
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_course_parent"))
+	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_course_parent"), nullable = true)
 	@JsonBackReference
 	private Course parent;
 
@@ -68,24 +68,22 @@ public class Course {
 
 	// Mối quan hệ 1-N với LecturerCourse
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@JsonManagedReference
-	private Set<LecturerCourse> lecturerCourses = new HashSet<>();
-
+	@JsonManagedReference(value = "lecturerCourses-course")
+	private Set<LecturerCourse> lecturerCourses;
 
 	// Mối quan hệ N-1 với KnowledgeAreas
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "knowledgeAreas_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_course_knowledgeAreas"))
-	@JsonBackReference
+	@JsonBackReference(value = "course-knowledgeAreas")
 	private KnowledgeAreas knowledgeAreas;
 
 	// Mối quan hệ N-N với CurriculumFramework
 	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "courses")
-	@JsonBackReference
 	private Set<CurriculumFramework> curriculumFrameworks = new HashSet<>();
-	
+
 	// Mối quan hệ 1-N với GroupOpeningPlan
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JsonManagedReference(value = "groupPlan-course")
-    private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
+	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@JsonManagedReference(value = "groupPlan-course")
+	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
 
 }
