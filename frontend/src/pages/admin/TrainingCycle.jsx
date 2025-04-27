@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa6";
 import { Input, Button, Table } from 'antd';
 import { Link } from 'react-router-dom';
-
+import { removeVietnameseTones } from "../../helpers/regex";
 
 
 const TrainingCycle = () => {
 	
   const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   
   useEffect(() => {
       const fetchAPI = async () => {
@@ -46,6 +47,13 @@ const TrainingCycle = () => {
     
   ];
 
+  const filteredData = searchTerm
+    ? data.filter((item) =>
+        removeVietnameseTones(item.name).includes(
+          removeVietnameseTones(searchTerm)
+        )
+      )
+    : data
   
   return (
     <div className="p-6">
@@ -54,7 +62,9 @@ const TrainingCycle = () => {
         <div className='flex justify-between mb-10'>
           <Input
             placeholder="Tìm kiếm..."
-            style={{ width: '250px', padding: '0.25rem 0.5rem' }} />
+            style={{ width: '250px', padding: '0.25rem 0.5rem' }} 
+			value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}/>
 
           <Link to="/admin/training-cycle/create">
             <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
@@ -65,7 +75,7 @@ const TrainingCycle = () => {
           </Link>
         </div>
         <Table
-          dataSource={data}
+          dataSource={filteredData}
           columns={columns}
           pagination={{ pageSize: 3 }}
           scrollToFirstRowOnChange={true} />
