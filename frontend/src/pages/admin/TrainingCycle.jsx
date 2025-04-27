@@ -1,58 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa6";
 import { Input, Button, Table } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 
 
 const TrainingCycle = () => {
-
-  const dataSource = [
-    {
-      key: '1',
-      name: 'Chương trình đạo tạo chu kì 2020-2024',
-      startYear: '2020',
-      endYear: '2024',
+	
+  const [data, setData] = useState([]);
   
-    },
-    {
-      key: '2',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '3',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '4',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '5',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '6',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '7',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-  ];
-  
+  useEffect(() => {
+      const fetchAPI = async () => {
+        const res = await fetch(`http://localhost:8081/api/training-cycles`);
+        const result = await res.json();
+        const dataNew = result.map((item, index) => ({
+          ...item,
+          key: index + 1
+        }));
+       setData(dataNew);
+      }
+      fetchAPI();
+    },[])
+	
   const columns = [
     {
       title: 'STT',
@@ -74,27 +43,9 @@ const TrainingCycle = () => {
       dataIndex: 'endYear',
       key: 'endYear',
     },
-    {
-      title: 'Thao tác',
-      dataIndex: 'actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Button
-          type="primary"
-          style={{ backgroundColor: '#4CAF50', borderColor: '#4CAF50' }}
-          onClick={() => handleEdit(record.key)}
-        >
-          Sửa
-        </Button>
-      ),
-    },
+    
   ];
 
-  const navigate = useNavigate();
-
-  const handleEdit = (id) => {
-    navigate(`/admin/training-cycle/edit/${id}`);
-  };
   
   return (
     <div className="p-6">
@@ -114,10 +65,10 @@ const TrainingCycle = () => {
           </Link>
         </div>
         <Table
-          dataSource={dataSource}
+          dataSource={data}
           columns={columns}
           pagination={{ pageSize: 3 }}
-          scrollToFirstRowOnChange={true} />;
+          scrollToFirstRowOnChange={true} />
       </div>
     </div>
   );

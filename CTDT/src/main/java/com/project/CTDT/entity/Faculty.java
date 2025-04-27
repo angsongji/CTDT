@@ -36,9 +36,9 @@ public class Faculty {
 	private String website;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "TrainingCycle_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_TrainingCycle"))
-	@JsonBackReference
-	private TrainingCycle trainingCycle;
+    @JoinColumn(name = "TrainingCycle_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_TrainingCycle"))
+    @JsonBackReference("trainingCycle-faculties")
+    private TrainingCycle trainingCycle;
 
 	// Mối quan hệ 1-N với GeneralInformation
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "faculty", cascade = CascadeType.ALL) // cascade là xóa các row
