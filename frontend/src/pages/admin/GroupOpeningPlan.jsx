@@ -86,7 +86,7 @@ function GroupOpeningPlan(){
         }
         fetchAPI();
   },[])
-  console.log(data);
+  //console.log(data);
   
   const filteredData = searchTerm
       ? data.filter((item) =>

@@ -40,10 +40,10 @@ public class Group {
 		
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "groupOpeningPlan_id", nullable = false, foreignKey = @ForeignKey(name = "fk_group_opening_plan"))
-	@JsonBackReference
+	@JsonBackReference(value = "groupPlan-groups")
 	private GroupOpeningPlan groupOpeningPlan;
 	
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JsonManagedReference
+	@JsonManagedReference(value = "groups-teachingAssignments")
 	private Set<TeachingAssignment> teachingAssignments;
 }

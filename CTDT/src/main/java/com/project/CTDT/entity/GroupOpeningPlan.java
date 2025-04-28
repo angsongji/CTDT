@@ -25,7 +25,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Entity
 @Table(name = "group_opening_plan")
 public class GroupOpeningPlan {
@@ -48,11 +47,11 @@ public class GroupOpeningPlan {
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_groupPlan_course"))
-    //@JsonBackReference(value = "groupPlan-course")
+    @JsonBackReference(value = "groupPlan-course")
     private Course course;
 
     @OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference(value = "groupPlan-groups")
-    private Set<Group> groups = new HashSet<>();
+    private Set<Group> groups;
 
 }

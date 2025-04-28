@@ -40,11 +40,10 @@ public class TrainingCycleController {
     }
 
     // Tạo mới training cycle
-	@PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<TrainingCycle> createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
-	    TrainingCycle created = trainingCycleService.saveTrainingCycle(trainingCycle);
-	    return ResponseEntity.status(201).body(created);
-	}
+    @PostMapping("/create")
+    public TrainingCycle createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
+        return trainingCycleService.saveTrainingCycle(trainingCycle);
+    }
 
     // Cập nhật training cycle
     @PutMapping("/update/{id}")
