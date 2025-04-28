@@ -37,10 +37,7 @@ public class Group {
 	
 	@Column(name = "maxStudents", nullable = false)
 	private Integer maxStudents;
-	
-	@Column(name = "status")
-	private Integer status = 1;
-	
+		
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "groupOpeningPlan_id", nullable = false, foreignKey = @ForeignKey(name = "fk_group_opening_plan"))
 	@JsonBackReference

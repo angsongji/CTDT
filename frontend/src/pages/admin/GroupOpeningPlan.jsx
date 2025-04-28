@@ -1,84 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag } from 'antd';
 import { Link } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 
 function GroupOpeningPlan(){
-
-  const dataSource = [
-    {
-      key: '1',
-      stt: 1,
-      Name: 'Lập trình C',
-      NumberOfGroups: 3,
-      NumberOfStudents: 90,
-      Status: 'Đang hoạt động',
-    },
-    {
-      key: '2',
-      stt: 2,
-      Name: 'Cơ sở dữ liệu',
-      NumberOfGroups: 2,
-      NumberOfStudents: 60,
-      Status: 'Đang hoạt động',
-    },
-    {
-      key: '3',
-      stt: 3,
-      Name: 'Kinh tế vĩ mô',
-      NumberOfGroups: 4,
-      NumberOfStudents: 120,
-      Status: 'Đang hoạt động',
-    },
-    {
-      key: '4',
-      stt: 4,
-      Name: 'Quản trị doanh nghiệp',
-      NumberOfGroups: 2,
-      NumberOfStudents: 60,
-      Status: 'Đã kết thúc',
-    },
-    {
-      key: '5',
-      stt: 5,
-      Name: 'Mạng máy tính',
-      NumberOfGroups: 3,
-      NumberOfStudents: 90,
-      Status: 'Đang hoạt động',
-    },
-  ];
+  const [data, setData] = useState([]);
 
   const columns = [
     {
       title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      dataIndex: 'key',
+      key: 'key',
     },
     {
       title: 'Tên Học Phần',
-      dataIndex: 'Name',
-      key: 'Name',
+      dataIndex: 'nameCouse',
+      key: 'nameCouse',
     },
     {
       title: 'Số Nhóm',
-      dataIndex: 'NumberOfGroups',
-      key: 'NumberOfGroups',
+      dataIndex: 'numberOfGroups',
+      key: 'numberOfGroups',
     },
     {
       title: 'Số Sinh Viên',
-      dataIndex: 'NumberOfStudents',
-      key: 'NumberOfStudents',
+      dataIndex: 'numberOfStudents',
+      key: 'numberOfStudents',
     },
     {
       title: 'Trạng Thái',
-      key: 'Status',
-      dataIndex: 'Status',
-      render: (_, { Status }) => {
-        let color = Status === 'Đang hoạt động' ? 'geekblue' : 'green';
-        if (Status === 'Đã kết thúc') {
+      key: 'status',
+      dataIndex: 'status',
+      render: (_, { status }) => {
+        let color = status == 1 ? 'geekblue' : 'green';
+        if (status === 0) {
           color = 'volcano';
         }
-        return <Tag color={color}>{Status.toUpperCase()}</Tag>;
+        return <Tag color={color}>{status == 1 ? 'Hoạt động' : 'Đã kết thúc'}</Tag>;
       },
     },
     {
@@ -112,6 +70,21 @@ function GroupOpeningPlan(){
       ),
     },
   ];
+  
+  useEffect(() => {
+        const fetchAPI = async () => {
+          const res = await fetch(`http://localhost:8081/api/group-open-plan`);
+          const result = await res.json();
+          const dataNew = result.map((item, index) => ({
+            ...item,
+            key: index + 1,
+			nameCouse: item.course.name,
+          }));
+         setData(dataNew);
+        }
+        fetchAPI();
+  },[])
+  console.log(data);
 
   const handleEdit = (key) => {
     console.log('Edit record with key:', key);
@@ -135,7 +108,7 @@ function GroupOpeningPlan(){
           </Link>
         </div>
         <Table
-          dataSource={dataSource}
+          dataSource={data}
           columns={columns}
           pagination={{ pageSize: 3 }}
           scrollToFirstRowOnChange={true}

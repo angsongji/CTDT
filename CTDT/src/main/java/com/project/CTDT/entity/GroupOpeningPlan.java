@@ -43,6 +43,9 @@ public class GroupOpeningPlan {
     @Column(name = "implementationSemester", nullable = false)
     private Integer implementationSemester;
     
+    @Column(name = "status")
+	private Integer status = 1;
+    
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_groupPlan_course"))
     //@JsonBackReference(value = "groupPlan-course")
