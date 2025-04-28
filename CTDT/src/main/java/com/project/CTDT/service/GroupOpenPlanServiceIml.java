@@ -19,7 +19,7 @@ public class GroupOpenPlanServiceIml implements GroupOpenPlanService {
 		this.groupOpenPlanRepository = groupOpenPlanRepository;
 	}
 
-	@Override
+	@Override //test
 	public List<GroupOpeningPlan> getAllGroupOpeningPlans() {
 		return groupOpenPlanRepository.findAll();
 	}
