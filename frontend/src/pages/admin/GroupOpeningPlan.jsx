@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag } from 'antd';
 import { Link } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
+import { removeVietnameseTones } from "../../helpers/regex";
 
 function GroupOpeningPlan(){
   const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const columns = [
     {
@@ -85,6 +87,14 @@ function GroupOpeningPlan(){
         fetchAPI();
   },[])
   console.log(data);
+  
+  const filteredData = searchTerm
+      ? data.filter((item) =>
+          removeVietnameseTones(item.course.name).includes(
+            removeVietnameseTones(searchTerm)
+          )
+        )
+      : data
 
   const handleEdit = (key) => {
     console.log('Edit record with key:', key);
@@ -98,7 +108,9 @@ function GroupOpeningPlan(){
         <div className='flex justify-between mb-10'>
           <Input
             placeholder="Tìm kiếm..."
-            style={{ width: '250px', padding: '0.25rem 0.5rem' }} />
+            style={{ width: '250px', padding: '0.25rem 0.5rem' }}
+			value={searchTerm}
+			onChange={(e) => setSearchTerm(e.target.value)} />
           <Link to="/admin/group-opening-plan/create">
             <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
               <span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
@@ -108,7 +120,7 @@ function GroupOpeningPlan(){
           </Link>
         </div>
         <Table
-          dataSource={data}
+          dataSource={filteredData}
           columns={columns}
           pagination={{ pageSize: 3 }}
           scrollToFirstRowOnChange={true}
