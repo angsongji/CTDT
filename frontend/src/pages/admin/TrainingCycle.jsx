@@ -14,9 +14,9 @@ const TrainingCycle = () => {
       const fetchAPI = async () => {
         const res = await fetch(`http://localhost:8081/api/training-cycles`);
         const result = await res.json();
-        const dataNew = result.map((item, index) => ({
+        const dataNew = result.map((item) => ({
           ...item,
-          key: index + 1
+          key: item.id
         }));
        setData(dataNew);
       }

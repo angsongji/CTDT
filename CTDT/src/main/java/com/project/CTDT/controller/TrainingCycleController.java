@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+
 
 import com.project.CTDT.entity.TrainingCycle;
 import com.project.CTDT.service.TrainingCycleService;
@@ -38,12 +40,11 @@ public class TrainingCycleController {
     }
 
     // Tạo mới training cycle
-    @PostMapping("/create")
-    public ResponseEntity<TrainingCycle> createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
-        // Kiểm tra tính hợp lệ của đối tượng trainingCycle (nếu cần thiết)
-        TrainingCycle created = trainingCycleService.saveTrainingCycle(trainingCycle);
-        return ResponseEntity.status(201).body(created); // Trả về mã 201 Created
-    }
+	@PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<TrainingCycle> createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
+	    TrainingCycle created = trainingCycleService.saveTrainingCycle(trainingCycle);
+	    return ResponseEntity.status(201).body(created);
+	}
 
     // Cập nhật training cycle
     @PutMapping("/update/{id}")
