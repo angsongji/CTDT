@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 import { removeVietnameseTones } from "../../helpers/regex";
 
-function GroupOpeningPlan(){
+function GroupOpeningPlan() {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -16,8 +16,8 @@ function GroupOpeningPlan(){
     },
     {
       title: 'Tên Học Phần',
-      dataIndex: 'nameCouse',
-      key: 'nameCouse',
+      dataIndex: 'nameCourse',
+      key: 'nameCourse',
     },
     {
       title: 'Số Nhóm',
@@ -34,11 +34,8 @@ function GroupOpeningPlan(){
       key: 'status',
       dataIndex: 'status',
       render: (_, { status }) => {
-        let color = status == 1 ? 'geekblue' : 'green';
-        if (status === 0) {
-          color = 'volcano';
-        }
-        return <Tag color={color}>{status == 1 ? 'Hoạt động' : 'Đã kết thúc'}</Tag>;
+        let color = status === 1 ? 'geekblue' : 'volcano';
+        return <Tag color={color}>{status === 1 ? 'Hoạt động' : 'Đã kết thúc'}</Tag>;
       },
     },
     {
@@ -72,49 +69,68 @@ function GroupOpeningPlan(){
       ),
     },
   ];
-  
+
   useEffect(() => {
-        const fetchAPI = async () => {
-          const res = await fetch(`http://localhost:8081/api/group-open-plan`);
-          const result = await res.json();
-          const dataNew = result.map((item, index) => ({
-            ...item,
-            key: index + 1,
-			nameCouse: item.course.name,
-          }));
-         setData(dataNew);
-        }
-        fetchAPI();
-  },[])
-  //console.log(data);
+    const fetchAPI = async () => {
+      try {
+        const resGroup = await fetch(`http://localhost:8081/api/group-open-plan`);
+        const resCourse = await fetch(`http://localhost:8081/api/courses`);
+        const groupPlans = await resGroup.json();
+        const courses = await resCourse.json();
+
+        // Tạo map courseId -> courseName
+        const courseMap = {};
+        courses.forEach(course => {
+          course.groupOpeningPlans.forEach(plan => {
+            courseMap[plan.id] = course.name;
+          });
+        });
+
+        // Gán nameCourse vào mỗi groupOpeningPlan
+        const dataNew = groupPlans.map((item, index) => ({
+          ...item,
+          key: index + 1,
+          nameCourse: courseMap[item.id] || "Không có học phần"
+        }));
+
+        setData(dataNew);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchAPI();
+  }, []);
   
+  console.log(data);
+
   const filteredData = searchTerm
-      ? data.filter((item) =>
-          removeVietnameseTones(item.course.name).includes(
-            removeVietnameseTones(searchTerm)
-          )
+    ? data.filter((item) =>
+        removeVietnameseTones(item.nameCourse || "").includes(
+          removeVietnameseTones(searchTerm)
         )
-      : data
+      )
+    : data;
 
   const handleEdit = (key) => {
     console.log('Edit record with key:', key);
-    // Thêm logic xử lý khi nhấn vào các nút Chi tiết, Sửa, Xóa
+    // TODO: Thêm xử lý khi nhấn nút Chi tiết, Sửa, Xóa
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Kế hoạch mở lớp</h1>
       <div className="bg-white rounded-lg shadow p-6">
-        <div className='flex justify-between mb-10'>
+        <div className="flex justify-between mb-10">
           <Input
             placeholder="Tìm kiếm..."
             style={{ width: '250px', padding: '0.25rem 0.5rem' }}
-			value={searchTerm}
-			onChange={(e) => setSearchTerm(e.target.value)} />
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <Link to="/admin/group-opening-plan/create">
-            <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
-              <span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
-                <FaPlus />Thêm
+            <Button type="primary" className="!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]">
+              <span className="text-white px-2 py-1 rounded-md flex items-center justify-center gap-1">
+                <FaPlus /> Thêm
               </span>
             </Button>
           </Link>
@@ -128,6 +144,6 @@ function GroupOpeningPlan(){
       </div>
     </div>
   );
-};
+}
 
 export default GroupOpeningPlan;

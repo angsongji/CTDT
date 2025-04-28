@@ -44,15 +44,25 @@ function CreateGroupOpeningPlan() {
     //console.log(courses);
 	
 	const onFinish = async (values) => {
-	    console.log('data:', values);
-		try {
+	    console.log('Form values:', values);
+
+	    const bodyData = {
+	        numberOfGroups: values.numberOfGroups,
+	        numberOfStudents: values.numberOfStudents,
+	        implementationSemester: values.implementationSemester,
+	        course: {
+	            id: values.course_id,
+	        },
+	    };
+
+	    try {
 	        const response = await fetch(`http://localhost:8081/api/group-open-plan/create`, {
 	            method: "POST",
 	            headers: {
 	                Accept: "application/json",
 	                "Content-Type": "application/json",
 	            },
-	            body: JSON.stringify(values),
+	            body: JSON.stringify(bodyData),
 	        });
 
 	        const result = await response.json();
@@ -77,6 +87,7 @@ function CreateGroupOpeningPlan() {
 	        });
 	    }
 	};
+
 
     return (
         <>
