@@ -42,7 +42,6 @@ function CreateGroupOpeningPlan() {
     },[]);
 
     //console.log(courses);
-	
 	const onFinish = async (values) => {
 	    console.log('Form values:', values);
 
@@ -56,6 +55,7 @@ function CreateGroupOpeningPlan() {
 	    };
 
 	    try {
+	        // Bước 1: Tạo GroupOpeningPlan
 	        const response = await fetch(`http://localhost:8081/api/group-open-plan/create`, {
 	            method: "POST",
 	            headers: {
@@ -67,16 +67,60 @@ function CreateGroupOpeningPlan() {
 
 	        const result = await response.json();
 
-	        if (result) { 
+	        if (result && result.id) {
+	            const groupOpeningPlanId = result.id;
+	            const numberOfGroups = values.numberOfGroups;
+	            const totalStudents = values.numberOfStudents;
+
+	            // Bước 2: Tính số sinh viên cho mỗi nhóm
+	            const baseStudentsPerGroup = Math.floor(totalStudents / numberOfGroups);
+	            let remainder = totalStudents % numberOfGroups; // số dư
+
+	            const groupRequests = [];
+
+	            for (let i = 1; i <= numberOfGroups; i++) {
+	                let studentsInGroup = baseStudentsPerGroup;
+	                if (remainder > 0) {
+	                    studentsInGroup += 1;
+	                    remainder -= 1;
+	                }
+
+	                const groupBody = {
+	                    groupNumber: i,
+	                    maxStudents: studentsInGroup,
+	                    groupOpeningPlan: {
+	                        id: groupOpeningPlanId
+	                    }
+	                };
+
+	                // Thêm request vào mảng để Promise.all
+	                const request = fetch(`http://localhost:8081/api/group-study/create`, {
+	                    method: "POST",
+	                    headers: {
+	                        Accept: "application/json",
+	                        "Content-Type": "application/json",
+	                    },
+	                    body: JSON.stringify(groupBody),
+	                });
+
+	                groupRequests.push(request);
+	            }
+
+	            // Bước 3: Gửi tất cả requests song song
+	            await Promise.all(groupRequests);
+
 	            Swal.fire({
 	                title: "Tạo thành công!",
-	                text: "Mở nhóm học mới đã được thêm.",
+	                text: "Mở nhóm học mới và các nhóm đã được thêm.",
 	                icon: "success",
 	                confirmButtonText: "OK"
 	            }).then(() => {
 	                navigate("/admin/group-opening-plan");
 	            });
-	        } 
+
+	        } else {
+	            throw new Error("Không nhận được ID GroupOpeningPlan sau khi tạo.");
+	        }
 	    } catch (error) {
 	        console.error('Lỗi:', error);
 	        Swal.fire({
@@ -87,6 +131,7 @@ function CreateGroupOpeningPlan() {
 	        });
 	    }
 	};
+
 
 
     return (
