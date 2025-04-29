@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 import { removeVietnameseTones } from "../../helpers/regex";
 
 function GroupOpeningPlan() {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate(); 
 
   const columns = [
     {
@@ -47,21 +48,21 @@ function GroupOpeningPlan() {
           <Button
             type="primary"
             style={{ backgroundColor: '#007bff', borderColor: '#007bff', marginRight: '10px' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleDetail(record.id)}
           >
             Chi tiết
           </Button>
           <Button
             type="primary"
             style={{ backgroundColor: '#4CAF50', borderColor: '#4CAF50', marginRight: '10px' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record.id)}
           >
             Sửa
           </Button>
           <Button
             type="primary"
             style={{ backgroundColor: '#F44336', borderColor: '#F44336' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record.id)}
           >
             Xóa
           </Button>
@@ -113,8 +114,11 @@ function GroupOpeningPlan() {
 
   const handleEdit = (key) => {
     console.log('Edit record with key:', key);
-    // TODO: Thêm xử lý khi nhấn nút Chi tiết, Sửa, Xóa
   };
+  
+  const handleDetail = (key) => {
+	  navigate(`/admin/group-opening-plan/detail/${key}`);
+    };
 
   return (
     <div className="p-6">
