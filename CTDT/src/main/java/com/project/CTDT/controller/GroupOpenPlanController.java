@@ -30,7 +30,7 @@ public class GroupOpenPlanController {
 		return groupOpenPlanService.getAllGroupOpeningPlans();
 	}
 
-	@GetMapping("/{id}")
+	@GetMapping("/detail/{id}")
 	public GroupOpeningPlan getGroupOpeningPlanById(@PathVariable Integer id) {
 		return groupOpenPlanService.getGroupOpeningPlanById(id);
 	}

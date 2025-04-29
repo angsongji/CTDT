@@ -5,6 +5,8 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -24,6 +26,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@JsonIdentityInfo(
+	    generator = ObjectIdGenerators.PropertyGenerator.class,
+	    property = "id"
+	)
 @Entity
 @Table(name = "course")
 public class Course {
@@ -82,7 +88,7 @@ public class Course {
 	private Set<CurriculumFramework> curriculumFrameworks = new HashSet<>();
 
 	// Mối quan hệ 1-N với GroupOpeningPlan
-	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "groupPlan-course")
 	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
 

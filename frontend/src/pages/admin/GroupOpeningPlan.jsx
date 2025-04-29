@@ -1,84 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
+import { removeVietnameseTones } from "../../helpers/regex";
 
-function GroupOpeningPlan(){
-
-  const dataSource = [
-    {
-      key: '1',
-      stt: 1,
-      Name: 'Lập trình C',
-      NumberOfGroups: 3,
-      NumberOfStudents: 90,
-      Status: 'Đang hoạt động',
-    },
-    {
-      key: '2',
-      stt: 2,
-      Name: 'Cơ sở dữ liệu',
-      NumberOfGroups: 2,
-      NumberOfStudents: 60,
-      Status: 'Đang hoạt động',
-    },
-    {
-      key: '3',
-      stt: 3,
-      Name: 'Kinh tế vĩ mô',
-      NumberOfGroups: 4,
-      NumberOfStudents: 120,
-      Status: 'Đang hoạt động',
-    },
-    {
-      key: '4',
-      stt: 4,
-      Name: 'Quản trị doanh nghiệp',
-      NumberOfGroups: 2,
-      NumberOfStudents: 60,
-      Status: 'Đã kết thúc',
-    },
-    {
-      key: '5',
-      stt: 5,
-      Name: 'Mạng máy tính',
-      NumberOfGroups: 3,
-      NumberOfStudents: 90,
-      Status: 'Đang hoạt động',
-    },
-  ];
+function GroupOpeningPlan() {
+  const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate(); 
 
   const columns = [
     {
       title: 'STT',
-      dataIndex: 'stt',
-      key: 'stt',
+      dataIndex: 'key',
+      key: 'key',
     },
     {
       title: 'Tên Học Phần',
-      dataIndex: 'Name',
-      key: 'Name',
+      dataIndex: 'nameCourse',
+      key: 'nameCourse',
     },
     {
       title: 'Số Nhóm',
-      dataIndex: 'NumberOfGroups',
-      key: 'NumberOfGroups',
+      dataIndex: 'numberOfGroups',
+      key: 'numberOfGroups',
     },
     {
       title: 'Số Sinh Viên',
-      dataIndex: 'NumberOfStudents',
-      key: 'NumberOfStudents',
+      dataIndex: 'numberOfStudents',
+      key: 'numberOfStudents',
     },
     {
       title: 'Trạng Thái',
-      key: 'Status',
-      dataIndex: 'Status',
-      render: (_, { Status }) => {
-        let color = Status === 'Đang hoạt động' ? 'geekblue' : 'green';
-        if (Status === 'Đã kết thúc') {
-          color = 'volcano';
-        }
-        return <Tag color={color}>{Status.toUpperCase()}</Tag>;
+      key: 'status',
+      dataIndex: 'status',
+      render: (_, { status }) => {
+        let color = status === 1 ? 'geekblue' : 'volcano';
+        return <Tag color={color}>{status === 1 ? 'Hoạt động' : 'Đã kết thúc'}</Tag>;
       },
     },
     {
@@ -90,21 +48,21 @@ function GroupOpeningPlan(){
           <Button
             type="primary"
             style={{ backgroundColor: '#007bff', borderColor: '#007bff', marginRight: '10px' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleDetail(record.id)}
           >
             Chi tiết
           </Button>
           <Button
             type="primary"
             style={{ backgroundColor: '#4CAF50', borderColor: '#4CAF50', marginRight: '10px' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record.id)}
           >
             Sửa
           </Button>
           <Button
             type="primary"
             style={{ backgroundColor: '#F44336', borderColor: '#F44336' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record.id)}
           >
             Xóa
           </Button>
@@ -113,29 +71,76 @@ function GroupOpeningPlan(){
     },
   ];
 
+  useEffect(() => {
+    const fetchAPI = async () => {
+      try {
+        const resGroup = await fetch(`http://localhost:8081/api/group-open-plan`);
+        const resCourse = await fetch(`http://localhost:8081/api/courses`);
+        const groupPlans = await resGroup.json();
+        const courses = await resCourse.json();
+
+        // Tạo map courseId -> courseName
+        const courseMap = {};
+        courses.forEach(course => {
+          course.groupOpeningPlans.forEach(plan => {
+            courseMap[plan.id] = course.name;
+          });
+        });
+
+        // Gán nameCourse vào mỗi groupOpeningPlan
+        const dataNew = groupPlans.map((item, index) => ({
+          ...item,
+          key: index + 1,
+          nameCourse: courseMap[item.id] || "Không có học phần"
+        }));
+
+        setData(dataNew);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchAPI();
+  }, []);
+  
+  console.log(data);
+
+  const filteredData = searchTerm
+    ? data.filter((item) =>
+        removeVietnameseTones(item.nameCourse || "").includes(
+          removeVietnameseTones(searchTerm)
+        )
+      )
+    : data;
+
   const handleEdit = (key) => {
     console.log('Edit record with key:', key);
-    // Thêm logic xử lý khi nhấn vào các nút Chi tiết, Sửa, Xóa
   };
+  
+  const handleDetail = (key) => {
+	  navigate(`/admin/group-opening-plan/detail/${key}`);
+    };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Kế hoạch mở lớp</h1>
       <div className="bg-white rounded-lg shadow p-6">
-        <div className='flex justify-between mb-10'>
+        <div className="flex justify-between mb-10">
           <Input
             placeholder="Tìm kiếm..."
-            style={{ width: '250px', padding: '0.25rem 0.5rem' }} />
+            style={{ width: '250px', padding: '0.25rem 0.5rem' }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <Link to="/admin/group-opening-plan/create">
-            <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
-              <span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
-                <FaPlus />Thêm
+            <Button type="primary" className="!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]">
+              <span className="text-white px-2 py-1 rounded-md flex items-center justify-center gap-1">
+                <FaPlus /> Thêm
               </span>
             </Button>
           </Link>
         </div>
         <Table
-          dataSource={dataSource}
+          dataSource={filteredData}
           columns={columns}
           pagination={{ pageSize: 3 }}
           scrollToFirstRowOnChange={true}
@@ -143,6 +148,6 @@ function GroupOpeningPlan(){
       </div>
     </div>
   );
-};
+}
 
 export default GroupOpeningPlan;

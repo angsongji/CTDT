@@ -37,11 +37,11 @@ public class TeachingAssignment {
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "group_id", nullable = false, foreignKey = @ForeignKey(name = "fk_teaching_assignment_group"))
-	@JsonBackReference
+	@JsonBackReference(value = "groups-teachingAssignments")
 	private Group group;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "lecturer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_teaching_assignment_lecturer"))
-	@JsonBackReference
+	@JsonBackReference(value = "lecturer-teachingAssignments")
 	private Lecturer lecturer;
 }
