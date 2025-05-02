@@ -55,7 +55,7 @@ function GroupOpeningPlan() {
           <Button
             type="primary"
             style={{ backgroundColor: '#4CAF50', borderColor: '#4CAF50', marginRight: '10px' }}
-            onClick={() => handleEdit(record.id)}
+            onClick={() => handleEdit(record)}
           >
             Sửa
           </Button>
@@ -102,7 +102,7 @@ function GroupOpeningPlan() {
     fetchAPI();
   }, []);
   
-  console.log(data);
+  //console.log(data);
 
   const filteredData = searchTerm
     ? data.filter((item) =>
@@ -112,8 +112,8 @@ function GroupOpeningPlan() {
       )
     : data;
 
-  const handleEdit = (key) => {
-    console.log('Edit record with key:', key);
+  const handleEdit = (record) => {
+	navigate(`/admin/group-opening-plan/edit/${record.id}`, { state: { groupData: record } });
   };
   
   const handleDetail = (key) => {
