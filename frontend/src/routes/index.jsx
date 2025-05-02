@@ -23,6 +23,7 @@ import CreateGroupOpeningPlan from "../pages/admin/CreateGroupOpeningPlan";
 import Assignment from "../pages/admin/Assignment";
 import CreateTeachingAssignment from "../pages/admin/CreateTeachingAssignment";
 import DetailGroupOpeningPlan from "../pages/admin/DetailGroupOpeningPlan";
+import EditGroupOpeningPlan from "../pages/admin/EditGroupOpeningPlan";
 
 const router = createBrowserRouter([
     {
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
             { path: "group-opening-plan", element: <GroupOpeningPlan /> },
             { path: "group-opening-plan/create", element: <CreateGroupOpeningPlan /> },
 			{ path: "group-opening-plan/detail/:id", element: <DetailGroupOpeningPlan /> },
+			{ path: "group-opening-plan/edit/:id", element: <EditGroupOpeningPlan /> },
             { path: "teaching-assignment", element: <TeachingAssignment /> },
             { path: "teaching-assignment/assignment", element: <Assignment /> },
             { path: "teaching-assignment/assignment/create", element: <CreateTeachingAssignment /> },

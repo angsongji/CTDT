@@ -114,6 +114,7 @@ function GroupOpeningPlan() {
 
   const handleEdit = (key) => {
     console.log('Edit record with key:', key);
+	navigate(`/admin/group-opening-plan/edit/${key}`);
   };
   
   const handleDetail = (key) => {
