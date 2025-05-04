@@ -3,6 +3,7 @@ import { FaPlus } from "react-icons/fa6";
 import { Input, Button, Table } from 'antd';
 import { Link } from 'react-router-dom';
 import { removeVietnameseTones } from "../../helpers/regex";
+import { getAllTraningCycle } from "../../services/trainingCycleServices";
 
 
 const TrainingCycle = () => {
@@ -12,8 +13,7 @@ const TrainingCycle = () => {
   
   useEffect(() => {
       const fetchAPI = async () => {
-        const res = await fetch(`http://localhost:8081/api/training-cycles`);
-        const result = await res.json();
+		const result = await getAllTraningCycle();
         const dataNew = result.map((item, index) => ({
           ...item,
           key: index + 1,

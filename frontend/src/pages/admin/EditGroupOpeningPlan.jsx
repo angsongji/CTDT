@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, InputNumber, Select, Button, Table, Card, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import { editGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { editGroup } from "../../services/groupServices";
 
 
 const { Option } = Select;
@@ -65,8 +67,6 @@ function EditGroupOpeningPlan() {
   };
   
   const onUpdate = async (values) => {
-    console.log('Form values (for update):', values);
-
     const bodyData = {
       numberOfGroups: values.numberOfGroups,
       numberOfStudents: values.numberOfStudents,
@@ -75,25 +75,16 @@ function EditGroupOpeningPlan() {
         id: groupData.course.id,
       },
     };
-	
 
     try {
-      const response = await fetch(`http://localhost:8081/api/group-open-plan/edit/${values.id}`, {
-        method: "PATCH",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bodyData),
-      });
-
-      const result = await response.json();
+      const result = await editGroupOpenPlan(values.id, bodyData);
 
       if (!result || !result.id) {
         throw new Error("Không nhận được ID GroupOpeningPlan sau khi cập nhật.");
       }
 
       const groupOpeningPlanId = result.id;
+
 
       const groupUpdateRequests = values.groups.map((group) => {
         const groupBody = {
@@ -104,14 +95,7 @@ function EditGroupOpeningPlan() {
           },
         };
 
-        return fetch(`http://localhost:8081/api/group-study/edit/${group.id}`, {
-          method: "PATCH",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(groupBody),
-        });
+        return editGroup(group.id, groupBody); 
       });
 
       await Promise.all(groupUpdateRequests);
@@ -137,6 +121,7 @@ function EditGroupOpeningPlan() {
   };
 
 
+
   const handleSubmit = () => {
       const totalMax = groups.reduce((sum, g) => sum + Number(g.maxStudents), 0);
       const totalStudents = form.getFieldValue('numberOfStudents');
@@ -152,7 +137,6 @@ function EditGroupOpeningPlan() {
       };
 
       console.log('Submitted data:', updatedData);
-	  //console.log("values.course_id", updatedData.course.id);
       onUpdate(updatedData);
     };
 

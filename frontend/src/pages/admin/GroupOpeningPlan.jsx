@@ -3,6 +3,8 @@ import { Input, Button, Table, Tag } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 import { removeVietnameseTones } from "../../helpers/regex";
+import { getAllGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { getAllCourses } from "../../services/courseCycleServices";
 
 function GroupOpeningPlan() {
   const [data, setData] = useState([]);
@@ -74,10 +76,8 @@ function GroupOpeningPlan() {
   useEffect(() => {
     const fetchAPI = async () => {
       try {
-        const resGroup = await fetch(`http://localhost:8081/api/group-open-plan`);
-        const resCourse = await fetch(`http://localhost:8081/api/courses`);
-        const groupPlans = await resGroup.json();
-        const courses = await resCourse.json();
+		const groupPlans = await getAllGroupOpenPlan();
+		const courses = await getAllCourses();
 		
         // Tạo map courseId -> courseName
         const courseMap = {};
