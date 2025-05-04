@@ -29,11 +29,13 @@ public class GroupOpenPlanServiceIml implements GroupOpenPlanService {
 		Optional<GroupOpeningPlan> optional = groupOpenPlanRepository.findById(id);
 		return optional.orElseThrow(() -> new RuntimeException("GroupOpeningPlan not found with id " + id));
 	}
-
+	
 	@Override
 	public GroupOpeningPlan saveGroupOpeningPlan(GroupOpeningPlan groupOpeningPlan) {
-		return groupOpenPlanRepository.save(groupOpeningPlan);
+	    groupOpeningPlan.setGroups(null);
+	    return groupOpenPlanRepository.save(groupOpeningPlan);
 	}
+
 
 	@Override
 	public void deleteGroupOpeningPlan(Integer id) {

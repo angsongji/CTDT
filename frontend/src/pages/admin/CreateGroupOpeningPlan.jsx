@@ -2,6 +2,9 @@ import { Button, Form, Input, Space, InputNumber, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { getAllCourses } from "../../services/courseCycleServices";
+import { createGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { createGroup } from "../../services/groupServices";
 
 function CreateGroupOpeningPlan() {
 
@@ -29,8 +32,7 @@ function CreateGroupOpeningPlan() {
     
     useEffect(() => {
         const fetchAPI = async () => {
-            const res = await fetch(`http://localhost:8081/api/courses`);
-            const result = await res.json();
+            const result = await getAllCourses();
             const dataNew = result.map((item) => ({
                 ...item,
                 value: item.id,
@@ -41,10 +43,7 @@ function CreateGroupOpeningPlan() {
         fetchAPI();
     },[]);
 
-    //console.log(courses);
 	const onFinish = async (values) => {
-	    console.log('Form values:', values);
-
 	    const bodyData = {
 	        numberOfGroups: values.numberOfGroups,
 	        numberOfStudents: values.numberOfStudents,
@@ -55,24 +54,14 @@ function CreateGroupOpeningPlan() {
 	    };
 
 	    try {
-	        // Bước 1: Tạo GroupOpeningPlan
-	        const response = await fetch(`http://localhost:8081/api/group-open-plan/create`, {
-	            method: "POST",
-	            headers: {
-	                Accept: "application/json",
-	                "Content-Type": "application/json",
-	            },
-	            body: JSON.stringify(bodyData),
-	        });
 
-	        const result = await response.json();
+	       const result = await createGroupOpenPlan(bodyData);
 
 	        if (result && result.id) {
 	            const groupOpeningPlanId = result.id;
 	            const numberOfGroups = values.numberOfGroups;
 	            const totalStudents = values.numberOfStudents;
 
-	            // Bước 2: Tính số sinh viên cho mỗi nhóm
 	            const baseStudentsPerGroup = Math.floor(totalStudents / numberOfGroups);
 	            let remainder = totalStudents % numberOfGroups; // số dư
 
@@ -92,17 +81,8 @@ function CreateGroupOpeningPlan() {
 	                        id: groupOpeningPlanId
 	                    }
 	                };
-
-	                // Thêm request vào mảng để Promise.all
-	                const request = fetch(`http://localhost:8081/api/group-study/create`, {
-	                    method: "POST",
-	                    headers: {
-	                        Accept: "application/json",
-	                        "Content-Type": "application/json",
-	                    },
-	                    body: JSON.stringify(groupBody),
-	                });
-
+					
+					const request = await createGroup(groupBody);
 	                groupRequests.push(request);
 	            }
 

@@ -2,6 +2,7 @@ import { Button, Form, Input, Space, DatePicker } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { createTraningCycle } from "../../services/trainingCycleServices";
 
 const { RangePicker } = DatePicker;
 
@@ -20,16 +21,7 @@ function CreateTrainingCycle() {
 		console.log(data);
 
 	    try {
-	        const response = await fetch(`http://localhost:8081/api/training-cycles/create`, {
-	            method: "POST",
-	            headers: {
-	                Accept: "application/json",
-	                "Content-Type": "application/json",
-	            },
-	            body: JSON.stringify(data),
-	        });
-
-	        const result = await response.json();
+			const result = await createTraningCycle(data);
 
 	        if (result) { 
 	            Swal.fire({
