@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, InputNumber, Select, Button, Table, Card, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
+import Swal from 'sweetalert2';
+
 
 const { Option } = Select;
 
@@ -13,6 +15,8 @@ function EditGroupOpeningPlan() {
 
   // Lấy dữ liệu truyền qua từ component cha
   const { groupData } = location.state || {};
+  
+  console.log("groupData", groupData)
 
   useEffect(() => {
     if (groupData) {
@@ -33,27 +37,10 @@ function EditGroupOpeningPlan() {
     setGroups(newGroups);
   };
 
-  const handleSubmit = () => {
-    const totalMax = groups.reduce((sum, g) => sum + Number(g.maxStudents), 0);
-    const totalStudents = form.getFieldValue('numberOfStudents');
-
-    if (totalMax !== totalStudents) {
-      message.error('Tổng số lượng tối đa của các nhóm phải bằng Tổng số sinh viên!');
-      return;
-    }
-
-    const updatedData = {
-      ...form.getFieldsValue(),
-      groups,
-    };
-
-    console.log('Submitted data:', updatedData);
-    // Gửi dữ liệu lên server tại đây
-  };
 
   const columns = [
     {
-      title: "STT Nhóm",
+      title: "Mã nhóm",
       dataIndex: "groupNumber",
       key: "groupNumber",
       align: "center",
@@ -76,6 +63,98 @@ function EditGroupOpeningPlan() {
   const handleBackClick = () => {
     navigate(-1);
   };
+  
+  const onUpdate = async (values) => {
+    console.log('Form values (for update):', values);
+
+    const bodyData = {
+      numberOfGroups: values.numberOfGroups,
+      numberOfStudents: values.numberOfStudents,
+      implementationSemester: values.implementationSemester,
+      course: {
+        id: groupData.course.id,
+      },
+    };
+	
+
+    try {
+      const response = await fetch(`http://localhost:8081/api/group-open-plan/edit/${values.id}`, {
+        method: "PATCH",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyData),
+      });
+
+      const result = await response.json();
+
+      if (!result || !result.id) {
+        throw new Error("Không nhận được ID GroupOpeningPlan sau khi cập nhật.");
+      }
+
+      const groupOpeningPlanId = result.id;
+
+      const groupUpdateRequests = values.groups.map((group) => {
+        const groupBody = {
+          groupNumber: group.groupNumber,
+          maxStudents: group.maxStudents,
+          groupOpeningPlan: {
+            id: groupOpeningPlanId,
+          },
+        };
+
+        return fetch(`http://localhost:8081/api/group-study/edit/${group.id}`, {
+          method: "PATCH",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(groupBody),
+        });
+      });
+
+      await Promise.all(groupUpdateRequests);
+
+      Swal.fire({
+        title: "Cập nhật thành công!",
+        text: "Thông tin nhóm học đã được cập nhật.",
+        icon: "success",
+        confirmButtonText: "OK"
+      }).then(() => {
+        navigate("/admin/group-opening-plan");
+      });
+
+    } catch (error) {
+      console.error("Lỗi cập nhật:", error);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Đã xảy ra lỗi khi cập nhật nhóm học.",
+        icon: "error",
+        confirmButtonText: "OK"
+      });
+    }
+  };
+
+
+  const handleSubmit = () => {
+      const totalMax = groups.reduce((sum, g) => sum + Number(g.maxStudents), 0);
+      const totalStudents = form.getFieldValue('numberOfStudents');
+
+      if (totalMax !== totalStudents) {
+        message.error('Tổng số lượng tối đa của các nhóm phải bằng Tổng số sinh viên!');
+        return;
+      }
+
+      const updatedData = {
+        ...form.getFieldsValue(),
+        groups,
+      };
+
+      console.log('Submitted data:', updatedData);
+	  //console.log("values.course_id", updatedData.course.id);
+      onUpdate(updatedData);
+    };
 
   return (
     <div style={{ padding: '24px' }}>

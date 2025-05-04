@@ -55,7 +55,6 @@ function CreateGroupOpeningPlan() {
 	    };
 
 	    try {
-	        // Bước 1: Tạo GroupOpeningPlan
 	        const response = await fetch(`http://localhost:8081/api/group-open-plan/create`, {
 	            method: "POST",
 	            headers: {
@@ -72,7 +71,6 @@ function CreateGroupOpeningPlan() {
 	            const numberOfGroups = values.numberOfGroups;
 	            const totalStudents = values.numberOfStudents;
 
-	            // Bước 2: Tính số sinh viên cho mỗi nhóm
 	            const baseStudentsPerGroup = Math.floor(totalStudents / numberOfGroups);
 	            let remainder = totalStudents % numberOfGroups; // số dư
 
@@ -93,7 +91,6 @@ function CreateGroupOpeningPlan() {
 	                    }
 	                };
 
-	                // Thêm request vào mảng để Promise.all
 	                const request = fetch(`http://localhost:8081/api/group-study/create`, {
 	                    method: "POST",
 	                    headers: {

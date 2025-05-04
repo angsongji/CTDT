@@ -78,12 +78,12 @@ function GroupOpeningPlan() {
         const resCourse = await fetch(`http://localhost:8081/api/courses`);
         const groupPlans = await resGroup.json();
         const courses = await resCourse.json();
-
+		
         // Tạo map courseId -> courseName
         const courseMap = {};
         courses.forEach(course => {
           course.groupOpeningPlans.forEach(plan => {
-            courseMap[plan.id] = course.name;
+            courseMap[plan.id] = course;
           });
         });
 
@@ -91,7 +91,8 @@ function GroupOpeningPlan() {
         const dataNew = groupPlans.map((item, index) => ({
           ...item,
           key: index + 1,
-          nameCourse: courseMap[item.id] || "Không có học phần"
+		  nameCourse: courseMap[item.id]?.name || "Không có học phần", 
+          course: courseMap[item.id] || null, 
         }));
 
         setData(dataNew);

@@ -27,7 +27,7 @@ function DetailGroupOpeningPlan() {
 
   const columns = [
     {
-      title: "STT Nhóm",
+      title: "Mã nhóm",
       dataIndex: "groupNumber",
       key: "groupNumber",
       align: "center",

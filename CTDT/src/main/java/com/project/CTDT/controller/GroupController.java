@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 import com.project.CTDT.entity.Group;
 import com.project.CTDT.service.GroupService;
@@ -42,8 +43,8 @@ public class GroupController {
         return groupService.saveGroup(group);
     }
 
-    // PUT update group
-    @PutMapping("/update/{id}")
+    // PATCH update group
+    @PatchMapping("/edit/{id}")
     public Group updateGroup(@PathVariable Integer id, @RequestBody Group group) {
         group.setId(id);
         return groupService.saveGroup(group);
