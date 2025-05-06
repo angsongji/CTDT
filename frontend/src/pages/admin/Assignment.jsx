@@ -85,7 +85,7 @@ function Assignment() {
                     <Button
                         type="primary"
                         style={{ backgroundColor: '#007bff', borderColor: '#007bff', marginRight: '10px' }}
-                        onClick={() => handleEdit(record.key)}
+                        onClick={() => handleEdit(record)}
                     >
                         Phân công
                     </Button>
@@ -94,8 +94,8 @@ function Assignment() {
         },
     ];
 
-    const handleEdit = (key) => {
-        navigate(`/admin/teaching-assignment/assignment/create`);
+    const handleEdit = (record) => {
+        navigate(`/admin/teaching-assignment/assignment/create`, { state: { record } });
     };
 
     return (

@@ -1,89 +1,50 @@
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import { Input, Button, Table, Select } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
 
-const CreateTeachingAssignment = () => {
-	
-	
-	
-    const rawDataSource = [
-        {
-            key: '1',
-            startYear: '2021',
-            Id_Course: '841302', // Mã HP
-            Name_Course: 'Cơ sở lập trình',
-            GroupNumber: '1',
-        },
-        {
-            key: '2',
-            startYear: '2021',
-            Id_Course: '841302',
-            Name_Course: 'Cơ sở lập trình',
-            GroupNumber: '2',
-        },
-    ];
+const  CreateTeachingAssignment = () => {
+    const location = useLocation();
+    const record = location.state?.record;
+    console.log("record", record);
 
-    // Dữ liệu giảng viên tách ra ngoài rawDataSource
     const lecturers = [
         { Id_Lecturer: '10409', Name_Lecturer: 'Phạm Hoàng Vương' },
         { Id_Lecturer: '10615', Name_Lecturer: 'Trần Nguyễn Minh Hiếu' },
         { Id_Lecturer: '10063', Name_Lecturer: 'Lai Đình Khải' },
     ];
 
-    // Tạo một dictionary giảng viên để tra cứu tên từ mã giảng viên
     const lecturerMap = lecturers.reduce((acc, lecturer) => {
         acc[lecturer.Id_Lecturer] = lecturer.Name_Lecturer;
         return acc;
     }, {});
 
-    // Xử lý dữ liệu để gom nhóm
-    const groupedData = rawDataSource.reduce((acc, current) => {
-        const key = current.Id_Course;
-        if (!acc[key]) {
-            acc[key] = {
-                key: key,
-                stt: current.stt,
-                Id_Course: current.Id_Course,
-                Name_Course: current.Name_Course,
-                groups: [],
-            };
-        }
-        acc[key].groups.push({
-            GroupNumber: current.GroupNumber,
-        });
-        return acc;
-    }, {});
-
-    const dataSource = Object.values(groupedData).map((item, index) => ({
-        ...item,
-        stt: index + 1,
+    const dataSource = record.groups.map((group) => ({
+        key: `${record.course.id}-${group.groupNumber}`,
+        Id_Course: record.course.id,
+        Name_Course: record.nameCourse || record.course.name,
+        GroupNumber: group.groupNumber,
     }));
 
     const [selectedLecturer, setSelectedLecturer] = useState({});
     const [selectedLecturerName, setSelectedLecturerName] = useState({});
 
-    // Hàm xử lý thay đổi giảng viên cho mỗi nhóm
     const handleLecturerChange = (groupKey, value, isIdLecturer) => {
         if (isIdLecturer) {
-            // Nếu chọn mã CBGD
             setSelectedLecturer((prev) => ({
                 ...prev,
                 [groupKey]: value,
             }));
-            // Cập nhật tên giảng viên
             const name = lecturerMap[value];
             setSelectedLecturerName((prev) => ({
                 ...prev,
                 [groupKey]: name,
             }));
         } else {
-            // Nếu chọn tên giảng viên
             setSelectedLecturerName((prev) => ({
                 ...prev,
                 [groupKey]: value,
             }));
-            // Cập nhật mã giảng viên
             const id = lecturers.find((lecturer) => lecturer.Name_Lecturer === value)?.Id_Lecturer;
             setSelectedLecturer((prev) => ({
                 ...prev,
@@ -105,61 +66,44 @@ const CreateTeachingAssignment = () => {
         },
         {
             title: 'Nhóm',
-            key: 'groups',
-            render: (text, record) => (
-                <div>
-                    {record.groups.map((group) => (
-                        <div key={`${record.key}-${group.GroupNumber}`}>
-                            {group.GroupNumber}
-                        </div>
-                    ))}
-                </div>
-            ),
+            dataIndex: 'GroupNumber',
+            key: 'GroupNumber',
+			sorter: (a, b) => a.GroupNumber - b.GroupNumber, 
         },
         {
             title: 'Mã CBGD',
-            key: 'groups',
+            key: 'lecturerIds',
             render: (text, record) => (
-                <div>
-                    {record.groups.map((group) => (
-                        <Select
-                            key={`${group.GroupNumber}-lecturer`}
-                            style={{ width: '100%' }}
-                            placeholder="Chọn mã CBGD"
-                            value={selectedLecturer[group.GroupNumber]} // Hiển thị mã CBGD đã chọn
-                            onChange={(value) => handleLecturerChange(group.GroupNumber, value, true)}
-                        >
-                            {lecturers.map((lecturer) => (
-                                <Select.Option key={lecturer.Id_Lecturer} value={lecturer.Id_Lecturer}>
-                                    {lecturer.Id_Lecturer}
-                                </Select.Option>
-                            ))}
-                        </Select>
+                <Select
+                    style={{ width: '100%' }}
+                    placeholder="Chọn mã CBGD"
+                    value={selectedLecturer[record.GroupNumber]}
+                    onChange={(value) => handleLecturerChange(record.GroupNumber, value, true)}
+                >
+                    {lecturers.map((lecturer) => (
+                        <Select.Option key={lecturer.Id_Lecturer} value={lecturer.Id_Lecturer}>
+                            {lecturer.Id_Lecturer}
+                        </Select.Option>
                     ))}
-                </div>
+                </Select>
             ),
         },
         {
             title: 'Họ và tên CBGD',
-            key: 'groups',
+            key: 'lecturerNames',
             render: (text, record) => (
-                <div>
-                    {record.groups.map((group) => (
-                        <Select
-                            key={`${group.GroupNumber}-lecturer-name`}
-                            style={{ width: '100%' }}
-                            placeholder="Chọn tên CBGD"
-                            value={selectedLecturerName[group.GroupNumber]} // Hiển thị tên giảng viên đã chọn
-                            onChange={(value) => handleLecturerChange(group.GroupNumber, value, false)}
-                        >
-                            {lecturers.map((lecturer) => (
-                                <Select.Option key={lecturer.Name_Lecturer} value={lecturer.Name_Lecturer}>
-                                    {lecturer.Name_Lecturer}
-                                </Select.Option>
-                            ))}
-                        </Select>
+                <Select
+                    style={{ width: '100%' }}
+                    placeholder="Chọn tên CBGD"
+                    value={selectedLecturerName[record.GroupNumber]}
+                    onChange={(value) => handleLecturerChange(record.GroupNumber, value, false)}
+                >
+                    {lecturers.map((lecturer) => (
+                        <Select.Option key={lecturer.Name_Lecturer} value={lecturer.Name_Lecturer}>
+                            {lecturer.Name_Lecturer}
+                        </Select.Option>
                     ))}
-                </div>
+                </Select>
             ),
         },
     ];
@@ -172,7 +116,7 @@ const CreateTeachingAssignment = () => {
                     <Link to="/admin/teaching-assignment/assignment">
                         <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
                             <span className=' text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
-                               <IoArrowBack /> Trở lại
+                                <IoArrowBack /> Trở lại
                             </span>
                         </Button>
                     </Link>
@@ -181,32 +125,8 @@ const CreateTeachingAssignment = () => {
                 <Table
                     dataSource={dataSource}
                     columns={columns}
-                    rowKey="Id_Course"
-                    pagination={false}  
-                    expandable={{
-                        expandIcon: () => null,
-                        expandedRowRender: (record) => (
-                            <table style={{ width: '100%' }}>
-                                <thead>
-                                    <tr>
-                                        <th>Nhóm</th>
-                                        <th>Mã CBGD</th>
-                                        <th>Họ và tên CBGD</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {record.groups.map((group) => (
-                                        <tr key={`${record.Id_Course}-${group.GroupNumber}`}>
-                                            <td>{group.GroupNumber}</td>
-                                            <td>{selectedLecturer[group.GroupNumber] || 'Chưa chọn'}</td>
-                                            <td>{selectedLecturerName[group.GroupNumber] || 'Chưa chọn'}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ),
-                        rowExpandable: (record) => record.groups.length > 1,
-                    }}
+                    rowKey="key"
+                    pagination={false}
                 />
 
                 <div className="mt-6 flex justify-end">
