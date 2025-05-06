@@ -3,13 +3,16 @@ import { Input, Button, Table, Tag } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 import { removeVietnameseTones } from "../../helpers/regex";
-import { getAllGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { getAllGroupOpenPlan, editGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
 import { getAllCourses } from "../../services/courseCycleServices";
+import Swal from 'sweetalert2';
+
 
 function GroupOpeningPlan() {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate(); 
+  const [reset, setReset] = useState(false);
 
   const columns = [
     {
@@ -64,7 +67,7 @@ function GroupOpeningPlan() {
           <Button
             type="primary"
             style={{ backgroundColor: '#F44336', borderColor: '#F44336' }}
-            onClick={() => handleEdit(record.id)}
+            onClick={() => handleDel(record.id)}
           >
             Xóa
           </Button>
@@ -86,9 +89,10 @@ function GroupOpeningPlan() {
             courseMap[plan.id] = course;
           });
         });
+		const filteredPlans = groupPlans.filter(plan => plan.status !== 3);
 
         // Gán nameCourse vào mỗi groupOpeningPlan
-        const dataNew = groupPlans.map((item, index) => ({
+        const dataNew = filteredPlans.map((item, index) => ({
           ...item,
           key: index + 1,
 		  nameCourse: courseMap[item.id]?.name || "Không có học phần", 
@@ -101,7 +105,7 @@ function GroupOpeningPlan() {
       }
     };
     fetchAPI();
-  }, []);
+  }, [reset]);
   
   //console.log(data);
 
@@ -120,6 +124,45 @@ function GroupOpeningPlan() {
   const handleDetail = (key) => {
 	  navigate(`/admin/group-opening-plan/detail/${key}`);
     };
+	
+	const handleDel = async (id) => {
+	  const result = await Swal.fire({
+	    title: 'Bạn có chắc chắn muốn xóa?',
+	    text: "Hành động này không thể hoàn tác!",
+	    icon: 'warning',
+	    showCancelButton: true,
+	    confirmButtonColor: '#d33',
+	    cancelButtonColor: '#3085d6',
+	    confirmButtonText: 'Xóa',
+	    cancelButtonText: 'Hủy'
+	  });
+
+	  if (result.isConfirmed) {
+	    try {
+	      // Tìm dữ liệu gốc theo id
+	      const planToDelete = data.find(item => item.id === id);
+	      if (!planToDelete) return;
+
+	      // Gửi toàn bộ dữ liệu kèm status mới
+	      const updatedData = { ...planToDelete, status: 3 };
+
+	      const response = await editGroupOpenPlan(id, updatedData);
+	      if (response) {
+	        Swal.fire('Đã xóa!', 'Kế hoạch mở lớp đã được xóa thành công.', 'success');
+
+	        setReset(!reset);
+	      }
+	    } catch (error) {
+		  console.log("error", error);
+	      Swal.fire({
+	        title: 'Lỗi!',
+	        text: 'Không thể xóa kế hoạch mở lớp.',
+	        icon: 'error'
+	      });
+	    }
+	  }
+	};
+
 
   return (
     <div className="p-6">
