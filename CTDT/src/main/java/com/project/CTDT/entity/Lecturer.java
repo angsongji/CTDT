@@ -52,6 +52,6 @@ public class Lecturer {
 
 	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "lecturer-teachingAssignments")
-	private Set<TeachingAssignment> TeachingAssignments;
+	private Set<TeachingAssignment> teachingAssignments;
 
 }
