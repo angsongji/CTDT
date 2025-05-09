@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Table, Select } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
+import { Input, Button, Table, Select, message } from 'antd';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
 import { getAllLecturers } from "../../services/lecturerServices";
+import { createTeachingAssignment } from "../../services/teachingAssignmentCycleServices";
+
 
 const  CreateTeachingAssignment = () => {
     const location = useLocation();
     const record = location.state?.record;
 	const [lecturers, setLecturers] = useState([]);
-	
-	console.log("record", record);
+	const navigate = useNavigate();
+
 	
 	useEffect(() => {
 		const fetchApi = async () => {
@@ -31,7 +33,6 @@ const  CreateTeachingAssignment = () => {
 		fetchApi();
 	}, []);
 	
-	console.log("lecturers", lecturers);
 
 
     const lecturerMap = lecturers.reduce((acc, lecturer) => {
@@ -73,9 +74,32 @@ const  CreateTeachingAssignment = () => {
         }
     };
 	
-	const handleSubmit = () => {
-		console.log("ok");
-	}
+	const handleSubmit = async () => {
+	    const unassignedGroups = record.groups.filter(group => !selectedLecturer[group.groupNumber]);
+
+	    if (unassignedGroups.length > 0) {
+	        message.warning("Vui lòng chọn giảng viên cho tất cả các nhóm trước khi xác nhận.");
+	        return;
+	    }
+
+	    const requests = record.groups.map((group) =>
+	        createTeachingAssignment({
+	            status: 1,
+	            group: { id: group.id },
+	            lecturer: { id: selectedLecturer[group.groupNumber] }
+	        })
+	    );
+
+	    try {
+	        await Promise.all(requests);
+	        message.success("Tạo phân công giảng dạy thành công!");
+			navigate(-1);
+	    } catch (error) {
+	        console.error("Lỗi khi gửi dữ liệu:", error);
+	        message.error("Đã xảy ra lỗi khi tạo phân công giảng dạy.");
+	    }
+	};
+
 
     const columns = [
         {
