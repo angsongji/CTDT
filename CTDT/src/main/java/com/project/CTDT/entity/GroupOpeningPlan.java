@@ -26,27 +26,26 @@ import lombok.Setter;
 @Entity
 @Table(name = "group_opening_plan")
 public class GroupOpeningPlan {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
-    
-    @Column(name = "numberOfGroups", nullable = false)
-    private Integer numberOfGroups;
-    
-    @Column(name = "numberOfStudents", nullable = false)
-    private Integer numberOfStudents;
-    
-    @Column(name = "implementationSemester", nullable = false)
-    private Integer implementationSemester;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_groupPlan_course"))
-    @JsonBackReference(value = "groupPlan-course")
-    private Course course;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference(value = "groupPlan-groups")
-    private Set<Group> groups = new HashSet<>();
+	@Column(name = "numberOfGroups", nullable = false)
+	private Integer numberOfGroups;
+
+	@Column(name = "numberOfStudents", nullable = false)
+	private Integer numberOfStudents;
+
+	@Column(name = "implementationSemester", nullable = false)
+	private Integer implementationSemester;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_groupPlan_course"))
+	@JsonBackReference(value = "groupPlan-course")
+	private Course course;
+
+	@OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JsonManagedReference(value = "groupPlan-groups")
+	private Set<Group> groups = new HashSet<>();
 
 }
