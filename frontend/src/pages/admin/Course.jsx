@@ -1,40 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Row, Col } from 'antd';
 import { FaPlus } from "react-icons/fa6";
 import { MdDelete, MdModeEdit } from "react-icons/md";
+import { getAllCourses, createCourse, updateCourse, deleteCourse } from "../../services/courseServices";
 
 function Course() {
-	const [dataCourse, setDataCourse] = useState([
-		{
-			key: '1',
-			id: '841302',
-			name: 'Cơ sở lập trình',
-			credits: 4,
-			lectureHours: 45,
-			practiceHours: 30,
-			internshipHours: 0,
-			weightingFactor: 0.8,
-			require: true,
-			status: 1,
-			id_KnowledgeAreas: "II",
-			name_KnowledgeAreas: "Chuyên nghiệp",
-		},
-		{
-			key: '2',
-			id: '861301',
-			name: 'Triết học Mác – Lênin',
-			credits: 3,
-			lectureHours: 45,
-			practiceHours: 0,
-			internshipHours: 0,
-			weightingFactor: 1,
-			require: true,
-			status: 1,
-			id_KnowledgeAreas: "I",
-			name_KnowledgeAreas: "Giáo dục đại cương",
-		},
-	]);
-
+	const [dataCourse, setDataCourse] = useState([]);
+	const [loading, setLoading] = useState(false);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [mode, setMode] = useState('add');
 	const [selectedRecord, setSelectedRecord] = useState(null);
@@ -42,28 +14,83 @@ function Course() {
 	const [confirmLoading, setConfirmLoading] = useState(false);
 	const [form] = Form.useForm();
 
+	useEffect(() => {
+		fetchCourses();
+	}, []);
+
+	const fetchCourses = async () => {
+		try {
+			setLoading(true);
+			const response = await getAllCourses();
+			console.log('Response từ API:', response);
+			const formattedCourses = response.map(course => {
+				console.log('KnowledgeAreas của course:', course.id, course.knowledgeAreas);
+				
+				return {
+					...course,
+					key: course.id,
+					require: course.requirement === 1,
+					id_KnowledgeAreas: course.knowledgeAreas?.id,
+					name_KnowledgeAreas: course.knowledgeAreas?.name || course.knowledgeAreas?.title || '-',
+					parent_id: course.parent?.id
+				};
+			});
+			console.log('Danh sách học phần sau khi format:', formattedCourses);
+			setDataCourse(formattedCourses);
+		} catch (error) {
+			message.error('Không thể tải danh sách học phần!');
+			console.error('Error fetching courses:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const columns = [
-		{ title: 'Mã HP', dataIndex: 'id', key: 'id' },
+		{ 
+			title: 'Mã HP', 
+			dataIndex: 'id', 
+			key: 'id',
+			render: (id) => id
+		},
 		{ title: 'Tên HP', dataIndex: 'name', key: 'name' },
 		{ title: 'STC', dataIndex: 'credits', key: 'credits' },
 		{ title: 'Lý thuyết', dataIndex: 'lectureHours', key: 'lectureHours' },
 		{ title: 'Thực hành', dataIndex: 'practiceHours', key: 'practiceHours' },
 		{ title: 'Thực tập', dataIndex: 'internshipHours', key: 'internshipHours' },
 		{ title: 'Hệ số học phần', dataIndex: 'weightingFactor', key: 'weightingFactor' },
-		{ title: 'Khối kiến thức', dataIndex: 'name_KnowledgeAreas', key: 'name_KnowledgeAreas' },
+		{ 
+			title: 'Khối kiến thức', 
+			dataIndex: 'name_KnowledgeAreas', 
+			key: 'name_KnowledgeAreas',
+			render: (text) => text || '-'
+		},
 		{
 			title: 'Loại HP',
 			dataIndex: 'require',
 			key: 'require',
 			render: (require) => (require ? 'Bắt buộc' : 'Tự chọn'),
 		},
+		{ title: 'Mã HP trước', dataIndex: 'parent_id', key: 'parent_id' },
 		{
 			title: 'Hành động',
 			key: 'actions',
 			render: (_, record) => (
-				<div className="flex gap-2">
-					<Button icon={<MdModeEdit />} onClick={() => handleEdit(record)}>Sửa</Button>
-					<Button danger icon={<MdDelete />} onClick={() => showModalDelete(record)}>Xoá</Button>
+				<div className="flex gap-2" key={`actions-${record.id}`}>
+					<Button 
+						key={`edit-${record.id}`}
+						icon={<MdModeEdit />} 
+						onClick={() => handleEdit(record)}
+					>
+						Sửa
+					</Button>
+					<Button 
+						key={`delete-${record.id}`}
+						danger 
+						icon={<MdDelete />} 
+						onClick={() => showModalDelete(record)}
+					>
+						Xoá
+					</Button>
 				</div>
 			),
 		},
@@ -83,23 +110,53 @@ function Course() {
 		setModalVisible(true);
 	};
 
-	const handleSave = (values) => {
-		if (mode === 'add') {
-			const newCourse = {
-				...values,
-				key: Date.now().toString(),
-				status: 1,
-			};
-			setDataCourse(prev => [...prev, newCourse]);
-			message.success('Thêm học phần thành công!');
-		} else if (mode === 'edit') {
-			const updated = dataCourse.map(item =>
-				item.key === selectedRecord.key ? { ...item, ...values } : item
-			);
-			setDataCourse(updated);
-			message.success('Cập nhật học phần thành công!');
+	const handleSave = async (values) => {
+		try {
+			setLoading(true);
+			if (mode === 'add') {
+				// Chuẩn bị dữ liệu để gửi lên server
+				const newCourse = {
+					...values,
+					status: 1,
+					requirement: values.require ? 1 : 0,
+					knowledgeAreas: {
+						id: values.id_KnowledgeAreas
+					},
+					parent: values.parent_id ? {
+						id: values.parent_id
+					} : null
+				};
+
+				// Gọi API tạo mới
+				await createCourse(newCourse);
+				message.success('Thêm học phần thành công!');
+			} else if (mode === 'edit') {
+				// Chuẩn bị dữ liệu để gửi lên server
+				const updatedCourse = {
+					...values,
+					status: selectedRecord.status,
+					requirement: values.require ? 1 : 0,
+					knowledgeAreas: {
+						id: values.id_KnowledgeAreas
+					},
+					parent: values.parent_id ? {
+						id: values.parent_id
+					} : null
+				};
+
+				// Gọi API cập nhật
+				await updateCourse(selectedRecord.id, updatedCourse);
+				message.success('Cập nhật học phần thành công!');
+			}
+			setModalVisible(false);
+			// Tải lại dữ liệu sau khi thêm/sửa
+			await fetchCourses();
+		} catch (error) {
+			console.error('Lỗi khi lưu học phần:', error);
+			message.error(mode === 'add' ? 'Thêm học phần thất bại!' : 'Cập nhật học phần thất bại!');
+		} finally {
+			setLoading(false);
 		}
-		setModalVisible(false);
 	};
 
 	const showModalDelete = (record) => {
@@ -107,15 +164,22 @@ function Course() {
 		setDeleteModalVisible(true);
 	};
 
-	const handleDelete = () => {
-		setConfirmLoading(true);
-		setTimeout(() => {
-			setDataCourse(prev => prev.filter(course => course.key !== selectedRecord.key));
+	const handleDelete = async () => {
+		try {
+			setConfirmLoading(true);
+			// Gọi API xóa
+			await deleteCourse(selectedRecord.id);
+			message.success('Đã xoá học phần!');
 			setDeleteModalVisible(false);
+			// Tải lại dữ liệu sau khi xóa
+			await fetchCourses();
+		} catch (error) {
+			console.error('Lỗi khi xóa học phần:', error);
+			message.error('Xóa học phần thất bại!');
+		} finally {
 			setConfirmLoading(false);
 			setSelectedRecord(null);
-			message.success('Đã xoá học phần!');
-		}, 800);
+		}
 	};
 
 	return (
@@ -132,7 +196,12 @@ function Course() {
 						</span>
 					</Button>
 				</div>
-				<Table dataSource={dataCourse} columns={columns} rowKey="key" />
+				<Table 
+					dataSource={dataCourse} 
+					columns={columns} 
+					rowKey={(record) => record.id} 
+					loading={loading}
+				/>
 			</div>
 
 			<Modal

@@ -17,6 +17,12 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.Set;
+import java.util.HashSet;
+import com.project.CTDT.entity.TeachingPlan;
+import jakarta.persistence.*;
+
+
 
 @Getter
 @Setter
@@ -62,8 +68,7 @@ public class GeneralInformation {
 	@JsonManagedReference(value = "generalInformation-curriculumFramework")
 	private CurriculumFramework curriculumFramework;
 
-	// Mối quan hệ 1-1 với TeachingPlan
-//	@OneToOne(fetch = FetchType.LAZY, mappedBy = "generalInformation", cascade = CascadeType.ALL)
-//	@JsonManagedReference
-//	private TeachingPlan teachingPlan;
+	// Mối quan hệ 1-N với TeachingPlan
+	@OneToMany(mappedBy = "generalInformation", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<TeachingPlan> teachingPlans = new HashSet<>();	
 }
