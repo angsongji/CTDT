@@ -6,6 +6,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -89,6 +90,7 @@ public class Course {
 	@JoinColumn(name = "knowledgeAreas_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_course_knowledgeAreas"))
 	@JsonIgnoreProperties({ "courses" })
 	@JsonProperty("knowledgeAreas")
+	@JsonBackReference(value = "course-knowledgeAreas")
 	private KnowledgeAreas knowledgeAreas;
 
 	// Thêm getter và setter cho knowledgeAreas
