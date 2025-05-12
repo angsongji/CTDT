@@ -24,6 +24,7 @@ import Assignment from "../pages/admin/Assignment";
 import CreateTeachingAssignment from "../pages/admin/CreateTeachingAssignment";
 import DetailGroupOpeningPlan from "../pages/admin/DetailGroupOpeningPlan";
 import EditGroupOpeningPlan from "../pages/admin/EditGroupOpeningPlan";
+import CourseOutlineDetail from "../pages/admin/CourseOulineDetail";
 
 const router = createBrowserRouter([
     {
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
             { path: "course", element: <Course /> },
             { path: "course-list", element: <CourseList /> },
             { path: "course-outline", element: <CourseOutline /> },
+			{ path: "course-outline/:id", element: <CourseOutlineDetail /> },
             { path: "teaching-plan", element: <TeachingPlan /> },
             { path: "lecturer", element: <Lecturer /> },
             { path: "group-opening-plan", element: <GroupOpeningPlan /> },
@@ -61,6 +63,7 @@ const router = createBrowserRouter([
             { path: "training-cycle", element: <TrainingCycle /> },
             { path: "training-cycle/create", element: <CreateTrainingCycle /> },
             { path: "training-cycle/edit/:id", element: <EditTrainingCycle /> },
+			
         ],
     },
     { path: "*", element: <NotFound /> },

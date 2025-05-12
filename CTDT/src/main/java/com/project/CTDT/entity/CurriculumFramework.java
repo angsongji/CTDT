@@ -1,8 +1,5 @@
 package com.project.CTDT.entity;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
@@ -13,8 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -31,13 +26,6 @@ public class CurriculumFramework {
 
 	@Column(name = "status")
 	private Integer status = 1;
-
-	// Mối quan hệ N-N với Course
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "course_curriculum_framework", // tên bảng trung gian
-			joinColumns = @JoinColumn(name = "curriculum_id"), inverseJoinColumns = @JoinColumn(name = "course_id"))
-//	@JsonManagedReference(value = "curriculumFramework-course")
-	private Set<Course> courses = new HashSet<>();
 
 	// Mối quan hệ 1-1 với GeneralInformation
 	@OneToOne(fetch = FetchType.LAZY)
