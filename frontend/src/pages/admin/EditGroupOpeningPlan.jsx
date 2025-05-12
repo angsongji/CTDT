@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, InputNumber, Select, Button, Table, Card, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
-import { editGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { editGroupOpenPlan } from "../../services/groupOpeningPlanServices";
 import { editGroup } from "../../services/groupServices";
 
 
