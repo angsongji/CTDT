@@ -3,10 +3,9 @@ package com.project.CTDT.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -26,69 +25,92 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@JsonIdentityInfo(
-	    generator = ObjectIdGenerators.PropertyGenerator.class,
-	    property = "id"
-	)
 @Entity
 @Table(name = "course")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Course {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", nullable = false)
+	@JsonProperty("id")
 	private Integer id;
 
 	@Column(name = "name", nullable = false, length = 255)
+	@JsonProperty("name")
 	private String name;
 
 	@Column(name = "credits", nullable = false)
+	@JsonProperty("credits")
 	private Integer credits;
 
 	@Column(name = "lectureHours", nullable = false)
+	@JsonProperty("lectureHours")
 	private Integer lectureHours;
 
 	@Column(name = "practiceHours", nullable = false)
+	@JsonProperty("practiceHours")
 	private Integer practiceHours;
 
 	@Column(name = "internshipHours", nullable = false)
+	@JsonProperty("internshipHours")
 	private Integer internshipHours;
 
 	@Column(name = "weightingFactor", nullable = false)
+	@JsonProperty("weightingFactor")
 	private Double weightingFactor;
 
 	@Column(name = "requirement ", nullable = false)
+	@JsonProperty("requirement")
 	private Integer requirement = 1; // Default = 1 la tu chon bat buoc
 
 	@Column(name = "status", nullable = false)
+	@JsonProperty("status")
 	private Integer status = 1; // Default = 1
 
 	// Mối quan hệ phản thân với Course (Mối học phần yêu cầu các học phần trước):
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_course_parent"), nullable = true)
-	@JsonBackReference
+	@JsonIgnoreProperties({ "parent", "children" })
+	@JsonProperty("parent")
 	private Course parent;
 
 	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-	@JsonManagedReference
+	@JsonIgnoreProperties({ "parent" })
+	@JsonProperty("children")
 	private Set<Course> children = new HashSet<>();
 
 	// Mối quan hệ 1-N với LecturerCourse
-	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@JsonManagedReference(value = "lecturerCourses-course")
+	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+	@JsonIgnoreProperties({ "course" })
+	@JsonProperty("lecturerCourses")
 	private Set<LecturerCourse> lecturerCourses;
 
 	// Mối quan hệ N-1 với KnowledgeAreas
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "knowledgeAreas_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_course_knowledgeAreas"))
-	@JsonBackReference(value = "course-knowledgeAreas")
+	@JsonIgnoreProperties({ "courses" })
+	@JsonProperty("knowledgeAreas")
 	private KnowledgeAreas knowledgeAreas;
 
+	// Thêm getter và setter cho knowledgeAreas
+	public KnowledgeAreas getKnowledgeAreas() {
+		return knowledgeAreas;
+	}
+
+	public void setKnowledgeAreas(KnowledgeAreas knowledgeAreas) {
+		this.knowledgeAreas = knowledgeAreas;
+	}
+
 	// Mối quan hệ N-N với CurriculumFramework
-	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "courses")
+	@ManyToMany(fetch = FetchType.EAGER, mappedBy = "courses")
+	@JsonIgnoreProperties({ "courses" })
+	@JsonProperty("curriculumFrameworks")
 	private Set<CurriculumFramework> curriculumFrameworks = new HashSet<>();
 
 	// Mối quan hệ 1-N với GroupOpeningPlan
-	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JsonManagedReference(value = "groupPlan-course")
+	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonIgnoreProperties({ "course" })
+	@JsonProperty("groupOpeningPlans")
 	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
 
 }
