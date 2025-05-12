@@ -1,5 +1,8 @@
 package com.project.CTDT.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -12,17 +15,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.Set;
-import java.util.HashSet;
-import com.project.CTDT.entity.TeachingPlan;
-import jakarta.persistence.*;
-
-
 
 @Getter
 @Setter
@@ -57,8 +54,8 @@ public class GeneralInformation {
 	@Column(name = "status")
 	private Integer status = 1;
 
-	// Mối quan hệ N-1 với Faculty
-	@ManyToOne(fetch = FetchType.LAZY)
+	// Mối quan hệ 1-1 với Faculty
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "faculty_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_GeneralInformation"))
 	@JsonBackReference(value = "faculty-generalInformation")
 	private Faculty faculty;
@@ -70,5 +67,5 @@ public class GeneralInformation {
 
 	// Mối quan hệ 1-N với TeachingPlan
 	@OneToMany(mappedBy = "generalInformation", cascade = CascadeType.ALL, orphanRemoval = true)
-	private Set<TeachingPlan> teachingPlans = new HashSet<>();	
+	private Set<TeachingPlan> teachingPlans = new HashSet<>();
 }
