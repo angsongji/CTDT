@@ -1,39 +1,118 @@
 import { Button, Form, Input, Space, InputNumber, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { getAllCourses } from "../../services/courseCycleServices";
+import { createGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { createGroup } from "../../services/groupServices";
 
 function CreateGroupOpeningPlan() {
 
     const navigate = useNavigate();
     const [form] = Form.useForm();
     const [submittable, setSubmittable] = useState(false);
+    const [courses, setCourses] = useState([]);
 
-    const onFinish = (values) => {
-        console.log('data:', values);
-    };
-
-    
     const handleFieldChange = () => {
-        const nameField = form.getFieldValue("courseName");
-        const semesterField = form.getFieldValue("semester"); 
+        const nameField = form.getFieldValue("course_id");
+        const semesterField = form.getFieldValue("implementationSemester"); 
         setSubmittable(!!nameField && !!semesterField); 
     };
 
-    const courses = [
-        { value: 'lap_trinh_c', label: 'Lập trình C' },
-        { value: 'co_so_du_lieu', label: 'Cơ sở dữ liệu' },
-        { value: 'kinh_te_vi_mo', label: 'Kinh tế vĩ mô' },
-        { value: 'quan_tri_doanh_nghiep', label: 'Quản trị doanh nghiệp' },
-        { value: 'mang_may_tinh', label: 'Mạng máy tính' },
-    ];
-
     const semester = [
-        { value: '1', label: '1' },
-        { value: '2', label: '2' },
-        { value: '3', label: '3' },
-        { value: '4', label: '4' },
-        { value: '5', label: '5' },
+        { value: 1, label: '1' },
+        { value: 2, label: '2' },
+        { value: 3, label: '3' },
+        { value: 4, label: '4' },
+        { value: 5, label: '5' },
+		{ value: 6, label: '6' },
+		{ value: 7, label: '7' },
+		{ value: 8, label: '8' },
     ];
+    
+    useEffect(() => {
+        const fetchAPI = async () => {
+            const result = await getAllCourses();
+            const dataNew = result.map((item) => ({
+                ...item,
+                value: item.id,
+                label: item.name,
+            }));
+            setCourses(dataNew);
+        };
+        fetchAPI();
+    },[]);
+
+	const onFinish = async (values) => {
+	    const bodyData = {
+	        numberOfGroups: values.numberOfGroups,
+	        numberOfStudents: values.numberOfStudents,
+	        implementationSemester: values.implementationSemester,
+	        course: {
+	            id: values.course_id,
+	        },
+	    };
+
+	    try {
+
+	       const result = await createGroupOpenPlan(bodyData);
+
+	        if (result && result.id) {
+	            const groupOpeningPlanId = result.id;
+	            const numberOfGroups = values.numberOfGroups;
+	            const totalStudents = values.numberOfStudents;
+
+	            const baseStudentsPerGroup = Math.floor(totalStudents / numberOfGroups);
+	            let remainder = totalStudents % numberOfGroups; // số dư
+
+	            const groupRequests = [];
+
+	            for (let i = 1; i <= numberOfGroups; i++) {
+	                let studentsInGroup = baseStudentsPerGroup;
+	                if (remainder > 0) {
+	                    studentsInGroup += 1;
+	                    remainder -= 1;
+	                }
+
+	                const groupBody = {
+	                    groupNumber: i,
+	                    maxStudents: studentsInGroup,
+	                    groupOpeningPlan: {
+	                        id: groupOpeningPlanId
+	                    }
+	                };
+					
+					const request = await createGroup(groupBody);
+	                groupRequests.push(request);
+	            }
+
+	            // Bước 3: Gửi tất cả requests song song
+	            await Promise.all(groupRequests);
+
+	            Swal.fire({
+	                title: "Tạo thành công!",
+	                text: "Mở nhóm học mới và các nhóm đã được thêm.",
+	                icon: "success",
+	                confirmButtonText: "OK"
+	            }).then(() => {
+	                navigate("/admin/group-opening-plan");
+	            });
+
+	        } else {
+	            throw new Error("Không nhận được ID GroupOpeningPlan sau khi tạo.");
+	        }
+	    } catch (error) {
+	        console.error('Lỗi:', error);
+	        Swal.fire({
+	            title: "Lỗi!",
+	            text: "Đã xảy ra lỗi khi tạo mở nhóm học mới.",
+	            icon: "error",
+	            confirmButtonText: "OK"
+	        });
+	    }
+	};
+
+
 
     return (
         <>
@@ -46,17 +125,20 @@ function CreateGroupOpeningPlan() {
                         layout="vertical"
                         autoComplete="off"
                         onFinish={onFinish}
+                        initialValues={{
+                            NumberOfGroups: 1,
+                            NumberOfStudents: 30,
+                        }}
+                        onValuesChange={handleFieldChange}  // Detect changes to form fields
                     >
                         <div className="flex space-x-6 justify-between w-full">
                             <Form.Item
                                 style={{ marginBottom: '20px', width: '48%' }}
-                                name="courseName"
+                                name="course_id"
                                 label="Tên học phần"
-                                rules={[{ required: true, message: 'Tên học phần là bắt buộc!' }]}
-                            >
+                                rules={[{ required: true, message: 'Tên học phần là bắt buộc!' }]}>
                                 <Select
                                     placeholder="Chọn học phần"
-                                    onChange={handleFieldChange}
                                     className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
                                 >
                                     {courses.map(course => (
@@ -69,10 +151,9 @@ function CreateGroupOpeningPlan() {
 
                             <Form.Item
                                 style={{ marginBottom: '20px', width: '48%' }}
-                                name="semester"
+                                name="implementationSemester"
                                 label="Học kỳ"
-                                rules={[{ required: true, message: 'Học kỳ là bắt buộc!' }]}
-                            >
+                                rules={[{ required: true, message: 'Học kỳ là bắt buộc!' }]}>
                                 <Select
                                     placeholder="Học kỳ"
                                     className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
@@ -89,28 +170,24 @@ function CreateGroupOpeningPlan() {
                         <div className="flex space-x-6 justify-between w-full">
                             <Form.Item
                                 style={{ marginBottom: '20px', width: '48%' }}
-                                name="NumberOfGroups"
+                                name="numberOfGroups"
                                 label="Số lượng Nhóm"
-                                rules={[{ required: true, message: 'Số lượng Nhóm là bắt buộc!' }]}
-                            >
+                                rules={[{ required: true, message: 'Số lượng Nhóm là bắt buộc!' }]}>
                                 <InputNumber
                                     min={1}
                                     max={10}
-                                    defaultValue={1}
                                     className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
                                 />
                             </Form.Item>
 
                             <Form.Item
                                 style={{ marginBottom: '20px', width: '48%' }}
-                                name="NumberOfStudents"
+                                name="numberOfStudents"
                                 label="Số Sinh Viên"
-                                rules={[{ required: true, message: 'Số Sinh Viên là bắt buộc!' }]}
-                            >
+                                rules={[{ required: true, message: 'Số Sinh Viên là bắt buộc!' }]}>
                                 <InputNumber
                                     min={30}
                                     max={1000}
-                                    defaultValue={30}
                                     className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
                                 />
                             </Form.Item>
@@ -137,9 +214,8 @@ function CreateGroupOpeningPlan() {
                     </Form>
                 </div>
             </div>
-
         </>
-    )
+    );
 }
 
 export default CreateGroupOpeningPlan;

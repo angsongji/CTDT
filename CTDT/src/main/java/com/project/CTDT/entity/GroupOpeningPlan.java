@@ -1,6 +1,5 @@
 package com.project.CTDT.entity;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -28,6 +27,7 @@ import lombok.Setter;
 public class GroupOpeningPlan {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", nullable = false)
 	private Integer id;
 
 	@Column(name = "numberOfGroups", nullable = false)
@@ -39,13 +39,16 @@ public class GroupOpeningPlan {
 	@Column(name = "implementationSemester", nullable = false)
 	private Integer implementationSemester;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@Column(name = "status")
+	private Integer status = 1;
+
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_groupPlan_course"))
 	@JsonBackReference(value = "groupPlan-course")
 	private Course course;
 
 	@OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "groupPlan-groups")
-	private Set<Group> groups = new HashSet<>();
+	private Set<Group> groups;
 
 }

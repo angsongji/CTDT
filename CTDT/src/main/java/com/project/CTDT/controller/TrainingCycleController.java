@@ -3,15 +3,10 @@ package com.project.CTDT.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+
 
 import com.project.CTDT.entity.TrainingCycle;
 import com.project.CTDT.service.TrainingCycleService;
@@ -21,32 +16,55 @@ import com.project.CTDT.service.TrainingCycleService;
 @CrossOrigin
 public class TrainingCycleController {
 
-	@Autowired
-	private TrainingCycleService trainingCycleService;
+    @Autowired
+    private TrainingCycleService trainingCycleService;
 
-	@GetMapping
-	public List<TrainingCycle> getAllTrainingCycles() {
-		return trainingCycleService.getAllTrainingCycles();
-	}
+    // Lấy danh sách tất cả training cycles
+    @GetMapping
+    public ResponseEntity<List<TrainingCycle>> getAllTrainingCycles() {
+        List<TrainingCycle> trainingCycles = trainingCycleService.getAllTrainingCycles();
+        if (trainingCycles.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(trainingCycles);
+    }
 
-	@GetMapping("/{id}")
-	public TrainingCycle getTrainingCycleById(@PathVariable Integer id) {
-		return trainingCycleService.getTrainingCycleById(id);
-	}
+    // Lấy 1 training cycle theo id
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<TrainingCycle> getTrainingCycleById(@PathVariable Integer id) {
+        TrainingCycle trainingCycle = trainingCycleService.getTrainingCycleById(id);
+        if (trainingCycle == null) {
+            return ResponseEntity.notFound().build(); // Trả về 404 nếu không tìm thấy
+        }
+        return ResponseEntity.ok(trainingCycle);
+    }
 
-	@PostMapping
-	public TrainingCycle createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
-		return trainingCycleService.saveTrainingCycle(trainingCycle);
-	}
+    // Tạo mới training cycle
+    @PostMapping("/create")
+    public TrainingCycle createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
+        return trainingCycleService.saveTrainingCycle(trainingCycle);
+    }
 
-	@PutMapping("/{id}")
-	public TrainingCycle updateTrainingCycle(@PathVariable Integer id, @RequestBody TrainingCycle trainingCycle) {
-		trainingCycle.setId(id);
-		return trainingCycleService.saveTrainingCycle(trainingCycle);
-	}
+    // Cập nhật training cycle
+    @PutMapping("/update/{id}")
+    public ResponseEntity<TrainingCycle> updateTrainingCycle(@PathVariable Integer id, @RequestBody TrainingCycle trainingCycle) {
+        TrainingCycle existingCycle = trainingCycleService.getTrainingCycleById(id);
+        if (existingCycle == null) {
+            return ResponseEntity.notFound().build(); // Trả về 404 nếu không tìm thấy
+        }
+        trainingCycle.setId(id); // Cập nhật id trước khi lưu
+        TrainingCycle updated = trainingCycleService.saveTrainingCycle(trainingCycle);
+        return ResponseEntity.ok(updated);
+    }
 
-	@DeleteMapping("/{id}")
-	public void deleteTrainingCycle(@PathVariable Integer id) {
-		trainingCycleService.deleteTrainingCycle(id);
-	}
+    // Xoá training cycle
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteTrainingCycle(@PathVariable Integer id) {
+        TrainingCycle existingCycle = trainingCycleService.getTrainingCycleById(id);
+        if (existingCycle == null) {
+            return ResponseEntity.notFound().build(); // Trả về 404 nếu không tìm thấy
+        }
+        trainingCycleService.deleteTrainingCycle(id);
+        return ResponseEntity.noContent().build(); // Trả về 204 No Content sau khi xoá
+    }
 }

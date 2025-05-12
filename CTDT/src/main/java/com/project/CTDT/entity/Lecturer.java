@@ -51,7 +51,7 @@ public class Lecturer {
 	// sách lecturerCourses, thì Hibernate sẽ tự động xóa record đó khỏi database.
 
 	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JsonManagedReference
-	private Set<TeachingAssignment> TeachingAssignments;
+	@JsonManagedReference(value = "lecturer-teachingAssignments")
+	private Set<TeachingAssignment> teachingAssignments;
 
 }

@@ -1,6 +1,8 @@
 import { Button, Form, Input, Space, DatePicker } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { createTraningCycle } from "../../services/trainingCycleServices";
 
 const { RangePicker } = DatePicker;
 
@@ -9,9 +11,39 @@ function CreateTrainingCycle() {
     const navigate = useNavigate();
     const [form] = Form.useForm();
 
-    const onFinish = (values) => {
-        console.log('data:', values); 
-    };
+	const onFinish = async (values) => {
+	    const data = {
+	        name: values.name,
+	        startYear: values.dates[0].year(), 
+	        endYear: values.dates[1].year()   
+	    };
+		
+		console.log(data);
+
+	    try {
+			const result = await createTraningCycle(data);
+
+	        if (result) { 
+	            Swal.fire({
+	                title: "Tạo thành công!",
+	                text: "Chu kỳ đào tạo mới đã được thêm.",
+	                icon: "success",
+	                confirmButtonText: "OK"
+	            }).then(() => {
+	                navigate("/admin/training-cycle");
+	            });
+	        } 
+	    } catch (error) {
+	        console.error('Lỗi:', error);
+	        Swal.fire({
+	            title: "Lỗi!",
+	            text: "Đã xảy ra lỗi khi tạo chu kỳ đào tạo.",
+	            icon: "error",
+	            confirmButtonText: "OK"
+	        });
+	    }
+	};
+
 
     const SubmitButton = ({ form, children }) => {
         const [submittable, setSubmittable] = useState(false);

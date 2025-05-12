@@ -1,71 +1,80 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
-
+import { getAllGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { getAllCourses } from "../../services/courseCycleServices";
 
 function Assignment() {
 
     const navigate = useNavigate();
+	
+	const [data, setData] = useState([]);
+		
+	useEffect(() => {
+	  const fetchAPI = async () => {
+	    try {
+	      const groupPlans = await getAllGroupOpenPlan();
+	      const courses = await getAllCourses();
 
-    const dataSource = [
-        {
-            key: '1',
-            stt: 1,
-            Name: 'Lập trình C',
-            NumberOfGroups: 3,
-            NumberOfStudents: 90,
-        },
-        {
-            key: '2',
-            stt: 2,
-            Name: 'Cơ sở dữ liệu',
-            NumberOfGroups: 2,
-            NumberOfStudents: 60,
-        },
-        {
-            key: '3',
-            stt: 3,
-            Name: 'Kinh tế vĩ mô',
-            NumberOfGroups: 4,
-            NumberOfStudents: 120,
-        },
-        {
-            key: '4',
-            stt: 4,
-            Name: 'Quản trị doanh nghiệp',
-            NumberOfGroups: 2,
-            NumberOfStudents: 60,
-        },
-        {
-            key: '5',
-            stt: 5,
-            Name: 'Mạng máy tính',
-            NumberOfGroups: 3,
-            NumberOfStudents: 90,
-        },
-    ];
+	      const courseMap = {};
+	      courses.forEach(course => {
+	        course.groupOpeningPlans.forEach(plan => {
+	          courseMap[plan.id] = course;
+	        });
+	      });
+
+	      const filteredPlans = groupPlans
+	        .filter(plan => plan.status !== 3)
+	        .map((item, index) => {
+
+	          const emptyTeachingGroups = item.groups.filter(
+	            group => group.teachingAssignments.length === 0
+	          );
+
+	          return {
+	            ...item,
+	            key: index + 1,
+	            nameCourse: courseMap[item.id]?.name || "Không có học phần",
+	            course: courseMap[item.id] || null,
+	            groups: emptyTeachingGroups, 
+	          };
+	        })
+
+	        .filter(item => item.groups.length > 0);
+
+	      setData(filteredPlans);
+	    } catch (error) {
+	      console.error("Error fetching data:", error);
+	    }
+	  };
+
+	  fetchAPI();
+	}, []);
+
+		
+	console.log(data);
 
     const columns = [
         {
             title: 'STT',
-            dataIndex: 'stt',
-            key: 'stt',
+            dataIndex: 'key',
+            key: 'key',
         },
         {
             title: 'Tên Học Phần',
-            dataIndex: 'Name',
-            key: 'Name',
+            dataIndex: 'nameCourse',
+            key: 'nameCourse',
         },
         {
             title: 'Số Nhóm',
-            dataIndex: 'NumberOfGroups',
-            key: 'NumberOfGroups',
+            dataIndex: 'numberOfGroups',
+            key: 'numberOfGroups',
         },
         {
             title: 'Số Sinh Viên',
-            dataIndex: 'NumberOfStudents',
-            key: 'NumberOfStudents',
+            dataIndex: 'numberOfStudents',
+            key: 'numberOfStudents',
         },
         {
             title: 'Thao tác',
@@ -76,7 +85,7 @@ function Assignment() {
                     <Button
                         type="primary"
                         style={{ backgroundColor: '#007bff', borderColor: '#007bff', marginRight: '10px' }}
-                        onClick={() => handleEdit(record.key)}
+                        onClick={() => handleEdit(record)}
                     >
                         Phân công
                     </Button>
@@ -85,14 +94,14 @@ function Assignment() {
         },
     ];
 
-    const handleEdit = (key) => {
-        navigate(`/admin/teaching-assignment/assignment/create`);
+    const handleEdit = (record) => {
+        navigate(`/admin/teaching-assignment/assignment/create`, { state: { record } });
     };
 
     return (
         <>
             <div className="p-6">
-                <h1 className="text-2xl font-bold mb-4">Phân công dạy học</h1>
+                <h1 className="text-2xl font-bold mb-4">Phân công giảng dạy</h1>
                 <div className="bg-white rounded-lg shadow p-6">
                     <div className='flex justify-between mb-10'>
                         <Input
@@ -107,7 +116,7 @@ function Assignment() {
                         </Link>
                     </div>
                     <Table
-                        dataSource={dataSource}
+                        dataSource={data}
                         columns={columns}
                         pagination={{ pageSize: 3 }}
                         scrollToFirstRowOnChange={true}

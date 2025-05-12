@@ -1,58 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa6";
 import { Input, Button, Table } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
+import { removeVietnameseTones } from "../../helpers/regex";
+import { getAllTraningCycle } from "../../services/trainingCycleServices";
 
 
 const TrainingCycle = () => {
-
-  const dataSource = [
-    {
-      key: '1',
-      name: 'Chương trình đạo tạo chu kì 2020-2024',
-      startYear: '2020',
-      endYear: '2024',
+	
+  const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   
-    },
-    {
-      key: '2',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '3',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '4',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '5',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '6',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-    {
-      key: '7',
-      name: 'Chương trình đạo tạo chu kì 2024-2028',
-      startYear: '2024',
-      endYear: '2028',
-    },
-  ];
-  
+  useEffect(() => {
+      const fetchAPI = async () => {
+		const result = await getAllTraningCycle();
+        const dataNew = result.map((item, index) => ({
+          ...item,
+          key: index + 1,
+        }));
+       setData(dataNew);
+      }
+      fetchAPI();
+    },[])
+	
   const columns = [
     {
       title: 'STT',
@@ -74,27 +44,16 @@ const TrainingCycle = () => {
       dataIndex: 'endYear',
       key: 'endYear',
     },
-    {
-      title: 'Thao tác',
-      dataIndex: 'actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Button
-          type="primary"
-          style={{ backgroundColor: '#4CAF50', borderColor: '#4CAF50' }}
-          onClick={() => handleEdit(record.key)}
-        >
-          Sửa
-        </Button>
-      ),
-    },
+    
   ];
 
-  const navigate = useNavigate();
-
-  const handleEdit = (id) => {
-    navigate(`/admin/training-cycle/edit/${id}`);
-  };
+  const filteredData = searchTerm
+    ? data.filter((item) =>
+        removeVietnameseTones(item.name).includes(
+          removeVietnameseTones(searchTerm)
+        )
+      )
+    : data
   
   return (
     <div className="p-6">
@@ -103,7 +62,9 @@ const TrainingCycle = () => {
         <div className='flex justify-between mb-10'>
           <Input
             placeholder="Tìm kiếm..."
-            style={{ width: '250px', padding: '0.25rem 0.5rem' }} />
+            style={{ width: '250px', padding: '0.25rem 0.5rem' }} 
+			value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}/>
 
           <Link to="/admin/training-cycle/create">
             <Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'>
@@ -114,10 +75,10 @@ const TrainingCycle = () => {
           </Link>
         </div>
         <Table
-          dataSource={dataSource}
+          dataSource={filteredData}
           columns={columns}
           pagination={{ pageSize: 3 }}
-          scrollToFirstRowOnChange={true} />;
+          scrollToFirstRowOnChange={true} />
       </div>
     </div>
   );
