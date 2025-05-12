@@ -1,21 +1,42 @@
-import React, { useState } from 'react';
-import { Input, Button, Table, Select } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Input, Button, Table, Select, message } from 'antd';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
+import { getAllLecturers } from "../../services/lecturerServices";
+import { createTeachingAssignment } from "../../services/teachingAssignmentServices";
+
 
 const  CreateTeachingAssignment = () => {
     const location = useLocation();
     const record = location.state?.record;
-    console.log("record", record);
+	const [lecturers, setLecturers] = useState([]);
+	const navigate = useNavigate();
 
-    const lecturers = [
-        { Id_Lecturer: '10409', Name_Lecturer: 'Phạm Hoàng Vương' },
-        { Id_Lecturer: '10615', Name_Lecturer: 'Trần Nguyễn Minh Hiếu' },
-        { Id_Lecturer: '10063', Name_Lecturer: 'Lai Đình Khải' },
-    ];
+	
+	useEffect(() => {
+		const fetchApi = async () => {
+			const lecturerCourses = (record.course.lecturerCourses || []);
+			const lecturerIds = lecturerCourses.map(lc => lc.id); // Lấy ra id của lecturerCourses
+			// Gọi API để lấy danh sách giảng viên
+			const listLecturers = await getAllLecturers();
+
+			// Lọc ra những giảng viên có lecturerCourses trùng với lecturerIds
+			const formattedResults = listLecturers.filter(lecturer => {
+				// kiểm tra nếu lecturerCourses của từng lecturer có id trùng với lecturerIds
+				const lecturerCourseIds = (lecturer.lecturerCourses || []).map(lc => lc.id);
+				return lecturerCourseIds.some(id => lecturerIds.includes(id));
+			});
+
+			setLecturers(formattedResults);
+		};
+
+		fetchApi();
+	}, []);
+	
+
 
     const lecturerMap = lecturers.reduce((acc, lecturer) => {
-        acc[lecturer.Id_Lecturer] = lecturer.Name_Lecturer;
+        acc[lecturer.id] = lecturer.fullName;
         return acc;
     }, {});
 
@@ -45,13 +66,40 @@ const  CreateTeachingAssignment = () => {
                 ...prev,
                 [groupKey]: value,
             }));
-            const id = lecturers.find((lecturer) => lecturer.Name_Lecturer === value)?.Id_Lecturer;
+            const id = lecturers.find((lecturer) => lecturer.fullName === value)?.id;
             setSelectedLecturer((prev) => ({
                 ...prev,
                 [groupKey]: id,
             }));
         }
     };
+	
+	const handleSubmit = async () => {
+	    const unassignedGroups = record.groups.filter(group => !selectedLecturer[group.groupNumber]);
+
+	    if (unassignedGroups.length > 0) {
+	        message.warning("Vui lòng chọn giảng viên cho tất cả các nhóm trước khi xác nhận.");
+	        return;
+	    }
+
+	    const requests = record.groups.map((group) =>
+	        createTeachingAssignment({
+	            status: 1,
+	            group: { id: group.id },
+	            lecturer: { id: selectedLecturer[group.groupNumber] }
+	        })
+	    );
+
+	    try {
+	        await Promise.all(requests);
+	        message.success("Tạo phân công giảng dạy thành công!");
+			navigate(-1);
+	    } catch (error) {
+	        console.error("Lỗi khi gửi dữ liệu:", error);
+	        message.error("Đã xảy ra lỗi khi tạo phân công giảng dạy.");
+	    }
+	};
+
 
     const columns = [
         {
@@ -81,8 +129,8 @@ const  CreateTeachingAssignment = () => {
                     onChange={(value) => handleLecturerChange(record.GroupNumber, value, true)}
                 >
                     {lecturers.map((lecturer) => (
-                        <Select.Option key={lecturer.Id_Lecturer} value={lecturer.Id_Lecturer}>
-                            {lecturer.Id_Lecturer}
+                        <Select.Option key={lecturer.id} value={lecturer.id}>
+                            {lecturer.id}
                         </Select.Option>
                     ))}
                 </Select>
@@ -99,8 +147,8 @@ const  CreateTeachingAssignment = () => {
                     onChange={(value) => handleLecturerChange(record.GroupNumber, value, false)}
                 >
                     {lecturers.map((lecturer) => (
-                        <Select.Option key={lecturer.Name_Lecturer} value={lecturer.Name_Lecturer}>
-                            {lecturer.Name_Lecturer}
+                        <Select.Option key={lecturer.fullName} value={lecturer.fullName}>
+                            {lecturer.fullName}
                         </Select.Option>
                     ))}
                 </Select>
@@ -130,7 +178,7 @@ const  CreateTeachingAssignment = () => {
                 />
 
                 <div className="mt-6 flex justify-end">
-                    <Button type="primary" className="!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]">
+                    <Button type="primary" className="!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]" onClick={handleSubmit}>
                         Xác nhận
                     </Button>
                 </div>

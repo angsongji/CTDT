@@ -1,4 +1,6 @@
+
 import { get, post, patch, del } from "../utils/request";
+
 
 // Lấy danh sách tất cả khoá học
 export const getAllCourses = async () => {
@@ -29,3 +31,4 @@ export const deleteCourse = async (id) => {
     const result = await del("courses", id);
     return result;
 };
+
