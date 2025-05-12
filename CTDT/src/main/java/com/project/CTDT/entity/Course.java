@@ -16,7 +16,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -100,12 +99,6 @@ public class Course {
 	public void setKnowledgeAreas(KnowledgeAreas knowledgeAreas) {
 		this.knowledgeAreas = knowledgeAreas;
 	}
-
-	// Mối quan hệ N-N với CurriculumFramework
-	@ManyToMany(fetch = FetchType.EAGER, mappedBy = "courses")
-	@JsonIgnoreProperties({ "courses" })
-	@JsonProperty("curriculumFrameworks")
-	private Set<CurriculumFramework> curriculumFrameworks = new HashSet<>();
 
 	// Mối quan hệ 1-N với GroupOpeningPlan
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
