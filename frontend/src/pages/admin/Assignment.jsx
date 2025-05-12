@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
-import { getAllGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
-import { getAllCourses } from "../../services/courseCycleServices";
+import { getAllGroupOpenPlan } from "../../services/groupOpeningPlanServices";
+import { getAllCourses } from "../../services/courseServices";
 
 function Assignment() {
 

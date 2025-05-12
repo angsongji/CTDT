@@ -2,8 +2,8 @@ import { Button, Form, Input, Space, InputNumber, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { getAllCourses } from "../../services/courseCycleServices";
-import { createGroupOpenPlan } from "../../services/groupOpeningPlanCycleServices";
+import { getAllCourses } from "../../services/courseServices";
+import { createGroupOpenPlan } from "../../services/groupOpeningPlanServices";
 import { createGroup } from "../../services/groupServices";
 
 function CreateGroupOpeningPlan() {

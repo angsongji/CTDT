@@ -3,7 +3,7 @@ import { Input, Button, Table, Select, message } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
 import { getAllLecturers } from "../../services/lecturerServices";
-import { createTeachingAssignment } from "../../services/teachingAssignmentCycleServices";
+import { createTeachingAssignment } from "../../services/teachingAssignmentServices";
 
 
 const  CreateTeachingAssignment = () => {
