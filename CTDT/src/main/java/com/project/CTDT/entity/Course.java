@@ -70,25 +70,25 @@ public class Course {
 	// Mối quan hệ phản thân với Course (Mối học phần yêu cầu các học phần trước):
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "parent_id", foreignKey = @ForeignKey(name = "fk_course_parent"), nullable = true)
-	@JsonIgnoreProperties({"parent", "children"})
+	@JsonIgnoreProperties({ "parent", "children" })
 	@JsonProperty("parent")
 	private Course parent;
 
 	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-	@JsonIgnoreProperties({"parent"})
+	@JsonIgnoreProperties({ "parent" })
 	@JsonProperty("children")
 	private Set<Course> children = new HashSet<>();
 
 	// Mối quan hệ 1-N với LecturerCourse
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonIgnoreProperties({"course"})
+	@JsonIgnoreProperties({ "course" })
 	@JsonProperty("lecturerCourses")
 	private Set<LecturerCourse> lecturerCourses;
 
 	// Mối quan hệ N-1 với KnowledgeAreas
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "knowledgeAreas_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_course_knowledgeAreas"))
-	@JsonIgnoreProperties({"courses"})
+	@JsonIgnoreProperties({ "courses" })
 	@JsonProperty("knowledgeAreas")
 	private KnowledgeAreas knowledgeAreas;
 
@@ -103,13 +103,13 @@ public class Course {
 
 	// Mối quan hệ N-N với CurriculumFramework
 	@ManyToMany(fetch = FetchType.EAGER, mappedBy = "courses")
-	@JsonIgnoreProperties({"courses"})
+	@JsonIgnoreProperties({ "courses" })
 	@JsonProperty("curriculumFrameworks")
 	private Set<CurriculumFramework> curriculumFrameworks = new HashSet<>();
 
 	// Mối quan hệ 1-N với GroupOpeningPlan
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JsonIgnoreProperties({"course"})
+	@JsonIgnoreProperties({ "course" })
 	@JsonProperty("groupOpeningPlans")
 	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
 
