@@ -5,6 +5,8 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,16 +27,19 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "knowledge_areas")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class KnowledgeAreas {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@JsonProperty("id")
 	private Integer id;
 
 	@Column(name = "name", nullable = false, length = 255)
+	@JsonProperty("name")
 	private String name;
 
-	@Column(name = "usage_count  ")
+	@Column(name = "usage_count")
 	private Integer usage_count = 1;
 
 	// Mỗi quan hệ phản thân
