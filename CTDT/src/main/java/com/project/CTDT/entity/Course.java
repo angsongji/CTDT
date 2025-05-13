@@ -102,6 +102,14 @@ public class Course {
 		this.knowledgeAreas = knowledgeAreas;
 	}
 
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
 	// Mối quan hệ 1-N với GroupOpeningPlan
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonIgnoreProperties({ "course" })
