@@ -11,10 +11,11 @@ const { confirm } = Modal;
 function KnowledgeAreas() {
     const [showFormAdd, setShowFormAdd] = useState(false);
     const [showFormUpdate, setShowFormUpdate] = useState(false);
+    const [valueSearch, setValueSearch] = useState("");
     const [knowledgeAreaUpdate, setKnowledgeAreaUpdate] = useState({});
     const [KnowledgeAreasList, setKnowledgeAreasList] = useState([]); //Lọc ra chỉ chứa các know với parent_id = 0
     const [KnowledgeAreasListAll, setKnowledgeAreasListAll] = useState([]); //Toan bo khoi kien thuc
-
+    const [KnowledgeAreasListSearch, setKnowledgeAreasListSearch] = useState([]); //Khoi kien thuc tim kiem
     useEffect(() => {
         const fetchAPI = async () => {
             const result = await getAllKnowledgeAreas();
@@ -23,7 +24,14 @@ function KnowledgeAreas() {
             setKnowledgeAreasListAll(result.data);
         }
         fetchAPI();
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        if(valueSearch !== "") {
+            const filteredData = KnowledgeAreasListAll.filter(item => item.name.toLowerCase().includes(valueSearch.toLowerCase()));
+            setKnowledgeAreasListSearch(filteredData);
+        }
+    }, [valueSearch]);
 
     //Xử lí chọn menu
     const handleMenuClick = (key, record) => {
@@ -420,13 +428,25 @@ function KnowledgeAreas() {
     return (
         <div className='flex flex-col gap-5 mt-10'>
             {/* Hiện tìm kiếm vào các nút thao tác */}
-            <div className='flex justify-end'>
+            <div className='flex justify-between'>
+            <div className='w-[50%] flex items-center'>
+                        <Input
+                            type="text"
+                            required
+                            onChange={(e) => setValueSearch(e.target.value)}
+                            value={valueSearch}
+                            placeholder="Nhập tên khối"
+                            style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+                            disabled={false}
+                        />
+                    </div>
                 <Button onClick={() => setShowFormAdd(true)} type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm khối</span></Button>
+                
             </div>
-            {/* <TableData /> */}
+            
             <Table
                 columns={columns}
-                dataSource={KnowledgeAreasList}
+                dataSource={valueSearch === "" ? KnowledgeAreasList : KnowledgeAreasListSearch}
                 pagination={{ pageSize: 6 }}
                 rowKey="id"
                 scrollToFirstRowOnChange={true}

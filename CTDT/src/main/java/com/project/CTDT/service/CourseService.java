@@ -13,5 +13,4 @@ public interface CourseService {
 
 	void deleteCourse(Integer id);
 
-	boolean isKnowledgeAreaReferenced(Integer knowledgeAreaId);
 }
