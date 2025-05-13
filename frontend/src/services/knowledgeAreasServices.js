@@ -1,9 +1,9 @@
 
-import { get, post, patch, del } from "../utils/request";
+import { getWithStatus, postWithStatus, patch, del } from "../utils/request";
 
 // Lấy danh sách tất cả lĩnh vực kiến thức
 export const getAllKnowledgeAreas = async () => {
-    const result = await get(`knowledge-areas`);
+    const result = await getWithStatus(`knowledge-areas`);
     return result;
 };
 
@@ -15,7 +15,7 @@ export const getKnowledgeAreaById = async (id) => {
 
 // Thêm mới lĩnh vực kiến thức
 export const createKnowledgeArea = async (data) => {
-    const result = await post("knowledge-areas", data);
+    const result = await postWithStatus("knowledge-areas", data);
     return result;
 };
 

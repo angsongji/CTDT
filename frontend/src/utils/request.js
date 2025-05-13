@@ -39,3 +39,22 @@ export const del = async (path, id) => {
     const result = await responsive.json();
     return result;
 }
+
+export const getWithStatus = async (path) => {
+    const responsive = await fetch(API_DOMAIN + path);
+    const result = await responsive.json();
+    return {data: result, status: responsive.status};
+}
+
+export const postWithStatus = async (path, options) => {
+    const responsive = await fetch(API_DOMAIN + path, {
+        method: "POST",
+        headers:{
+            Accept: "application/json",
+           "Content-Type": "application/json"
+        },
+        body: JSON.stringify(options)
+    })
+    const result = await responsive.json();
+    return {data: result, status: responsive.status};
+}
