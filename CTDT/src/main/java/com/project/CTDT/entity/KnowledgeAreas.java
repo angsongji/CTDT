@@ -22,6 +22,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -30,6 +31,7 @@ import lombok.Setter;
 @Table(name = "knowledge_areas")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+@NoArgsConstructor
 public class KnowledgeAreas {
 
 	@Id

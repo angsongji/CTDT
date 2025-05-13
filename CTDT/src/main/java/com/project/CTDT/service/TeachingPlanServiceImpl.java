@@ -14,6 +14,10 @@ public class TeachingPlanServiceImpl implements TeachingPlanService {
     @Autowired
     private TeachingPlanRepository repository;
 
+    public TeachingPlanServiceImpl(TeachingPlanRepository repository) {
+        this.repository = repository;
+    }
+
     // Lấy toàn bộ TeachingPlan
     @Override
     public List<TeachingPlan> getAllTeachingPlans() {
@@ -26,31 +30,9 @@ public class TeachingPlanServiceImpl implements TeachingPlanService {
         return repository.findByGeneralInformationId(idInformation);
     }
 
-    // Tạo TeachingPlan mới
     @Override
-    public TeachingPlan createTeachingPlan(TeachingPlan teachingPlan) {
-        if (teachingPlan.getCourse() == null || teachingPlan.getGeneralInformation() == null) {
-            throw new IllegalArgumentException("Course và GeneralInformation không được để trống.");
-        }
+    public TeachingPlan saveTeachingPlan(TeachingPlan teachingPlan){
         return repository.save(teachingPlan);
-    }
-
-    // Cập nhật TeachingPlan theo id
-    @Override
-    public TeachingPlan updateTeachingPlan(Integer id, TeachingPlan updatedTeachingPlan) {
-        Optional<TeachingPlan> optional = repository.findById(id);
-        if (optional.isPresent()) {
-            TeachingPlan plan = optional.get();
-
-            plan.setCourse(updatedTeachingPlan.getCourse());
-            plan.setGeneralInformation(updatedTeachingPlan.getGeneralInformation());
-            plan.setImplementationSemester(updatedTeachingPlan.getImplementationSemester());
-            plan.setStatus(updatedTeachingPlan.getStatus());
-
-            return repository.save(plan);
-        } else {
-            throw new RuntimeException("Không tìm thấy TeachingPlan với id: " + id);
-        }
     }
 
     // Xoá TeachingPlan theo id
