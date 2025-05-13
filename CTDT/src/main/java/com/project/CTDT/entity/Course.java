@@ -3,9 +3,9 @@ package com.project.CTDT.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
@@ -88,19 +88,9 @@ public class Course {
 	// Mối quan hệ N-1 với KnowledgeAreas
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "knowledgeAreas_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_course_knowledgeAreas"))
-	@JsonIgnoreProperties({ "courses" })
-	@JsonBackReference(value = "course-knowledgeAreas")
+	@JsonManagedReference(value = "course-knowledgeAreas")
 	@JsonProperty("knowledgeAreas")
 	private KnowledgeAreas knowledgeAreas;
-
-	// Thêm getter và setter cho knowledgeAreas
-	public KnowledgeAreas getKnowledgeAreas() {
-		return knowledgeAreas;
-	}
-
-	public void setKnowledgeAreas(KnowledgeAreas knowledgeAreas) {
-		this.knowledgeAreas = knowledgeAreas;
-	}
 
 	// Mối quan hệ 1-N với GroupOpeningPlan
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

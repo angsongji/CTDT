@@ -1,0 +1,51 @@
+package com.project.CTDT.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.project.CTDT.entity.KnowledgeAreas;
+import com.project.CTDT.service.KnowledgeAreasService;
+
+@RestController
+@RequestMapping("/api/knowledge-areas")
+@CrossOrigin // Cho phép gọi từ frontend
+public class KnowledgeAreasController {
+	@Autowired
+	private KnowledgeAreasService knowledgeAreasService;
+
+	@GetMapping
+	public List<KnowledgeAreas> getAllKnowledgeAreas() {
+		return knowledgeAreasService.getAllKnowledgeAreas();
+	}
+
+	@GetMapping("/{id}")
+	public KnowledgeAreas getKnowledgeAreasById(@PathVariable Integer id) {
+		return knowledgeAreasService.getKnowledgeAreasById(id);
+	}
+
+	@PostMapping
+	public KnowledgeAreas createKnowledgeAreas(@RequestBody KnowledgeAreas knowledgeAreas) {
+		return knowledgeAreasService.saveKnowledgeAreas(knowledgeAreas);
+	}
+
+	@PutMapping("/{id}")
+	public KnowledgeAreas updateKnowledgeAreas(@PathVariable Integer id, @RequestBody KnowledgeAreas knowledgeAreas) {
+		knowledgeAreas.setId(id);
+		return knowledgeAreasService.saveKnowledgeAreas(knowledgeAreas);
+	}
+
+	@DeleteMapping("/{id}")
+	public void deleteKnowledgeAreas(@PathVariable Integer id) {
+		knowledgeAreasService.deleteKnowledgeAreas(id);
+	}
+}
