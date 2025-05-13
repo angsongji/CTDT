@@ -7,7 +7,6 @@ import java.util.List;
 public interface TeachingPlanService {
     List<TeachingPlan> getAllTeachingPlans();
     List<TeachingPlan> getByInformationId(Integer idInformation);
-    TeachingPlan createTeachingPlan(TeachingPlan teachingPlan);
-    TeachingPlan updateTeachingPlan(Integer id, TeachingPlan updatedTeachingPlan);
+    TeachingPlan saveTeachingPlan(TeachingPlan teachingPlan);
     void deleteTeachingPlan(Integer id);
 }

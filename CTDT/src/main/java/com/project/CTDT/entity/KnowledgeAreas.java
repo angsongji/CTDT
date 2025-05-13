@@ -23,12 +23,15 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
+
 
 @Getter
 @Setter
 @Entity
 @Table(name = "knowledge_areas")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@NoArgsConstructor
 public class KnowledgeAreas {
 
 	@Id
