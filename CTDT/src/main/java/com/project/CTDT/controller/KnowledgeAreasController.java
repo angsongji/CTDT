@@ -3,6 +3,8 @@ package com.project.CTDT.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,8 +36,9 @@ public class KnowledgeAreasController {
 	}
 
 	@PostMapping
-	public KnowledgeAreas createKnowledgeAreas(@RequestBody KnowledgeAreas knowledgeAreas) {
-		return knowledgeAreasService.saveKnowledgeAreas(knowledgeAreas);
+	public ResponseEntity<KnowledgeAreas> createKnowledgeAreas(@RequestBody KnowledgeAreas knowledgeAreas) {
+		KnowledgeAreas saved = knowledgeAreasService.saveKnowledgeAreas(knowledgeAreas);
+		return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 	}
 
 	@PutMapping("/{id}")

@@ -1,10 +1,10 @@
 import { Table, Button, Radio, Input, message } from 'antd';
-import { Select,  Dropdown } from "antd";
+import { Select, Dropdown } from "antd";
 import { useState, useEffect } from 'react';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FaPlus, FaEllipsisV } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
-import { getAllKnowledgeAreas } from "../../services/knowledgeAreasServices";
+import { getAllKnowledgeAreas, createKnowledgeArea } from "../../services/knowledgeAreasServices";
 
 //Xử lí chọn menu
 const handleMenuClick = (key, record) => {
@@ -76,70 +76,106 @@ const columns = [
     },
 ];
 
-// const list_knowledge_areas = [
-//     { Id: 1, Name: "Khối kiến thức giáo dục đại cương.", Id_Parent: 0, Use: 1 },
-//     { Id: 2, Name: "Kiến thức Giáo dục thể chất và Giáo dục quốc phòng và an ninh.", Id_Parent: 1, Use: 0 },
-//     { Id: 3, Name: "Khối kiến thức giáo dục chuyên nghiệp.", Id_Parent: 0, Use: 1 }
-// ];
-
-// const data = list_knowledge_areas
-//     .filter(item => item.Id_Parent === 0)
-//     .map(parent => ({
-//         ...parent,
-//         children: list_knowledge_areas.filter(child => child.Id_Parent === parent.Id)
-//     }));
 
 function KnowledgeAreas() {
     const [showFormAdd, setShowFormAdd] = useState(false);
-    const [KnowledgeAreasList, setKnowledgeAreasList] = useState([]);
-
+    const [KnowledgeAreasList, setKnowledgeAreasList] = useState([]); //Lọc ra chỉ chứa các know với parent_id = 0
+    const [KnowledgeAreasListAll, setKnowledgeAreasListAll] = useState([]);
 
     useEffect(() => {
         const fetchAPI = async () => {
             const result = await getAllKnowledgeAreas();
-            // const resultFilter = result.filter(item => item.children.length !== 0);
-            setKnowledgeAreasList(result);
+            const filteredData = result.data.filter(item => item.parent_id === 0);
+            setKnowledgeAreasList(filteredData);
+            setKnowledgeAreasListAll(result.data);
         }
         fetchAPI();
     }, [])
 
 
-    const TableData = () => (
-        <Table
-            columns={columns}
-            dataSource={KnowledgeAreasList.filter(item => item.parent_id === 0)}
-            pagination={{ pageSize: 5 }}
-            scrollToFirstRowOnChange={true}
-            rowKey="id"
-        />
-    )
-
     const FormAdd = () => {
         const [valueName, setValueName] = useState("")
         const [selectValue, setSelectValue] = useState(0);
         const [valueRadio, setValueRadio] = useState(1);
+        const [isLoading, setIsLoading] = useState(false);
         const handleChange = (value) => {
             setSelectValue(value);
         };
 
+        function addKnowledgeToTree(tree, newKnowledge) {
+            return tree.map(node => {
+                if (node.id === newKnowledge.parent_id) {
+                    return {
+                        ...node,
+                        children: [...node.children, newKnowledge],
+                    };
+                }
+                if (node.children && node.children.length > 0) {
+                    return {
+                        ...node,
+                        children: addKnowledgeToTree(node.children, newKnowledge),
+                    };
+                }
+                return node;
+            });
+        }
+
+
         const handleSubmitForm = (e) => {
             e.preventDefault();
-            alert('hi')
-            console.log({
+            if (valueName.trim() !== "" && KnowledgeAreasList.find(item => item.name.toLowerCase() === valueName.toLowerCase())) {
+                message.error("Tên đã tồn tại");
+                return;
+            }
+            const dataAdd = {
                 name: valueName,
-                parentId: selectValue,
-                isCountCredit: valueRadio,
-            });
-            // gọi API hoặc xử lý dữ liệu ở đây
+                usage_count: valueRadio,
+            }
+            if (selectValue !== 0) {
+                dataAdd.parent = { id: selectValue }
+            }
+
+            console.log(dataAdd);
+            const addAPI = async () => {
+                try {
+                    setIsLoading(true);
+                    message.loading({ content: "Đang tạo...", key: "add" });
+                    const result = await createKnowledgeArea(dataAdd);
+                    console.log(result);
+                    if (result.status === 201) {
+                        const newKnowledge = result.data;
+                        if (newKnowledge.parent_id !== 0) {
+                            const updatedList = addKnowledgeToTree(KnowledgeAreasList, newKnowledge);
+                            setKnowledgeAreasList(updatedList);
+                        } else {
+                            // Trường hợp root knowledge
+                            setKnowledgeAreasList(prev => [...prev, newKnowledge]);
+                        }
+                        setKnowledgeAreasListAll(prev => [...prev, newKnowledge]);
+                        message.success({ content: "Thêm thành công!", key: "add", duration: 2, style: { marginTop: '1vh' } });
+                        setShowFormAdd(false);
+                    }
+                } catch (error) {
+                    console.log(error);
+                    message.error({
+                        content: error.message,
+                        duration: 2,
+                        key: "add",
+                        style: { marginTop: '1vh' },
+                    });
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+            addAPI();
+
         };
 
-        let options = KnowledgeAreasList
-            .filter((item) => item.parent_id === 0)
-            .map((item) => ({
-                value: item.id,
-                label: item.name
-            }));
-        
+        let options = KnowledgeAreasListAll.map((item) => ({
+            value: item.id,
+            label: item.name
+        }));
+
         options.unshift({ value: 0, label: "Bỏ qua" });
 
         const ComboBox = ({ options, onChange }) => {
@@ -149,7 +185,8 @@ function KnowledgeAreas() {
                     placeholder="Chọn một mục"
                     onChange={onChange}
                     value={selectValue}
-                    
+                    disabled={isLoading}
+
                 >
                     {options.map((item) => (
                         <Option key={item.value} value={item.value}>
@@ -187,6 +224,7 @@ function KnowledgeAreas() {
                             value={valueName}
                             placeholder="Nhập tên"
                             style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+                            disabled={isLoading}
                         />
                     </div>
                     <div className='flex flex-col gap-2 w-full  ' >
@@ -194,14 +232,29 @@ function KnowledgeAreas() {
                         <ComboBox options={options} onChange={handleChange} />
                     </div>
 
-                    <div className='flex gap-5  w-full items-center'>
-                        <span className=''>Tính vào tính chỉ tích lũy</span>
-                        <RadioGroupDemo />
+
+
+                    <div className='flex gap-5  w-full items-center h-10'>
+                        {
+                            selectValue !== 0 &&
+                            <>
+                                <span className=''>Tính vào tính chỉ tích lũy</span>
+                                <RadioGroupDemo />
+                            </>
+                        }
                     </div>
-                    <Button type='primary' htmlType="submit" className='!my-3 !bg-[var(--medium-pink2)] !text-white'>Thêm khối</Button>
-                    <div onClick={() => setShowFormAdd(false)} className='cursor-pointer absolute right-0 translate-x-[120%] translate-y-[-120%]'>
-                        <HiX size={28} className='text-white' />
-                    </div>
+
+
+                    {
+                        !isLoading ? <Button type='primary' htmlType="submit" className='!my-3 !bg-[var(--medium-pink2)] !text-white'>Thêm khối</Button> :
+                            <Button type='primary' htmlType="button" disabled={isLoading} className='!my-3 !bg-gray-400 !text-white'>Đang tạo</Button>
+                    }
+                    {
+                        !isLoading && <div onClick={() => setShowFormAdd(false)} className='cursor-pointer absolute right-0 translate-x-[120%] translate-y-[-120%]'>
+                            <HiX size={28} className='text-white' />
+                        </div>
+                    }
+
                 </form>
 
 
@@ -217,12 +270,31 @@ function KnowledgeAreas() {
             </div>
             {/* <TableData /> */}
             <Table
-                        columns={columns}
-                        dataSource={KnowledgeAreasList.filter(item => item.parent_id === 0)}
-                        pagination={{ pageSize: 6 }}
-                        scrollToFirstRowOnChange={true}
-                        rowKey="id"
-                    />
+                columns={columns}
+                dataSource={KnowledgeAreasList}
+                pagination={{ pageSize: 6 }}
+                rowKey="id"
+                scrollToFirstRowOnChange={true}
+                expandable={{
+                    childrenColumnName: "children",
+                    defaultExpandAllRows: true,
+                    expandIcon: ({ expanded, onExpand, record }) => {
+                        if (record.children && record.children.length > 0) {
+                            return (
+                                <span
+                                    onClick={e => onExpand(record, e)}
+                                    className="text-xl cursor-pointer text-gray-600 "
+                                >
+                                    {expanded ? '−' : '+'}
+                                </span>
+                            );
+                        }
+                        return null; // Không hiển thị gì nếu không có con
+                    }
+                }}
+
+            />
+
             {showFormAdd && <FormAdd />}
         </div>
 
