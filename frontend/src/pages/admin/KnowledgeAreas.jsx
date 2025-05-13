@@ -1,86 +1,19 @@
-import { Table, Button, Radio, Input, message } from 'antd';
+import { Table, Button, Radio, Input, message, Modal } from 'antd';
 import { Select, Dropdown } from "antd";
 import { useState, useEffect } from 'react';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FaPlus, FaEllipsisV } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
-import { getAllKnowledgeAreas, createKnowledgeArea } from "../../services/knowledgeAreasServices";
-
-//Xử lí chọn menu
-const handleMenuClick = (key, record) => {
-    if (key === "edit") {
-        // setUser(record);
-        message.success({
-            content: "Sửa!",
-            duration: 2,
-            style: { marginTop: '1vh' },
-        });
-        console.log("Sửa:", record);
-    } else if (key === "delete") {
-        message.error({
-            content: "Xóa!",
-            duration: 2,
-            style: { marginTop: '1vh' },
-        });
-        console.log("Xóa:", record);
-    }
-};
-
-const columns = [
-    {
-        title: '',
-        dataIndex: '',
-        key: '',
-    },
-    {
-        title: 'Mã khối',
-        dataIndex: 'id',
-        key: 'id',
-    },
-    {
-        title: 'Tên khối kiến thức',
-        dataIndex: 'name',
-        key: 'name',
-    },
-    {
-        title: 'Tính vào tín chỉ tích lũy',
-        dataIndex: 'usage_count',
-        key: 'usage_count',
-        align: 'center', // Căn giữa cột
-        render: (use) =>
-            use === 1 ? (
-                <CheckCircleOutlined style={{ color: 'green', fontSize: '18px' }} />
-            ) : (
-                <CloseCircleOutlined style={{ color: 'red', fontSize: '18px' }} />
-            ),
-    },
-    {
-        title: "",
-        key: "action",
-        render: (record) => (
-            <Dropdown
-                menu={{
-                    items: [
-                        { key: "edit", label: "Chỉnh sửa" },
-                        { key: "delete", label: "Xóa", danger: true },
-                    ],
-                    onClick: ({ key }) => handleMenuClick(key, record),
-                }}
-                trigger={["click"]}
-            >
-                <span className="cursor-pointer">
-                    <FaEllipsisV className="text-gray-500 hover:text-[var(--main-green)]" />
-                </span>
-            </Dropdown>
-        ),
-    },
-];
+import { getAllKnowledgeAreas, createKnowledgeArea, deleteKnowledgeArea, updateKnowledgeArea } from "../../services/knowledgeAreasServices";
+const { confirm } = Modal;
 
 
 function KnowledgeAreas() {
     const [showFormAdd, setShowFormAdd] = useState(false);
+    const [showFormUpdate, setShowFormUpdate] = useState(false);
+    const [knowledgeAreaUpdate, setKnowledgeAreaUpdate] = useState({});
     const [KnowledgeAreasList, setKnowledgeAreasList] = useState([]); //Lọc ra chỉ chứa các know với parent_id = 0
-    const [KnowledgeAreasListAll, setKnowledgeAreasListAll] = useState([]);
+    const [KnowledgeAreasListAll, setKnowledgeAreasListAll] = useState([]); //Toan bo khoi kien thuc
 
     useEffect(() => {
         const fetchAPI = async () => {
@@ -92,6 +25,94 @@ function KnowledgeAreas() {
         fetchAPI();
     }, [])
 
+    //Xử lí chọn menu
+    const handleMenuClick = (key, record) => {
+        if (key === "edit") {
+            setKnowledgeAreaUpdate(record);
+            setShowFormUpdate(true);
+            console.log("Sửa:", record);
+        } else if (key === "delete") {
+            confirm({
+                title: 'Bạn có chắc chắn muốn xóa?',
+                content: 'Hành động này không thể hoàn tác.',
+                okText: 'Xóa',
+                okType: 'danger',
+                cancelText: 'Hủy',
+                onOk() {
+                    handleDeleteKnowledgeArea(record.id);
+                },
+                onCancel() {
+                    console.log('Hủy xóa');
+                },
+            });
+        }
+    };
+
+    const columns = [
+        {
+            title: '',
+            dataIndex: '',
+            key: '',
+        },
+        {
+            title: 'Mã khối',
+            dataIndex: 'id',
+            key: 'id',
+        },
+        {
+            title: 'Tên khối kiến thức',
+            dataIndex: 'name',
+            key: 'name',
+        },
+        {
+            title: 'Tính vào tín chỉ tích lũy',
+            dataIndex: 'usage_count',
+            key: 'usage_count',
+            align: 'center', // Căn giữa cột
+            render: (use) =>
+                use === 1 ? (
+                    <CheckCircleOutlined style={{ color: 'green', fontSize: '18px' }} />
+                ) : (
+                    <CloseCircleOutlined style={{ color: 'red', fontSize: '18px' }} />
+                ),
+        },
+        {
+            title: "",
+            key: "action",
+            render: (record) => (
+                <Dropdown
+                    menu={{
+                        items: [
+                            { key: "edit", label: "Chỉnh sửa" },
+                            { key: "delete", label: "Xóa", danger: true },
+                        ],
+                        onClick: ({ key }) => handleMenuClick(key, record),
+                    }}
+                    trigger={["click"]}
+                >
+                    <span className="cursor-pointer">
+                        <FaEllipsisV className="text-gray-500 hover:text-[var(--main-green)]" />
+                    </span>
+                </Dropdown>
+            ),
+        },
+    ];
+
+    const RadioGroupDemo = ({ valueRadio, setValueRadio }) => {
+
+
+        const onChange = (e) => {
+            console.log('radio checked', e.target.value);
+            setValueRadio(e.target.value);
+        };
+
+        return (
+            <Radio.Group onChange={onChange} value={valueRadio}>
+                <Radio value={1}>Có</Radio>
+                <Radio value={0}>Không</Radio>
+            </Radio.Group>
+        );
+    };
 
     const FormAdd = () => {
         const [valueName, setValueName] = useState("")
@@ -196,21 +217,7 @@ function KnowledgeAreas() {
                 </Select>
             );
         };
-        const RadioGroupDemo = () => {
 
-
-            const onChange = (e) => {
-                console.log('radio checked', e.target.value);
-                setValueRadio(e.target.value);
-            };
-
-            return (
-                <Radio.Group onChange={onChange} value={valueRadio}>
-                    <Radio value={1}>Có</Radio>
-                    <Radio value={2}>Không</Radio>
-                </Radio.Group>
-            );
-        };
         return (
             <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
                 <form onSubmit={handleSubmitForm} className="relative text-sm w-[30vw] flex flex-col gap-10 bg-white p-5 rounded-md shadow-md flex items-center gap-5">
@@ -239,7 +246,7 @@ function KnowledgeAreas() {
                             selectValue !== 0 &&
                             <>
                                 <span className=''>Tính vào tính chỉ tích lũy</span>
-                                <RadioGroupDemo />
+                                <RadioGroupDemo valueRadio={valueRadio} setValueRadio={setValueRadio} />
                             </>
                         }
                     </div>
@@ -260,6 +267,154 @@ function KnowledgeAreas() {
 
             </div>
         );
+    };
+
+    const FormUpdate = ({ knowledgeArea }) => {
+        const [valueName, setValueName] = useState(knowledgeArea.name)
+        const [valueRadio, setValueRadio] = useState(knowledgeArea.usage_count);
+        const [isLoading, setIsLoading] = useState(false);
+
+        function updateKnowledgeToTree(tree, newKnowledge) {
+            return tree.map(node => {
+                if (node.id === newKnowledge.parent_id) {
+                    return {
+                        ...node,
+                        children: [...node.children.filter(item => item.id !== newKnowledge.id), newKnowledge],
+                    };
+                }
+                if (node.children && node.children.length > 0) {
+                    return {
+                        ...node,
+                        children: updateKnowledgeToTree(node.children, newKnowledge),
+                    };
+                }
+                return node;
+            });
+        }
+
+        const handleSubmitForm = (e) => {
+            e.preventDefault();
+            confirm({
+                title: 'Bạn có chắc chắn muốn cập nhật?',
+                content: 'Hành động này không thể hoàn tác.',
+                okText: 'Cập nhật',
+                okType: 'primary',
+                cancelText: 'Hủy',
+                onOk() {
+                    submitUpdate();
+                },
+                onCancel() {
+                    console.log('Hủy cập nhật');
+                },
+            });
+            const submitUpdate = async () => {
+                setIsLoading(true);
+                try {
+                    message.loading({ content: "Đang cập nhật...", key: "update" });
+                    const result = await updateKnowledgeArea(knowledgeAreaUpdate.id, { name: valueName, usage_count: valueRadio, parent: { id: knowledgeAreaUpdate.parent_id } });
+                    console.log("ketb qua ", result);
+                    if (result.status === 200) {
+                        message.success({ content: "Cập nhật thành công!", key: "update", duration: 2, style: { marginTop: '1vh' } });
+                        const updatedList = updateKnowledgeToTree(KnowledgeAreasList, result.data);
+                        setKnowledgeAreasList(updatedList);
+                        setShowFormUpdate(false);
+                    }
+                } catch (error) {
+                    console.log(error);
+                    message.error({
+                        content: error.message,
+                        duration: 2,
+                        key: "update",
+                        style: { marginTop: '1vh' },
+                    });
+                } finally {
+                    setIsLoading(false);
+                }
+
+
+            };
+        }
+
+
+
+        return (
+            <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
+                <form onSubmit={handleSubmitForm} className="relative text-sm w-[30vw] flex flex-col gap-5 bg-white p-5 rounded-md shadow-md flex items-center gap-5">
+                    <div className='font-bold text-xl'>Chỉnh sửa khối kiến thức</div>
+                    <div className='w-full flex items-center'>
+                        <span className='flex-1 '>Tên khối</span>
+                        <Input
+                            type="text"
+                            required
+                            onChange={(e) => setValueName(e.target.value)}
+                            value={valueName}
+                            placeholder="Nhập tên"
+                            style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+                            disabled={isLoading}
+                        />
+                    </div>
+
+
+                    {
+                        knowledgeArea.parent_id !== 0 &&
+                        <div className='flex gap-5  w-full items-center h-10 '>
+                            <span className=''>Tính vào tính chỉ tích lũy</span>
+                            <RadioGroupDemo valueRadio={valueRadio} setValueRadio={setValueRadio} />
+                        </div>
+                    }
+
+
+
+                    {
+                        !isLoading ? <Button type='primary' htmlType="submit" className=' !bg-[var(--medium-pink2)] !text-white'>Lưu thay đổi</Button> :
+                            <Button type='primary' htmlType="button" disabled={isLoading} className=' !bg-gray-400 !text-white'>Đang lưu</Button>
+                    }
+                    {
+                        !isLoading && <div onClick={() => setShowFormUpdate(false)} className='cursor-pointer absolute right-0 translate-x-[120%] translate-y-[-120%]'>
+                            <HiX size={28} className='text-white' />
+                        </div>
+                    }
+
+                </form>
+
+
+            </div>
+        );
+
+    }
+
+    const removeKnowledgeAreaById = (list, idToRemove) => {
+        return list
+            .filter(item => item.id !== idToRemove)
+            .map(item => ({
+                ...item,
+                children: item.children ? removeKnowledgeAreaById(item.children, idToRemove) : []
+            }));
+    };
+
+    const handleDeleteKnowledgeArea = async (id) => {
+
+        try {
+            message.loading({ content: "Đang xóa...", key: "delete" });
+            const result = await deleteKnowledgeArea(id);
+            console.log(result);
+            if (result.status === 200) {
+                message.success({ content: "Xóa thành công!", key: "delete", duration: 2, style: { marginTop: '1vh' } });
+                const updatedList = removeKnowledgeAreaById(KnowledgeAreasList, id);
+                setKnowledgeAreasList(updatedList);
+                setKnowledgeAreasListAll(prev => prev.filter(item => item.id !== id));
+            } else if (result.status === 409) {
+                message.error({ content: result.message, key: "delete", duration: 2, style: { marginTop: '1vh' } });
+            }
+        } catch (error) {
+            console.log(error);
+            message.error({
+                content: error.message,
+                duration: 2,
+                key: "delete",
+                style: { marginTop: '1vh' },
+            });
+        }
     };
 
     return (
@@ -296,6 +451,7 @@ function KnowledgeAreas() {
             />
 
             {showFormAdd && <FormAdd />}
+            {showFormUpdate && <FormUpdate knowledgeArea={knowledgeAreaUpdate} />}
         </div>
 
     );
