@@ -48,7 +48,13 @@ public class KnowledgeAreasController {
 	}
 
 	@DeleteMapping("/{id}")
-	public void deleteKnowledgeAreas(@PathVariable Integer id) {
-		knowledgeAreasService.deleteKnowledgeAreas(id);
+	public ResponseEntity<?> deleteKnowledgeArea(@PathVariable Integer id) {
+		try {
+			knowledgeAreasService.deleteKnowledgeAreas(id);
+			return ResponseEntity.ok().build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+		}
 	}
+
 }
