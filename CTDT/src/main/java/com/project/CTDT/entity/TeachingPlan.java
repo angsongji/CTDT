@@ -39,46 +39,4 @@ public class TeachingPlan {
 
     @Column(name = "status", nullable = false)
     private Integer status;
-    
- // Getters and Setters
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public GeneralInformation getGeneralInformation() {
-        return generalInformation;
-    }
-
-    public void setGeneralInformation(GeneralInformation generalInformation) {
-        this.generalInformation = generalInformation;
-    }
-
-    public Course getCourse() {
-        return course;
-    }
-
-    public void setCourse(Course course) {
-        this.course = course;
-    }
-
-    public Integer getImplementationSemester() {
-        return implementationSemester;
-    }
-
-    public void setImplementationSemester(Integer implementationSemester) {
-        this.implementationSemester = implementationSemester;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
 }

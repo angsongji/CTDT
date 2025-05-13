@@ -1,9 +1,31 @@
-import { Table, Button, Radio, Input, Select } from 'antd';
-import { useState } from 'react';
+import { Table, Button, Radio, Input, message } from 'antd';
+import { Select,  Dropdown } from "antd";
+import { useState, useEffect } from 'react';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { FaPlus } from "react-icons/fa6";
+import { FaPlus, FaEllipsisV } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
-import "../../index.css";
+import { getAllKnowledgeAreas } from "../../services/knowledgeAreasServices";
+
+//Xử lí chọn menu
+const handleMenuClick = (key, record) => {
+    if (key === "edit") {
+        // setUser(record);
+        message.success({
+            content: "Sửa!",
+            duration: 2,
+            style: { marginTop: '1vh' },
+        });
+        console.log("Sửa:", record);
+    } else if (key === "delete") {
+        message.error({
+            content: "Xóa!",
+            duration: 2,
+            style: { marginTop: '1vh' },
+        });
+        console.log("Xóa:", record);
+    }
+};
+
 const columns = [
     {
         title: '',
@@ -12,18 +34,18 @@ const columns = [
     },
     {
         title: 'Mã khối',
-        dataIndex: 'Id',
-        key: 'Id',
+        dataIndex: 'id',
+        key: 'id',
     },
     {
         title: 'Tên khối kiến thức',
-        dataIndex: 'Name',
-        key: 'Name',
+        dataIndex: 'name',
+        key: 'name',
     },
     {
         title: 'Tính vào tín chỉ tích lũy',
-        dataIndex: 'Use',
-        key: 'Use',
+        dataIndex: 'usage_count',
+        key: 'usage_count',
         align: 'center', // Căn giữa cột
         render: (use) =>
             use === 1 ? (
@@ -32,46 +54,69 @@ const columns = [
                 <CloseCircleOutlined style={{ color: 'red', fontSize: '18px' }} />
             ),
     },
+    {
+        title: "",
+        key: "action",
+        render: (record) => (
+            <Dropdown
+                menu={{
+                    items: [
+                        { key: "edit", label: "Chỉnh sửa" },
+                        { key: "delete", label: "Xóa", danger: true },
+                    ],
+                    onClick: ({ key }) => handleMenuClick(key, record),
+                }}
+                trigger={["click"]}
+            >
+                <span className="cursor-pointer">
+                    <FaEllipsisV className="text-gray-500 hover:text-[var(--main-green)]" />
+                </span>
+            </Dropdown>
+        ),
+    },
 ];
 
-const list_knowledge_areas = [
-    { Id: 1, Name: "Khối kiến thức giáo dục đại cương.", Id_Parent: 0, Use: 1 },
-    { Id: 2, Name: "Kiến thức Giáo dục thể chất và Giáo dục quốc phòng và an ninh.", Id_Parent: 1, Use: 0 },
-    { Id: 3, Name: "Khối kiến thức giáo dục chuyên nghiệp.", Id_Parent: 0, Use: 1 }
-];
+// const list_knowledge_areas = [
+//     { Id: 1, Name: "Khối kiến thức giáo dục đại cương.", Id_Parent: 0, Use: 1 },
+//     { Id: 2, Name: "Kiến thức Giáo dục thể chất và Giáo dục quốc phòng và an ninh.", Id_Parent: 1, Use: 0 },
+//     { Id: 3, Name: "Khối kiến thức giáo dục chuyên nghiệp.", Id_Parent: 0, Use: 1 }
+// ];
 
-const data = list_knowledge_areas
-    .filter(item => item.Id_Parent === 0)
-    .map(parent => ({
-        ...parent,
-        children: list_knowledge_areas.filter(child => child.Id_Parent === parent.Id)
-    }));
+// const data = list_knowledge_areas
+//     .filter(item => item.Id_Parent === 0)
+//     .map(parent => ({
+//         ...parent,
+//         children: list_knowledge_areas.filter(child => child.Id_Parent === parent.Id)
+//     }));
 
 function KnowledgeAreas() {
-    const [expandedRowKeys, setExpandedRowKeys] = useState([]);
     const [showFormAdd, setShowFormAdd] = useState(false);
-    const handleExpand = (expanded, record) => {
-        setExpandedRowKeys(expanded ? [record.Id] : []);
-    };
+    const [KnowledgeAreasList, setKnowledgeAreasList] = useState([]);
+
+
+    useEffect(() => {
+        const fetchAPI = async () => {
+            const result = await getAllKnowledgeAreas();
+            // const resultFilter = result.filter(item => item.children.length !== 0);
+            setKnowledgeAreasList(result);
+        }
+        fetchAPI();
+    }, [])
+
 
     const TableData = () => (
         <Table
             columns={columns}
-            dataSource={data}
+            dataSource={KnowledgeAreasList.filter(item => item.parent_id === 0)}
             pagination={{ pageSize: 5 }}
             scrollToFirstRowOnChange={true}
-            expandable={{
-                expandedRowKeys,
-                onExpand: handleExpand,
-                rowExpandable: record => record.children && record.children.length > 0,
-            }}
-            rowKey="Id"
+            rowKey="id"
         />
     )
 
     const FormAdd = () => {
         const [valueName, setValueName] = useState("")
-        const [selectValue, setSelectValue] = useState(1);
+        const [selectValue, setSelectValue] = useState(0);
         const [valueRadio, setValueRadio] = useState(1);
         const handleChange = (value) => {
             setSelectValue(value);
@@ -88,12 +133,14 @@ function KnowledgeAreas() {
             // gọi API hoặc xử lý dữ liệu ở đây
         };
 
-        const options = list_knowledge_areas
-            .filter((item) => item.Id_Parent === 0)
+        let options = KnowledgeAreasList
+            .filter((item) => item.parent_id === 0)
             .map((item) => ({
-                value: item.Id,
-                label: item.Name
+                value: item.id,
+                label: item.name
             }));
+        
+        options.unshift({ value: 0, label: "Bỏ qua" });
 
         const ComboBox = ({ options, onChange }) => {
             return (
@@ -102,6 +149,7 @@ function KnowledgeAreas() {
                     placeholder="Chọn một mục"
                     onChange={onChange}
                     value={selectValue}
+                    
                 >
                     {options.map((item) => (
                         <Option key={item.value} value={item.value}>
@@ -127,7 +175,7 @@ function KnowledgeAreas() {
             );
         };
         return (
-            <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center">
+            <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
                 <form onSubmit={handleSubmitForm} className="relative text-sm w-[30vw] flex flex-col gap-10 bg-white p-5 rounded-md shadow-md flex items-center gap-5">
                     <div className='font-bold text-xl'>Thêm khối kiến thức</div>
                     <div className='w-full flex items-center'>
@@ -167,7 +215,14 @@ function KnowledgeAreas() {
             <div className='flex justify-end'>
                 <Button onClick={() => setShowFormAdd(true)} type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm khối</span></Button>
             </div>
-            <TableData />
+            {/* <TableData /> */}
+            <Table
+                        columns={columns}
+                        dataSource={KnowledgeAreasList.filter(item => item.parent_id === 0)}
+                        pagination={{ pageSize: 6 }}
+                        scrollToFirstRowOnChange={true}
+                        rowKey="id"
+                    />
             {showFormAdd && <FormAdd />}
         </div>
 

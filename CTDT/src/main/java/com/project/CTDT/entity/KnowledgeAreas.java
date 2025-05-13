@@ -4,8 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
@@ -51,12 +52,19 @@ public class KnowledgeAreas {
 	@JsonBackReference
 	private KnowledgeAreas parent;
 
+	// Getter để trả về id của parent
+	@JsonProperty("parent_id")
+	public Integer getParentId() {
+		return parent != null ? parent.getId() : 0;
+	}
+
 	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonManagedReference
 	private Set<KnowledgeAreas> children = new HashSet<>();
 
 	// Mối quan hệ 1-N với Course
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "knowledgeAreas", cascade = CascadeType.ALL)
-	@JsonManagedReference(value = "course-knowledgeAreas")
+	@JsonBackReference(value = "course-knowledgeAreas")
+	@JsonIgnore // 👈 Thêm dòng này để không trả về courses
 	private Set<Course> courses = new HashSet<>();
 }
