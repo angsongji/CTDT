@@ -92,6 +92,12 @@ public class Course {
 	@JsonProperty("knowledgeAreas")
 	private KnowledgeAreas knowledgeAreas;
 
+	// Getter để trả về knowledgeAreas
+	@JsonProperty("knowledgeAreasData")
+	public KnowledgeAreas getKnowledgeAreas() {
+		return knowledgeAreas;
+	}
+
 	// Mối quan hệ 1-N với GroupOpeningPlan
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonIgnoreProperties({ "course" })
