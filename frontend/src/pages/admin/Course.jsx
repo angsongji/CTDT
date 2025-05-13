@@ -22,20 +22,19 @@ function Course() {
 		try {
 			setLoading(true);
 			const response = await getAllCourses();
-			console.log('Response từ API:', response);
+
 			const formattedCourses = response.map(course => {
-				console.log('KnowledgeAreas của course:', course.id, course.knowledgeAreas);
 				
 				return {
 					...course,
 					key: course.id,
 					require: course.requirement === 1,
 					id_KnowledgeAreas: course.knowledgeAreas?.id,
-					name_KnowledgeAreas: course.knowledgeAreas?.name || course.knowledgeAreas?.title || '-',
+					name_KnowledgeAreas: course.knowledgeAreasData?.name || '-',
 					parent_id: course.parent?.id
 				};
 			});
-			console.log('Danh sách học phần sau khi format:', formattedCourses);
+
 			setDataCourse(formattedCourses);
 		} catch (error) {
 			message.error('Không thể tải danh sách học phần!');

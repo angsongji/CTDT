@@ -29,14 +29,14 @@ public class TeachingPlanController {
 
     // Thêm TeachingPlan mới
     @PostMapping
-    public TeachingPlan create(@RequestBody TeachingPlan teachingPlan) {
-        return teachingPlanService.createTeachingPlan(teachingPlan);
+    public TeachingPlan createTeachingPlan(@RequestBody TeachingPlan teachingPlan) {
+        return teachingPlanService.saveTeachingPlan(teachingPlan);
     }
 
     // Cập nhật TeachingPlan theo id
     @PutMapping("/{id}")
-    public TeachingPlan update(@PathVariable Integer id, @RequestBody TeachingPlan updatedPlan) {
-        return teachingPlanService.updateTeachingPlan(id, updatedPlan);
+    public TeachingPlan updateTeachingPlan(@PathVariable Integer id, @RequestBody TeachingPlan updatedPlan) {
+        return teachingPlanService.saveTeachingPlan(updatedPlan);
     }
 
     // Xoá TeachingPlan theo id

@@ -20,6 +20,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Getter
 @Setter
@@ -67,5 +68,6 @@ public class GeneralInformation {
 
 	// Mối quan hệ 1-N với TeachingPlan
 	@OneToMany(mappedBy = "generalInformation", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
 	private Set<TeachingPlan> teachingPlans = new HashSet<>();
 }
