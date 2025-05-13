@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FaPlus, FaEllipsisV } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
-import { getAllKnowledgeAreas } from "../../services/knowledgeAreasServices";
+import { getAllKnowledgeAreas, createKnowledgeArea } from "../../services/knowledgeAreasServices";
 
 //Xử lí chọn menu
 const handleMenuClick = (key, record) => {
@@ -76,43 +76,22 @@ const columns = [
     },
 ];
 
-// const list_knowledge_areas = [
-//     { Id: 1, Name: "Khối kiến thức giáo dục đại cương.", Id_Parent: 0, Use: 1 },
-//     { Id: 2, Name: "Kiến thức Giáo dục thể chất và Giáo dục quốc phòng và an ninh.", Id_Parent: 1, Use: 0 },
-//     { Id: 3, Name: "Khối kiến thức giáo dục chuyên nghiệp.", Id_Parent: 0, Use: 1 }
-// ];
-
-// const data = list_knowledge_areas
-//     .filter(item => item.Id_Parent === 0)
-//     .map(parent => ({
-//         ...parent,
-//         children: list_knowledge_areas.filter(child => child.Id_Parent === parent.Id)
-//     }));
 
 function KnowledgeAreas() {
     const [showFormAdd, setShowFormAdd] = useState(false);
     const [KnowledgeAreasList, setKnowledgeAreasList] = useState([]);
-
+    const [KnowledgeAreasListAll, setKnowledgeAreasListAll] = useState([]);
 
     useEffect(() => {
         const fetchAPI = async () => {
             const result = await getAllKnowledgeAreas();
-            // const resultFilter = result.filter(item => item.children.length !== 0);
-            setKnowledgeAreasList(result);
+            const filteredData = result.data.filter(item => item.parent_id === 0);
+            setKnowledgeAreasList(filteredData);
+            setKnowledgeAreasListAll(result.data);
         }
         fetchAPI();
     }, [])
 
-
-    const TableData = () => (
-        <Table
-            columns={columns}
-            dataSource={KnowledgeAreasList.filter(item => item.parent_id === 0)}
-            pagination={{ pageSize: 5 }}
-            scrollToFirstRowOnChange={true}
-            rowKey="id"
-        />
-    )
 
     const FormAdd = () => {
         const [valueName, setValueName] = useState("")
@@ -124,18 +103,51 @@ function KnowledgeAreas() {
 
         const handleSubmitForm = (e) => {
             e.preventDefault();
-            alert('hi')
-            console.log({
+            if (valueName.trim() !== "" && KnowledgeAreasList.find(item => item.name.toLowerCase() === valueName.toLowerCase())) {
+                message.error("Tên đã tồn tại");
+                return;
+            }
+            const dataAdd = {
                 name: valueName,
-                parentId: selectValue,
-                isCountCredit: valueRadio,
-            });
-            // gọi API hoặc xử lý dữ liệu ở đây
+                usage_count: valueRadio,
+            }
+            if(selectValue !== 0){
+                dataAdd.parent = {id: selectValue}
+            }
+            
+            console.log(dataAdd);
+            const addAPI = async () => {
+                const result = await createKnowledgeArea(dataAdd);
+                console.log(result);
+                if(result.status === 201){
+                    if(selectValue !== 0){
+                        const updatedList = KnowledgeAreasList.map(item => {
+                            if (item.id === selectValue) {
+                              return {
+                                ...item,
+                                children: [...item.children, result.data],
+                              };
+                            }
+                            return item;
+                          });
+                          console.log(updatedList);
+                          setKnowledgeAreasList(updatedList);                          
+                    }else{
+                        setKnowledgeAreasList(prev => [...prev, result.data]);
+                    }
+                    message.success({
+                        content: "Thêm thành công!",
+                        duration: 2,
+                        style: { marginTop: '1vh' },
+                    });
+                    setShowFormAdd(false);
+                }
+            }
+            addAPI();
+            
         };
 
-        let options = KnowledgeAreasList
-            .filter((item) => item.parent_id === 0)
-            .map((item) => ({
+        let options = KnowledgeAreasListAll.map((item) => ({
                 value: item.id,
                 label: item.name
             }));
@@ -194,10 +206,20 @@ function KnowledgeAreas() {
                         <ComboBox options={options} onChange={handleChange} />
                     </div>
 
-                    <div className='flex gap-5  w-full items-center'>
-                        <span className=''>Tính vào tính chỉ tích lũy</span>
-                        <RadioGroupDemo />
-                    </div>
+                    
+                        
+                            <div className='flex gap-5  w-full items-center h-10'>
+                            {
+                            selectValue !== 0 &&   
+                                <>
+                                <span className=''>Tính vào tính chỉ tích lũy</span>
+                                <RadioGroupDemo />
+                                </>
+                            }
+                            </div>
+                        
+                      
+                    
                     <Button type='primary' htmlType="submit" className='!my-3 !bg-[var(--medium-pink2)] !text-white'>Thêm khối</Button>
                     <div onClick={() => setShowFormAdd(false)} className='cursor-pointer absolute right-0 translate-x-[120%] translate-y-[-120%]'>
                         <HiX size={28} className='text-white' />
@@ -217,12 +239,17 @@ function KnowledgeAreas() {
             </div>
             {/* <TableData /> */}
             <Table
-                        columns={columns}
-                        dataSource={KnowledgeAreasList.filter(item => item.parent_id === 0)}
-                        pagination={{ pageSize: 6 }}
-                        scrollToFirstRowOnChange={true}
-                        rowKey="id"
-                    />
+    columns={columns}
+    dataSource={KnowledgeAreasList}
+    pagination={{ pageSize: 6 }}
+    rowKey="id"
+    scrollToFirstRowOnChange={true}
+    expandable={{
+        childrenColumnName: "children",
+        defaultExpandAllRows: true,
+    }}
+/>
+
             {showFormAdd && <FormAdd />}
         </div>
 

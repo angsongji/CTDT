@@ -61,7 +61,7 @@ public class KnowledgeAreas {
 
 	// Mối quan hệ 1-N với Course
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "knowledgeAreas", cascade = CascadeType.ALL)
-	@JsonBackReference(value = "course-knowledgeAreas")
-	@JsonIgnore // 👈 Thêm dòng này để không trả về courses
+	@JsonManagedReference(value = "course-knowledgeAreas")
+	@JsonIgnore
 	private Set<Course> courses = new HashSet<>();
 }
