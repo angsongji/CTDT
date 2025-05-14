@@ -27,7 +27,7 @@ function KnowledgeAreas() {
     }, []);
 
     useEffect(() => {
-        if(valueSearch !== "") {
+        if (valueSearch !== "") {
             const filteredData = KnowledgeAreasListAll.filter(item => item.name.toLowerCase().includes(valueSearch.toLowerCase()));
             setKnowledgeAreasListSearch(filteredData);
         }
@@ -302,7 +302,7 @@ function KnowledgeAreas() {
 
         const handleSubmitForm = (e) => {
             e.preventDefault();
-            if(valueName.trim() !== "" && KnowledgeAreasListAll.find(item => item.name.toLowerCase() === valueName.trim().toLowerCase())) {
+            if (valueName.trim() !== "" && KnowledgeAreasListAll.find(item => item.name.toLowerCase() === valueName.trim().toLowerCase())) {
                 message.error("Tên đã tồn tại");
                 return;
             }
@@ -433,22 +433,22 @@ function KnowledgeAreas() {
         <div className='flex flex-col gap-5 mt-10'>
             {/* Hiện tìm kiếm vào các nút thao tác */}
             <div className='flex justify-between'>
-            <div className='w-[50%] flex items-center'>
-                        <Input
-                            type="text"
-                            required
-                            onChange={(e) => setValueSearch(e.target.value)}
-                            value={valueSearch}
-                            placeholder="Nhập tên khối kiến thức"
-                            style={{ width: "80%", padding: '0.25rem 0.5rem' }}
-                            disabled={false}
-                            allowClear 
-                        />
-                    </div>
+                <div className='w-[50%] flex items-center'>
+                    <Input
+                        type="text"
+                        required
+                        onChange={(e) => setValueSearch(e.target.value)}
+                        value={valueSearch}
+                        placeholder="Nhập tên khối kiến thức"
+                        style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+                        disabled={false}
+                        allowClear
+                    />
+                </div>
                 <Button onClick={() => setShowFormAdd(true)} type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm khối</span></Button>
-                
+
             </div>
-            
+
             <Table
                 columns={columns}
                 dataSource={valueSearch === "" ? KnowledgeAreasList : KnowledgeAreasListSearch}
