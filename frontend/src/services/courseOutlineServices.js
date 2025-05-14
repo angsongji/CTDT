@@ -1,4 +1,4 @@
-import { get, post, put, del } from "../utils/request";
+import { get, post, put} from "../utils/request";
 
 // Lấy tất cả course outlines
 export const getAll = async () => {
@@ -32,12 +32,12 @@ export const update = async (id, data) => {
 
 // Xoá course outline theo ID
 export const remove = async (id) => {
-    const result = await del("course-outlines", id);
+    const result = await put("course-outlines/delete", id);
     return result;
 };
 
 // Xoá tất cả course outlines theo courseId
 export const deleteByCourseId = async (courseId) => {
-    const result = await del(`course-outlines/course/${courseId}`);
+    const result = await put("course-outlines/course/delete", courseId);
     return result;
 };

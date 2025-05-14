@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Table, Button, Popconfirm, message, Modal, Form, Input, InputNumber } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getByCourseId, update, remove } from '../../services/courseOutlineServices';
+import { getByCourseId, update, remove} from '../../services/courseOutlineServices';
 
 /**
  * Component hiển thị đề cương chi tiết môn học
@@ -112,16 +112,9 @@ function CourseOutlineDetail() {
 	const handleDelete = async (values) => {
 		setLoading(true);
 		try {
-			const data = {
-				assessmentUnit: values.assessmentUnit,
-				componentScore: values.componentScore,
-				assessmentMethod: values.assessmentMethod,
-				weight: parseFloat(values.weight),
-				status: 0 
-			};
-
-			await update(values.id, data);
+			await remove(values.id);
 			message.success('Xóa đề cương thành công');
+			
 			await fetchCourseOutline(); // Tải lại dữ liệu sau khi xóa
 		} catch (error) {
 			console.error('Lỗi khi xóa đề cương:', error);
@@ -154,6 +147,11 @@ function CourseOutlineDetail() {
 			setLoading(false);
 		}
 	};
+	
+	// Lấy danh sách tên các mục có id_parent là rỗng
+	const mainSectionNames = dataEvaluation
+	  .filter(item => !item.parent)
+	  .map(item => item.assessmentUnit);
 
 	// Định nghĩa cấu hình cột cho bảng
 	const columns = useMemo(() => [
@@ -163,7 +161,7 @@ function CourseOutlineDetail() {
 			key: 'assessmentUnit',
 			width: 200,
 			render: (text) => {
-				const isMainSection = text && (text === '1. Đánh giá quá trình' || text === '2. Đánh giá cuối kỳ');
+				 const isMainSection = mainSectionNames.includes(text);
 				return isMainSection ? <span style={{ fontWeight: 'bold' }}>{text}</span> : text;
 			},
 			onCell: (record) => {

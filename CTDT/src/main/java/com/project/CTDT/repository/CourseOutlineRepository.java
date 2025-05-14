@@ -12,4 +12,10 @@ public interface CourseOutlineRepository extends JpaRepository<CourseOutline, In
 
     // Xóa tất cả CourseOutline theo id_course
     void deleteByCourseId(Integer courseId);
+    
+ // Lấy danh sách CourseOutline có status = 1
+ 	List<CourseOutline> findByStatus(Integer status);
+ 	
+ // Tìm tất cả các CourseOutline có parent.id = idParent
+    List<CourseOutline> findByParentId(Integer idParent);
 }

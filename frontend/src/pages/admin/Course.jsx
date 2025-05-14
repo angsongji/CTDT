@@ -22,6 +22,7 @@ function Course() {
 		try {
 			setLoading(true);
 			const response = await getAllCourses();
+			console.log("response", response);
 
 			const formattedCourses = response.map(course => {
 
@@ -29,8 +30,8 @@ function Course() {
 					...course,
 					key: course.id,
 					require: course.requirement === 1,
-					id_KnowledgeAreas: course.knowledgeAreasData?.id,
-					name_KnowledgeAreas: course.knowledgeAreasData?.name || '-',
+					id_KnowledgeAreas: course.knowledgeArea?.id,
+					name_KnowledgeAreas: course.knowledgeArea?.name || '-',
 					parent_id: course.parent?.id
 				};
 			});
@@ -103,7 +104,7 @@ function Course() {
 	};
 
 	const handleEdit = (record) => {
-		console.log("record", record);
+		//		console.log("record", record);
 		setMode('edit');
 		setSelectedRecord(record);
 		form.setFieldsValue(record);
@@ -112,7 +113,7 @@ function Course() {
 
 	const handleSave = async (values) => {
 		try {
-			console.log("values", values);
+			//			console.log("values", values);
 			setLoading(true);
 			if (mode === 'add') {
 				// Chuẩn bị dữ liệu để gửi lên server
@@ -134,19 +135,18 @@ function Course() {
 			} else if (mode === 'edit') {
 
 				const updatedCourse = {
-				  name: values.name,
-				  credits: values.credits,
-				  lectureHours: values.lectureHours,
-				  practiceHours: values.practiceHours,
-				  internshipHours: values.internshipHours,
-				  weightingFactor: values.weightingFactor,
-				  requirement: values.require ? 1 : 0,
-				  status: selectedRecord.status,
-				  knowledgeAreas: { id: values.id_KnowledgeAreas || selectedRecord.id_KnowledgeAreas },
-				  parent: selectedRecord.parent_id ? { id: selectedRecord.parent_id } : null
+					name: values.name,
+					credits: values.credits,
+					lectureHours: values.lectureHours,
+					practiceHours: values.practiceHours,
+					internshipHours: values.internshipHours,
+					weightingFactor: values.weightingFactor,
+					requirement: values.require ? 1 : 0,
+					status: selectedRecord.status,
+					knowledgeAreas: { id: values.id_KnowledgeAreas || selectedRecord.id_KnowledgeAreas },
+					parent: selectedRecord.parent_id ? { id: selectedRecord.parent_id } : null
 				};
-				
-				console.log("update", updatedCourse);
+
 				// Gọi API cập nhật
 				await updateCourse(selectedRecord.id, updatedCourse);
 				message.success('Cập nhật học phần thành công!');
@@ -170,11 +170,13 @@ function Course() {
 	const handleDelete = async () => {
 		try {
 			setConfirmLoading(true);
-			// Gọi API xóa
+			
+			// Gọi API cập nhật
 			await deleteCourse(selectedRecord.id);
 			message.success('Đã xoá học phần!');
 			setDeleteModalVisible(false);
-			// Tải lại dữ liệu sau khi xóa
+			
+			// Tải lại dữ liệu sau khi xoá
 			await fetchCourses();
 		} catch (error) {
 			console.error('Lỗi khi xóa học phần:', error);
@@ -289,10 +291,10 @@ function Course() {
 					</Row>
 
 					<Form.Item name="id_KnowledgeAreas" hidden>
-					  <Input />
+						<Input />
 					</Form.Item>
 
-					
+
 					<Form.Item
 						label="Khối kiến thức"
 						name="name_KnowledgeAreas"

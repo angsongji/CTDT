@@ -16,4 +16,6 @@ public interface CourseOutlineService {
     CourseOutline saveCourseOutline(CourseOutline courseOutline);
 
     void deleteCourseOutline(Integer id); // Xoá theo id
+    
+    List<CourseOutline> getChildrenByParentId(Integer parentId);
 }

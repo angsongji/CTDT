@@ -59,7 +59,7 @@ public class Course {
 	@JsonProperty("weightingFactor")
 	private Double weightingFactor;
 
-	@Column(name = "requirement ", nullable = false)
+	@Column(name = "requirement", nullable = false)
 	@JsonProperty("requirement")
 	private Integer requirement = 1; // Default = 1 la tu chon bat buoc
 
@@ -103,5 +103,11 @@ public class Course {
 	@JsonIgnoreProperties({ "course" })
 	@JsonProperty("groupOpeningPlans")
 	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
+	
+//	 // Mối quan hệ 1:N với TeachingPlan
+//	@OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//	@JsonIgnoreProperties({"course"})
+//	@JsonProperty("teachingPlans")
+//	private Set<TeachingPlan> teachingPlans = new HashSet<>();
 
 }

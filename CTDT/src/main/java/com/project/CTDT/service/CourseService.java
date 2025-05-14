@@ -5,6 +5,7 @@ import java.util.List;
 import com.project.CTDT.entity.Course;
 
 public interface CourseService {
+	
 	List<Course> getAllCourses();
 
 	Course getCourseById(Integer id);
@@ -12,5 +13,7 @@ public interface CourseService {
 	Course saveCourse(Course course);
 
 	void deleteCourse(Integer id);
+	
+	List<Course> getCoursesByParentId(Integer parentId)
 
 }

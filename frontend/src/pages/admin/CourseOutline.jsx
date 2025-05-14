@@ -218,7 +218,7 @@ function CourseOutline() {
               style={{ width: '100%' }}
               onChange={handleCourseChange}
             >
-              {availableCourses.map(course => (
+              {allCourses.map(course => (
                 <Select.Option key={course.id} value={course.id}>
                   {course.id} - {course.name}
                 </Select.Option>
@@ -228,32 +228,30 @@ function CourseOutline() {
 
           <Form.Item
             name="assessmentUnit"
-            label="Đơn vị đánh giá"
-            rules={[{ required: true, message: 'Vui lòng nhập đơn vị đánh giá' }]}
+            label="Bộ phận được đánh giá"
+            rules={[{ required: true, message: 'Vui lòng nhập bộ phận được đánh giá' }]}
           >
-            <Input placeholder="Nhập đơn vị đánh giá" />
+            <Input placeholder="Nhập bộ phận được đánh giá" />
           </Form.Item>
 
           <Form.Item
             name="componentScore"
-            label="Thành phần điểm"
-            rules={[{ required: true, message: 'Vui lòng nhập thành phần điểm' }]}
+            label="Điểm đánh giá bộ phận"
+            rules={[{ required: true, message: 'Vui lòng nhập điểm đánh giá bộ phận' }]}
           >
-            <Input placeholder="Nhập thành phần điểm" />
+            <Input placeholder="Nhập điểm đánh giá bộ phận" />
           </Form.Item>
 
           <Form.Item
             name="assessmentMethod"
-            label="Phương pháp đánh giá"
-            rules={[{ required: true, message: 'Vui lòng nhập phương pháp đánh giá' }]}
+            label="Hình thức đánh giá"
           >
-            <Input placeholder="Nhập phương pháp đánh giá" />
+            <Input placeholder="Nhập hình thức đánh giá" />
           </Form.Item>
 
           <Form.Item
             name="weight"
             label="Trọng số"
-            rules={[{ required: true, message: 'Vui lòng nhập trọng số' }]}
           >
             <InputNumber
               min={0}

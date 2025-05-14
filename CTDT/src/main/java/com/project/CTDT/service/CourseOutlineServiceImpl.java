@@ -20,7 +20,7 @@ public class CourseOutlineServiceImpl implements CourseOutlineService {
 
     @Override
     public List<CourseOutline> getAllCourseOutlines() {
-        return courseOutlineRepository.findAll();
+        return courseOutlineRepository.findByStatus(1);
     }
 
     @Override
@@ -48,4 +48,9 @@ public class CourseOutlineServiceImpl implements CourseOutlineService {
     public void deleteCourseOutline(Integer id) {
         courseOutlineRepository.deleteById(id);
     }
+    
+	@Override
+	public List<CourseOutline> getChildrenByParentId(Integer parentId) {
+	    return courseOutlineRepository.findByParentId(parentId);
+	}
 }
