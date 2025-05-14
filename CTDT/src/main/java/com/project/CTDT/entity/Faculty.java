@@ -5,7 +5,6 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,7 +33,7 @@ public class Faculty {
 	private String website;
 
 	// Mối quan hệ 1-N với TrainingCycleFaculty
-	@OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(mappedBy = "faculty", fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "trainingCycleFaculty-faculty")
 	private Set<TrainingCycleFaculty> trainingCycleFacultyList;
 	// cascade = CascadeType.ALL : Khi bạn xóa một phần tử LecturerCourse khỏi danh
