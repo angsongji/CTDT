@@ -3,8 +3,8 @@ package com.project.CTDT.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-
 
 import com.project.CTDT.entity.Faculty;
 import com.project.CTDT.repository.FacultyRepository;
@@ -36,6 +36,11 @@ public class FacultyServiceImpl implements FacultyService {
 
 	@Override
 	public void deleteFaculty(Integer id) {
-		facultyRepository.deleteById(id);
+		try {
+			facultyRepository.deleteById(id);
+		} catch (DataIntegrityViolationException e) {
+			throw new IllegalStateException("Không thể xóa vì ngành đang thuộc chu kỳ đào tạo nào đó!");
+		}
 	}
+
 }
