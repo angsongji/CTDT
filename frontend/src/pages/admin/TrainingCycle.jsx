@@ -23,29 +23,43 @@ const TrainingCycle = () => {
       fetchAPI();
     },[])
 	
-  const columns = [
-    {
-      title: 'STT',
-      dataIndex: 'key',
-      key: 'key',
-    },
-    {
-      title: 'Tên chương trình',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Năm bắt đầu',
-      dataIndex: 'startYear',
-      key: 'startYear',
-    },
-    {
-      title: 'Năm kết thúc',
-      dataIndex: 'endYear',
-      key: 'endYear',
-    },
-    
-  ];
+	const columns = [
+	  {
+	    title: 'STT',
+	    dataIndex: 'key',
+	    key: 'key',
+	  },
+	  {
+	    title: 'Tên chương trình',
+	    dataIndex: 'name',
+	    key: 'name',
+	  },
+	  {
+	    title: 'Năm bắt đầu',
+	    dataIndex: 'startYear',
+	    key: 'startYear',
+	  },
+	  {
+	    title: 'Năm kết thúc',
+	    dataIndex: 'endYear',
+	    key: 'endYear',
+	  },
+	  {
+	    title: 'Thao tác',
+	    key: 'action',
+	    render: (text, record) => (
+	      <div className="flex gap-2">
+	        <Link to={`/admin/training-cycle/edit/${record._id}`}>
+	          <Button type="default">Sửa</Button>
+	        </Link>
+	        <Link to={`/admin/training-cycle/detail/${record._id}`}>
+	          <Button type="primary">Xem chi tiết</Button>
+	        </Link>
+	      </div>
+	    ),
+	  },
+	];
+
 
   const filteredData = searchTerm
     ? data.filter((item) =>

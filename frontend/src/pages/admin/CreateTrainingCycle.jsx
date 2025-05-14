@@ -1,49 +1,67 @@
-import { Button, Form, Input, Space, DatePicker } from 'antd';
+import { Button, Form, Input, Space, DatePicker, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { createTraningCycle } from "../../services/trainingCycleServices";
+import { getAllFaculties } from "../../services/facultyServices";
 
 const { RangePicker } = DatePicker;
 
 function CreateTrainingCycle() {
-
     const navigate = useNavigate();
     const [form] = Form.useForm();
+	const [majors, setMajors] = useState([]);
+	
+	useEffect(() => {
+		const fetchApi = async () => {
+			try {
+				const result = await getAllFaculties();
+				const dataNew = result.data.map(item => ({
+					...item,
+					label: item.name,
+					value: item.id
+				}));
+				setMajors(dataNew);
+			} catch (error) {
+				console.error("Lỗi khi lấy danh sách ngành:", error);
+			}
+		};
+		fetchApi();
+	}, []);
+	
 
-	const onFinish = async (values) => {
-	    const data = {
-	        name: values.name,
-	        startYear: values.dates[0].year(), 
-	        endYear: values.dates[1].year()   
-	    };
-		
-		console.log(data);
+    const onFinish = async (values) => {
+        const data = {
+            name: values.name,
+            startYear: values.dates[0].year(),
+            endYear: values.dates[1].year(),
+            majors: values.majors || [], 
+        };
 
-	    try {
-			const result = await createTraningCycle(data);
+        console.log(data);
 
-	        if (result) { 
-	            Swal.fire({
-	                title: "Tạo thành công!",
-	                text: "Chu kỳ đào tạo mới đã được thêm.",
-	                icon: "success",
-	                confirmButtonText: "OK"
-	            }).then(() => {
-	                navigate("/admin/training-cycle");
-	            });
-	        } 
-	    } catch (error) {
-	        console.error('Lỗi:', error);
-	        Swal.fire({
-	            title: "Lỗi!",
-	            text: "Đã xảy ra lỗi khi tạo chu kỳ đào tạo.",
-	            icon: "error",
-	            confirmButtonText: "OK"
-	        });
-	    }
-	};
-
+        /*try {
+            const result = await createTraningCycle(data);
+            if (result) {
+                Swal.fire({
+                    title: "Tạo thành công!",
+                    text: "Chu kỳ đào tạo mới đã được thêm.",
+                    icon: "success",
+                    confirmButtonText: "OK"
+                }).then(() => {
+                    navigate("/admin/training-cycle");
+                });
+            }
+        } catch (error) {
+            console.error('Lỗi:', error);
+            Swal.fire({
+                title: "Lỗi!",
+                text: "Đã xảy ra lỗi khi tạo chu kỳ đào tạo.",
+                icon: "error",
+                confirmButtonText: "OK"
+            });
+        }*/
+    };
 
     const SubmitButton = ({ form, children }) => {
         const [submittable, setSubmittable] = useState(false);
@@ -64,47 +82,53 @@ function CreateTrainingCycle() {
     };
 
     return (
-        <>
-            <div className="p-6">
-                <h1 className="text-2xl font-bold mb-4">Thêm mới chu kỳ đào tạo</h1>
-                <div className="bg-white rounded-lg shadow p-6">
-                    <Form 
-                        form={form} 
-                        name="validateOnly" 
-                        layout="vertical" 
-                        autoComplete="off"
-                        onFinish={onFinish} 
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Thêm mới chu kỳ đào tạo</h1>
+            <div className="bg-white rounded-lg shadow p-6">
+                <Form
+                    form={form}
+                    name="createTrainingCycle"
+                    layout="vertical"
+                    autoComplete="off"
+                    onFinish={onFinish}
+                >
+                    <Form.Item
+                        name="name"
+                        label="Tên chương trình"
+                        rules={[{ required: true, message: 'Tên chương trình là bắt buộc!' }]}
                     >
+                        <Input />
+                    </Form.Item>
 
-                        <Form.Item
-                            style={{ marginBottom: '20px' }}
-                            name="name"
-                            label="Tên chương trình"
-                            rules={[{ required: true, message: 'Tên chương trình là bắt buộc!' }]}
-                        >
-                            <Input />
-                        </Form.Item>
+                    <Form.Item
+                        name="dates"
+                        label="Khoảng thời gian"
+                        rules={[{ required: true, message: 'Vui lòng chọn khoảng thời gian!' }]}
+                    >
+                        <RangePicker picker="year" style={{ width: '100%' }} />
+                    </Form.Item>
 
-                        <Form.Item
-                            name="dates"
-                            rules={[{ required: true, message: 'Vui lòng chọn khoảng thời gian!' }]}
-                        >
-                            <RangePicker
-                                style={{ width: '100%' }}
-                                picker="year"
-                            />
-                        </Form.Item>
+                    <Form.Item
+                        name="majors"
+                        label="Danh sách ngành mở (tùy chọn)"
+                    >
+                        <Select
+                            mode="multiple"
+                            allowClear
+                            placeholder="Chọn ngành (không bắt buộc)"
+                            options={majors}
+                        />
+                    </Form.Item>
 
-                        <Form.Item>
-                            <Space className="flex justify-end w-full">
-                                <Button  onClick={() => navigate(-1)}>Quay lại</Button>
-                                <SubmitButton form={form}>Tạo mới</SubmitButton>
-                            </Space>
-                        </Form.Item>
-                    </Form>
-                </div>
+                    <Form.Item>
+                        <Space className="flex justify-end w-full">
+                            <Button onClick={() => navigate(-1)}>Quay lại</Button>
+                            <SubmitButton form={form}>Tạo mới</SubmitButton>
+                        </Space>
+                    </Form.Item>
+                </Form>
             </div>
-        </>
+        </div>
     );
 }
 
