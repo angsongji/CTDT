@@ -21,32 +21,33 @@ import com.project.CTDT.service.CourseService;
 @CrossOrigin
 public class CourseController {
 
-    @Autowired
-    private CourseService courseService;
+	@Autowired
+	private CourseService courseService;
 
-    @GetMapping
-    public List<Course> getAllCourses() {
-        return courseService.getAllCourses();
-    }
+	@GetMapping
+	public List<Course> getAllCourses() {
+		return courseService.getAllCourses();
+	}
 
-    @GetMapping("/{id}")
-    public Course getCourseById(@PathVariable Integer id) {
-        return courseService.getCourseById(id);
-    }
+	@GetMapping("/{id}")
+	public Course getCourseById(@PathVariable Integer id) {
+		return courseService.getCourseById(id);
+	}
 
-    @PostMapping
-    public Course createCourse(@RequestBody Course course) {
-        return courseService.saveCourse(course);
-    }
+	@PostMapping
+	public Course createCourse(@RequestBody Course course) {
+		return courseService.saveCourse(course);
+	}
 
-    @PutMapping("/{id}")
-    public Course updateCourse(@PathVariable Integer id, @RequestBody Course course) {
-        course.setId(id); 
-        return courseService.saveCourse(course);
-    }
+	@PutMapping("/{id}")
+	public Course updateCourse(@PathVariable Integer id, @RequestBody Course course) {
+		course.setId(id);
+		return courseService.saveCourse(course);
+	}
 
-    @DeleteMapping("/{id}")
-    public void deleteCourse(@PathVariable Integer id) {
-        courseService.deleteCourse(id);
-    }
+	@DeleteMapping("/{id}")
+	public void deleteCourse(@PathVariable Integer id) {
+		courseService.deleteCourse(id);
+	}
+
 }

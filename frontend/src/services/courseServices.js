@@ -32,3 +32,4 @@ export const deleteCourse = async (id) => {
     return result;
 };
 
+

@@ -59,6 +59,21 @@ export const getWithStatus = async (path) => {
     return {data: result, status: responsive.status};
 }
 
+
+export const putWithStatus = async (path, id , options) => {
+    const responsive = await fetch(`${API_DOMAIN}${path}/${id}`, {
+        method: "PUT",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(options)
+    })
+    const result = await responsive.json();
+    console.log(result);
+    return {data: result, status: responsive.status};
+}
+
 export const postWithStatus = async (path, options) => {
     const responsive = await fetch(API_DOMAIN + path, {
         method: "POST",
@@ -70,4 +85,13 @@ export const postWithStatus = async (path, options) => {
     })
     const result = await responsive.json();
     return {data: result, status: responsive.status};
+}
+
+
+export const delWithStatus = async (path, id) => {
+    const responsive = await fetch(`${API_DOMAIN}${path}/${id}`,{
+        method: "DELETE"
+    })
+    const result = await responsive.text();
+    return {status: responsive.status, message: result};
 }

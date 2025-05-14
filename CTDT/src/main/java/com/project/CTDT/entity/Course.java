@@ -93,8 +93,8 @@ public class Course {
 	private KnowledgeAreas knowledgeAreas;
 
 	// Getter để trả về knowledgeAreas
-	@JsonProperty("knowledgeAreasData")
-	public KnowledgeAreas getKnowledgeAreas() {
+	@JsonProperty("knowledgeArea")
+	public KnowledgeAreas getKnowledgeArea() {
 		return knowledgeAreas;
 	}
 
