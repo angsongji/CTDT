@@ -1,6 +1,7 @@
 package com.project.CTDT.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -52,6 +53,13 @@ public class TrainingCycleFaculty {
 
 	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonManagedReference(value = "trainingCycleFaculty-generalInformation")
+	@JsonIgnore
 	private GeneralInformation generalInformation;
+
+	// Getter để trả về generalInformation có status == 1
+	@JsonProperty("generalInformation")
+	public GeneralInformation getGeneralInformation() {
+		return generalInformation == null ? null : generalInformation.getStatus() == 1 ? generalInformation : null;
+	}
 
 }
