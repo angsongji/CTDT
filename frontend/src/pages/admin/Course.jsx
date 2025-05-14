@@ -5,6 +5,7 @@ import { MdDelete, MdModeEdit } from "react-icons/md";
 import { getAllCourses, createCourse, updateCourse, deleteCourse } from "../../services/courseServices";
 
 function Course() {
+	const [originalDataCourse, setOriginalDataCourse] = useState([]); //Lưu bản gốc
 	const [dataCourse, setDataCourse] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [modalVisible, setModalVisible] = useState(false);
@@ -12,6 +13,7 @@ function Course() {
 	const [selectedRecord, setSelectedRecord] = useState(null);
 	const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
+	const [searchText, setSearchText] = useState('');
 	const [form] = Form.useForm();
 
 	useEffect(() => {
@@ -37,6 +39,7 @@ function Course() {
 			});
 
 			setDataCourse(formattedCourses);
+			setOriginalDataCourse(formattedCourses); // lưu mảng gốc
 		} catch (error) {
 			message.error('Không thể tải danh sách học phần!');
 			console.error('Error fetching courses:', error);
@@ -95,6 +98,20 @@ function Course() {
 			),
 		},
 	];
+
+	const handleSearch = (e) => {
+		const value = e.target.value.toLowerCase();
+		if (!value) {
+			setDataCourse(originalDataCourse);
+		} else {
+			const filtered = originalDataCourse.filter((course) => {
+				const nameMatch = course.name.toLowerCase().includes(value);
+				const idMatch = course.id.toString().includes(value); // id là số, nên cần .toString()
+				return nameMatch || idMatch;
+			});
+			setDataCourse(filtered);
+		}
+	};
 
 	const handleAdd = () => {
 		setMode('add');
@@ -170,12 +187,12 @@ function Course() {
 	const handleDelete = async () => {
 		try {
 			setConfirmLoading(true);
-			
+
 			// Gọi API cập nhật
 			await deleteCourse(selectedRecord.id);
 			message.success('Đã xoá học phần!');
 			setDeleteModalVisible(false);
-			
+
 			// Tải lại dữ liệu sau khi xoá
 			await fetchCourses();
 		} catch (error) {
@@ -191,16 +208,28 @@ function Course() {
 		<>
 			<div className="p-6">
 				<h1 className="text-2xl font-bold mb-4">Khóa học</h1>
-				<div className="text-right mb-4">
-					<Button
-						className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
-						onClick={handleAdd}
-					>
-						<span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'>
-							<FaPlus />Thêm học phần
-						</span>
-					</Button>
-				</div>
+
+				<Row justify="space-between" align="middle" className="mb-4">
+					<Col className="mr-5">
+						<Input
+							placeholder="Tìm kiếm học phần"
+							onChange={handleSearch}
+							allowClear
+							style={{ width: 300 }}
+						/>
+					</Col>
+					<Col>
+						<Button
+							className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
+							onClick={handleAdd}
+						>
+							<span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
+								<FaPlus /> Thêm học phần
+							</span>
+						</Button>
+					</Col>
+				</Row>
+
 				<Table
 					dataSource={dataCourse}
 					columns={columns}
