@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -20,7 +20,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Getter
 @Setter
@@ -55,16 +54,11 @@ public class GeneralInformation {
 	@Column(name = "status")
 	private Integer status = 1;
 
-	// Mối quan hệ 1-1 với Faculty
+	// Quan hệ 1-1 với bảng trung gian TrainingCycleFaculty
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "faculty_Id", nullable = false, foreignKey = @ForeignKey(name = "fk_Faculty_GeneralInformation"))
-	@JsonBackReference(value = "faculty-generalInformation")
-	private Faculty faculty;
-
-	// Mối quan hệ 1-1 với CurriculumFramework
-	@OneToOne(fetch = FetchType.LAZY, mappedBy = "generalInformation", cascade = CascadeType.ALL)
-	@JsonManagedReference(value = "generalInformation-curriculumFramework")
-	private CurriculumFramework curriculumFramework;
+	@JoinColumn(name = "training_cycle_faculty_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_general_info_training_cycle_faculty"))
+	@JsonBackReference(value = "trainingCycleFaculty-generalInformation")
+	private TrainingCycleFaculty trainingCycleFaculty;
 
 	// Mối quan hệ 1-N với TeachingPlan
 	@OneToMany(mappedBy = "generalInformation", cascade = CascadeType.ALL, orphanRemoval = true)

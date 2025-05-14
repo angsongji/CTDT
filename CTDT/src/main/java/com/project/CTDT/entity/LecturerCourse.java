@@ -2,7 +2,6 @@ package com.project.CTDT.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -31,7 +30,6 @@ public class LecturerCourse {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "lecturer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_lecturer_course"))
 	@JsonBackReference(value = "lecturer-lecturerCourses")
-
 	private Lecturer lecturer;
 
 	@ManyToOne(fetch = FetchType.LAZY)
