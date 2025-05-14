@@ -302,6 +302,10 @@ function KnowledgeAreas() {
 
         const handleSubmitForm = (e) => {
             e.preventDefault();
+            if(valueName.trim() !== "" && KnowledgeAreasListAll.find(item => item.name.toLowerCase() === valueName.trim().toLowerCase())) {
+                message.error("Tên đã tồn tại");
+                return;
+            }
             confirm({
                 title: 'Bạn có chắc chắn muốn cập nhật?',
                 content: 'Hành động này không thể hoàn tác.',
@@ -435,9 +439,10 @@ function KnowledgeAreas() {
                             required
                             onChange={(e) => setValueSearch(e.target.value)}
                             value={valueSearch}
-                            placeholder="Nhập tên khối"
+                            placeholder="Nhập tên khối kiến thức"
                             style={{ width: "80%", padding: '0.25rem 0.5rem' }}
                             disabled={false}
+                            allowClear 
                         />
                     </div>
                 <Button onClick={() => setShowFormAdd(true)} type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm khối</span></Button>
