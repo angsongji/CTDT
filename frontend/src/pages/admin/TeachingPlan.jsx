@@ -56,12 +56,16 @@ function TeachingPlan() {
   const handleOk = async () => {
     if (selectedCourse && selectedSemester) {
       try {
-        const updatedData = {
-          id_information: selectedCourse.id_information,
-          id_course: selectedCourse.id_course,
-          implementationSemester: selectedSemester,
-          status: selectedCourse.status
-        };
+		const updatedData = {
+		  generalInformation: { id: selectedCourse.id_information },
+		  course: { id: selectedCourse.id_course },
+		  implementationSemester: selectedSemester,
+		  status: selectedCourse.status
+		};
+
+		console.log("id: ", selectedCourse.key);
+		console.log("updatedData: ", updatedData);
+		
         await updateTeachingPlan(selectedCourse.key, updatedData);
         await fetchData();
         setIsModalVisible(false);

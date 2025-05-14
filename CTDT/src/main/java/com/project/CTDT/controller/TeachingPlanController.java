@@ -36,6 +36,7 @@ public class TeachingPlanController {
     // Cập nhật TeachingPlan theo id
     @PutMapping("/{id}")
     public TeachingPlan updateTeachingPlan(@PathVariable Integer id, @RequestBody TeachingPlan updatedPlan) {
+    	updatedPlan.setId(id); 
         return teachingPlanService.saveTeachingPlan(updatedPlan);
     }
 

@@ -32,6 +32,19 @@ export const patch = async (path, id , options) => {
     return result;
 }
 
+export const put = async (path, id , options) => {
+    const responsive = await fetch(`${API_DOMAIN}${path}/${id}`, {
+        method: "PUT",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(options)
+    })
+    const result = await responsive.json();
+    return result;
+}
+
 export const del = async (path, id) => {
     const responsive = await fetch(`${API_DOMAIN}${path}/${id}`,{
         method: "DELETE"

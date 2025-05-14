@@ -8,7 +8,7 @@ import com.project.CTDT.entity.CourseOutline;
 public interface CourseOutlineRepository extends JpaRepository<CourseOutline, Integer> {
 
     // Lấy danh sách CourseOutline theo id_course
-    List<CourseOutline> findByCourseId(Integer courseId);
+	List<CourseOutline> findByCourseIdAndStatus(Integer courseId, Integer status);
 
     // Xóa tất cả CourseOutline theo id_course
     void deleteByCourseId(Integer courseId);

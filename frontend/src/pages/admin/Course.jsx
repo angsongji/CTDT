@@ -24,12 +24,12 @@ function Course() {
 			const response = await getAllCourses();
 
 			const formattedCourses = response.map(course => {
-				
+
 				return {
 					...course,
 					key: course.id,
 					require: course.requirement === 1,
-					id_KnowledgeAreas: course.knowledgeAreas?.id,
+					id_KnowledgeAreas: course.knowledgeAreasData?.id,
 					name_KnowledgeAreas: course.knowledgeAreasData?.name || '-',
 					parent_id: course.parent?.id
 				};
@@ -45,9 +45,9 @@ function Course() {
 	};
 
 	const columns = [
-		{ 
-			title: 'Mã HP', 
-			dataIndex: 'id', 
+		{
+			title: 'Mã HP',
+			dataIndex: 'id',
 			key: 'id',
 			render: (id) => id
 		},
@@ -57,9 +57,9 @@ function Course() {
 		{ title: 'Thực hành', dataIndex: 'practiceHours', key: 'practiceHours' },
 		{ title: 'Thực tập', dataIndex: 'internshipHours', key: 'internshipHours' },
 		{ title: 'Hệ số học phần', dataIndex: 'weightingFactor', key: 'weightingFactor' },
-		{ 
-			title: 'Khối kiến thức', 
-			dataIndex: 'name_KnowledgeAreas', 
+		{
+			title: 'Khối kiến thức',
+			dataIndex: 'name_KnowledgeAreas',
 			key: 'name_KnowledgeAreas',
 			render: (text) => text || '-'
 		},
@@ -75,17 +75,17 @@ function Course() {
 			key: 'actions',
 			render: (_, record) => (
 				<div className="flex gap-2" key={`actions-${record.id}`}>
-					<Button 
+					<Button
 						key={`edit-${record.id}`}
-						icon={<MdModeEdit />} 
+						icon={<MdModeEdit />}
 						onClick={() => handleEdit(record)}
 					>
 						Sửa
 					</Button>
-					<Button 
+					<Button
 						key={`delete-${record.id}`}
-						danger 
-						icon={<MdDelete />} 
+						danger
+						icon={<MdDelete />}
 						onClick={() => showModalDelete(record)}
 					>
 						Xoá
@@ -103,6 +103,7 @@ function Course() {
 	};
 
 	const handleEdit = (record) => {
+		console.log("record", record);
 		setMode('edit');
 		setSelectedRecord(record);
 		form.setFieldsValue(record);
@@ -111,6 +112,7 @@ function Course() {
 
 	const handleSave = async (values) => {
 		try {
+			console.log("values", values);
 			setLoading(true);
 			if (mode === 'add') {
 				// Chuẩn bị dữ liệu để gửi lên server
@@ -130,19 +132,21 @@ function Course() {
 				await createCourse(newCourse);
 				message.success('Thêm học phần thành công!');
 			} else if (mode === 'edit') {
-				// Chuẩn bị dữ liệu để gửi lên server
-				const updatedCourse = {
-					...values,
-					status: selectedRecord.status,
-					requirement: values.require ? 1 : 0,
-					knowledgeAreas: {
-						id: values.id_KnowledgeAreas
-					},
-					parent: values.parent_id ? {
-						id: values.parent_id
-					} : null
-				};
 
+				const updatedCourse = {
+				  name: values.name,
+				  credits: values.credits,
+				  lectureHours: values.lectureHours,
+				  practiceHours: values.practiceHours,
+				  internshipHours: values.internshipHours,
+				  weightingFactor: values.weightingFactor,
+				  requirement: values.require ? 1 : 0,
+				  status: selectedRecord.status,
+				  knowledgeAreas: { id: values.id_KnowledgeAreas || selectedRecord.id_KnowledgeAreas },
+				  parent: selectedRecord.parent_id ? { id: selectedRecord.parent_id } : null
+				};
+				
+				console.log("update", updatedCourse);
 				// Gọi API cập nhật
 				await updateCourse(selectedRecord.id, updatedCourse);
 				message.success('Cập nhật học phần thành công!');
@@ -195,10 +199,10 @@ function Course() {
 						</span>
 					</Button>
 				</div>
-				<Table 
-					dataSource={dataCourse} 
-					columns={columns} 
-					rowKey={(record) => record.id} 
+				<Table
+					dataSource={dataCourse}
+					columns={columns}
+					rowKey={(record) => record.id}
 					loading={loading}
 				/>
 			</div>
@@ -284,11 +288,16 @@ function Course() {
 						</Col>
 					</Row>
 
+					<Form.Item name="id_KnowledgeAreas" hidden>
+					  <Input />
+					</Form.Item>
+
+					
 					<Form.Item
 						label="Khối kiến thức"
 						name="name_KnowledgeAreas"
 						style={{ marginBottom: '8px' }}
-						rules={[{ required: true, message: 'Vui lòng nhập khối kiến thức'}]}>
+						rules={[{ required: true, message: 'Vui lòng nhập khối kiến thức' }]}>
 						<Input />
 					</Form.Item>
 
