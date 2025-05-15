@@ -1,121 +1,80 @@
-import React, { useState } from 'react';
-import { Table, Button, Input } from 'antd';
-import { FaPlus } from "react-icons/fa6";
+
+import { Table, Button, Radio, Input, message, Modal } from 'antd';
+import { Select, Dropdown } from "antd";
+import { Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { FaPlus, FaEllipsisV } from "react-icons/fa";
+import { HiX } from "react-icons/hi";
+import { getAllTraningCycle } from "../../services/trainingCycleServices";
+import { createGeneralInformation, updateGeneralInformation, deleteGeneralInformation } from "../../services/generalInformationServices";
+import { getByInformationId } from "../../services/teachingPlanServices";
+const { confirm } = Modal;
 
 
-const curriculum_framework_list = [
-  {
-    Id: 1,
-    Name_program: "Chuong trinh dao tao 2020 - 2024",
-    Name_faculty: "Cong nghe thong tin",
-    Status: 1,
-    Details: [
-      {
-        Id: 1,
-        Name: "Khoi kien thuc giao duc dai cuong",
-        Id_Parent: 0,
-        Use: 1
-      },
-      {
-        Id: 2,
-        Name: "Kien thuc giao duc the chat va giao duc quoc phong va an ninh",
-        Id_Parent: 1,
-        Use: 0
-      }
-    ]
-  },
-  {
-    Id: 2,
-    Name_program: "Chuong trinh dao tao 2020 - 2024",
-    Name_faculty: "Ke toan",
-    Status: 1,
-    Details: [
-      {
-        Id: 1,
-        Name: "Khoi kien thuc giao duc dai cuong",
-        Id_Parent: 0,
-        Use: 1
-      },
-      {
-        Id: 2,
-        Name: "Kien thuc giao duc the chat va giao duc quoc phong va an ninh",
-        Id_Parent: 1,
-        Use: 0
-      }
-    ]
-  }
-]
 
 
 const CurriculumFramework = () => {
-  const columns1 = [
-    {
-      title: "",
-      dataIndex: "stt",
-      key: "stt",
-      render: (_text, _record, index) => index + 1,
-    },
-    {
-      title: 'Ten chuong trinh',
-      dataIndex: 'Name_program',
-      key: 'Name_program',
-    },
-    {
-      title: 'Ten nganh',
-      dataIndex: 'Name_faculty',
-      key: 'Name_faculty',
-    },
-    {
-      title: '',
-      render: (row) => (<div className="underline text-blue-400 cursor-pointer" onClick={() => handleShowCurriculumFramework(row.Id)}>Xem chi tiet</div>)
+  const [trainingCycles, setTrainingCycles] = useState([]);
+  useEffect(() => {
+    const fetchAPI = async () => {
+      const result1 = await getAllTraningCycle();
+      setTrainingCycles(result1);
     }
-  ];
-  const columns2 = [
-    {
-      title: 'Cac khoi kien thuc',
-      dataIndex: 'Name',
-      key: 'Name',
-    },
-    {
-      title: 'So tin chi bat buoc',
-      dataIndex: 'Name_faculty',
-      key: 'Name_faculty',
-    },
-    {
-      title: 'So tin chi tu chon',
-      dataIndex: 'Name_faculty',
-      key: 'Name_faculty',
-    }
-  ];
-  const [data, setData] = useState(curriculum_framework_list);
-  const [columns, setColumns] = useState(columns1);
+    fetchAPI();
+  }, []);
 
+  // const handleShowCurriculumFramework = (Id) => {
+  //   //Id cua khung chuong trinh
+  //   const data = curriculum_framework_list.find((item) => item.Id = Id).Details
+  //   setData(data);
+  //   setColumns(columns2);
+  // }
 
-  const handleShowCurriculumFramework = (Id) => {
-    //Id cua khung chuong trinh
-    const data = curriculum_framework_list.find((item) => item.Id = Id).Details
-    setData(data);
-    setColumns(columns2);
-  }
-
-  const handleBack = () => {
-    setData(curriculum_framework_list);
-    setColumns(columns1);
-  }
+  // const handleBack = () => {
+  //   setData(curriculum_framework_list);
+  //   setColumns(columns1);
+  // }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Khung chương trình</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        {
-          columns.length != 4 && <div className='underline text-blue-400 cursor-pointer text-sm' onClick={() => handleBack()}>Back</div>
-        }
-        <div className="py-4">
-          <Table dataSource={data} columns={columns} pagination={{ pageSize: 5 }} />
+    <div className='flex flex-col gap-5 mt-10'>
 
-        </div>
-      </div>
-    </div >
+      <table className="w-full text-center text-sm " style={{ fontFamily: "Arial" }}>
+        <thead className="bg-[var(--dark-pink)] text-white h-[8vh]" >
+          <tr>
+            <th className="border-r-1 border-white">STT</th>
+            <th className="border-r-1 border-white">Tên chu kỳ đào tạo</th>
+            <th className="border-r-1 border-white">Tên ngành đào tạo</th>
+            <th className="border-r-1 border-white">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody className='bg-white'>
+          {trainingCycles.map((trainingCycle, index) => {
+            return trainingCycle.faculties.map((faculty, facultyIndex) => (
+              <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
+                {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
+                {facultyIndex === 0 && (
+                  <>
+                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{index + 1}</td>
+                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{trainingCycle.name}</td>
+                  </>
+                )}
+                <td className='py-5'>{faculty.name}</td>
+                <td className='py-5 flex items-center justify-center'>
+                  <Link to={`/admin/curriculum-framework/${faculty.trainingCycleFacultyList[0].generalInformation.id}`} className="text-blue-500 underline">Xem chi tiết</Link>
+                </td>
+              </tr>
+            ));
+          })}
+        </tbody>
+      </table>
+      {/* {!showFormUpdate && selectFaculty && Object.keys(selectFaculty).length > 0 && (
+        <GeneralInformationDetail faculty={selectFaculty} />
+      )}
+      {showFormAdd && <FormAdd />}
+      {showFormUpdate && <FormUpdate />} */}
+
+
+    </div>
   );
 };
 
