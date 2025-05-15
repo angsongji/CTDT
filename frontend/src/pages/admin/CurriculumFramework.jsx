@@ -37,8 +37,7 @@ const CurriculumFramework = () => {
 
   return (
     <div className='flex flex-col gap-5 mt-10'>
-
-      <table className="w-full text-center text-sm " style={{ fontFamily: "Arial" }}>
+      <table className="w-full table-auto border border-[var(--light-pink)] rounded-xl overflow-hidden border-separate border-spacing-0 text-center text-sm " style={{ fontFamily: "Arial" }}>
         <thead className="bg-[var(--dark-pink)] text-white h-[8vh]" >
           <tr>
             <th className="border-r-1 border-white">STT</th>
