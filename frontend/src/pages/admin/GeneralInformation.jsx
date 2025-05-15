@@ -37,7 +37,6 @@ const GeneralInformation = () => {
       }
     } else if (key === "delete") {
       const generalInformationId = faculty.trainingCycleFacultyList[0].generalInformation?.id;
-      console.log(generalInformationId);
       if (generalInformationId) {
         confirm({
           title: 'Bạn có chắc chắn muốn xóa?',
@@ -152,7 +151,6 @@ const GeneralInformation = () => {
     const countCredit = async (generalInformationId) => {
       try {
         const teachingPlans = await getByInformationId(generalInformationId);
-        console.log(teachingPlans);
         const total = teachingPlans.reduce((sum, teachingPlan) => {
           return sum + (teachingPlan.course?.credits || 0);
         }, 0);
@@ -332,7 +330,6 @@ const GeneralInformation = () => {
         const result = await createGeneralInformation(dataAdd);
         if (result.status === 200) {
           const trainingCyclesUpdate = updateTrainingCycleWithGeneralInfo(selectValueTrainingCycle, selectValueFaculty, result.data);
-          console.log(trainingCyclesUpdate);
           setTrainingCycles(trainingCyclesUpdate);
           message.success({ content: "Thêm thành công!", key: "add", duration: 2, style: { marginTop: '1vh' } });
           setShowFormAdd(false);
