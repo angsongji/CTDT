@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { createTraningCycle } from "../../services/trainingCycleServices";
 import { getAllFaculties } from "../../services/facultyServices";
+import { createTraningCycleFaculty } from "../../services/trainingCycleFacultyServices";
 
 const { RangePicker } = DatePicker;
 
@@ -30,38 +31,52 @@ function CreateTrainingCycle() {
 	}, []);
 	
 
-    const onFinish = async (values) => {
-        const data = {
-            name: values.name,
-            startYear: values.dates[0].year(),
-            endYear: values.dates[1].year(),
-            majors: values.majors || [], 
-        };
+	const onFinish = async (values) => {
+	    const data = {
+	        name: values.name,
+	        startYear: values.dates[0].year(),
+	        endYear: values.dates[1].year(),
+	    };
 
-        console.log(data);
+	    try {
+	        // 1. Tạo chương trình đào tạo
+	        const result = await createTraningCycle(data);
 
-        /*try {
-            const result = await createTraningCycle(data);
-            if (result) {
-                Swal.fire({
-                    title: "Tạo thành công!",
-                    text: "Chu kỳ đào tạo mới đã được thêm.",
-                    icon: "success",
-                    confirmButtonText: "OK"
-                }).then(() => {
-                    navigate("/admin/training-cycle");
-                });
-            }
-        } catch (error) {
-            console.error('Lỗi:', error);
-            Swal.fire({
-                title: "Lỗi!",
-                text: "Đã xảy ra lỗi khi tạo chu kỳ đào tạo.",
-                icon: "error",
-                confirmButtonText: "OK"
-            });
-        }*/
-    };
+	        if (result && result.id) {
+	            const trainingCycleId = result.id;
+	            const selectedMajors = values.majors || [];
+
+	            // 2. Gọi API tạo trainingCycleFaculty cho từng ngành được chọn
+	            await Promise.all(
+	                selectedMajors.map(facultyId =>
+	                    createTraningCycleFaculty({
+	                        trainingCycle: { id: trainingCycleId },
+	                        faculty: { id: facultyId }
+	                    })
+	                )
+	            );
+
+	            Swal.fire({
+	                title: "Tạo thành công!",
+	                text: "Chu kỳ đào tạo mới và danh sách ngành đã được thêm.",
+	                icon: "success",
+	                confirmButtonText: "OK"
+	            }).then(() => {
+	                navigate("/admin/training-cycle");
+	            });
+	        }
+	    } catch (error) {
+	        console.error('Lỗi:', error);
+	        Swal.fire({
+	            title: "Lỗi!",
+	            text: "Đã xảy ra lỗi khi tạo chu kỳ đào tạo hoặc thêm ngành.",
+	            icon: "error",
+	            confirmButtonText: "OK"
+	        });
+	    }
+	};
+
+
 
     const SubmitButton = ({ form, children }) => {
         const [submittable, setSubmittable] = useState(false);

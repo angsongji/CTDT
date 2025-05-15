@@ -49,10 +49,10 @@ const TrainingCycle = () => {
 	    key: 'action',
 	    render: (text, record) => (
 	      <div className="flex gap-2">
-	        <Link to={`/admin/training-cycle/edit/${record._id}`}>
+	        <Link to={`/admin/training-cycle/edit/${record.id}`} state={{ record }}>
 	          <Button type="default">Sửa</Button>
 	        </Link>
-	        <Link to={`/admin/training-cycle/detail/${record._id}`}>
+	        <Link to={`/admin/training-cycle/detail/${record.id}`} state={{ record }}>
 	          <Button type="primary">Xem chi tiết</Button>
 	        </Link>
 	      </div>
