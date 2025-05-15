@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Form, InputNumber, Select, Button, Table, Card, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { editGroupOpenPlan } from "../../services/groupOpeningPlanServices";
 import { editGroup } from "../../services/groupServices";
+import { getGroupOpenPlanById } from "../../services/groupOpeningPlanServices";
 
 
 const { Option } = Select;
@@ -12,13 +13,21 @@ const { Option } = Select;
 function EditGroupOpeningPlan() {
   const [groups, setGroups] = useState([]);
   const [form] = Form.useForm();
-  const location = useLocation();
   const navigate = useNavigate();
-
-  // Lấy dữ liệu truyền qua từ component cha
-  const { groupData } = location.state || {};
+  const params = useParams();
+  const [groupData, setGroupData] = useState([]);
+  const location = useLocation();
+  const {record, selectedCycle, selectedFaculty } = location.state || {};
   
-  console.log("groupData", groupData)
+  console.log(record);
+
+  useEffect(() => {
+       const fetchAPI = async () => {
+         const result = await getGroupOpenPlanById(params.id);
+		 setGroupData(result);
+       };
+       fetchAPI();
+     }, [params.id]);
 
   useEffect(() => {
     if (groupData) {
@@ -63,7 +72,7 @@ function EditGroupOpeningPlan() {
   ];
 
   const handleBackClick = () => {
-    navigate(-1);
+    navigate('/admin/group-opening-plan', { state: { selectedCycle, selectedFaculty }});
   };
   
   const onUpdate = async (values) => {
@@ -72,7 +81,7 @@ function EditGroupOpeningPlan() {
       numberOfStudents: values.numberOfStudents,
       implementationSemester: values.implementationSemester,
       course: {
-        id: groupData.course.id,
+        id: record.idCourse,
       },
     };
 
@@ -106,7 +115,7 @@ function EditGroupOpeningPlan() {
         icon: "success",
         confirmButtonText: "OK"
       }).then(() => {
-        navigate("/admin/group-opening-plan");
+		navigate('/admin/group-opening-plan', { state: { selectedCycle, selectedFaculty }});
       });
 
     } catch (error) {
@@ -155,8 +164,8 @@ function EditGroupOpeningPlan() {
          borderRadius: "8px",
          fontWeight: "bold", 
        }}
-     >
-       Quay lại
+	   
+     > Quay lại
      </Button>
 
       <Card title="Chỉnh sửa Kế hoạch mở nhóm học phần">
@@ -171,7 +180,7 @@ function EditGroupOpeningPlan() {
               label="Học kỳ triển khai"
               style={{ flex: 1 }}
             >
-              <InputNumber min={1} max={9} style={{ width: "100%" }} />
+              <InputNumber disabled style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item
               name="numberOfGroups"

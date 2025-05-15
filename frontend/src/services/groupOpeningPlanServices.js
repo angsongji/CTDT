@@ -14,3 +14,8 @@ export const editGroupOpenPlan = async (id, data) => {
     const result = await patch(`group-open-plan/edit`,id, data);
     return result;
 }
+
+export const getGroupOpenPlanById = async (id) => {
+    const result = await get(`group-open-plan/detail/${id}`);
+    return result;
+}

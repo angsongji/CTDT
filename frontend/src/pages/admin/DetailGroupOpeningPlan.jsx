@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Descriptions, Table, Card, Spin, Button } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; 
 import { ArrowLeftOutlined } from "@ant-design/icons"; 
+import { useLocation } from "react-router-dom";
 
 function DetailGroupOpeningPlan() {
   const [loading, setLoading] = useState(true);
   const [groupOpeningPlan, setGroupOpeningPlan] = useState(null);
   const params = useParams();
+  const location = useLocation();
+  const { selectedCycle, selectedFaculty } = location.state || {};
 
   const navigate = useNavigate(); 
   
@@ -37,18 +40,11 @@ function DetailGroupOpeningPlan() {
       dataIndex: "maxStudents",
       key: "maxStudents",
       align: "center",
-    },
-    {
-      title: "Số lượng phân công giảng dạy",
-      dataIndex: "teachingAssignments",
-      key: "teachingAssignments",
-      align: "center",
-      render: (teachingAssignments) => teachingAssignments.length,
-    },
+    }
   ];
 
   const handleBackClick = () => {
-    navigate(-1); 
+    navigate('/admin/group-opening-plan', { state: { selectedCycle, selectedFaculty } });
   };
 
   if (loading) {
