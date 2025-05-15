@@ -6,6 +6,7 @@ import { FaPlus, FaEllipsisV } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
 import { createGeneralInformation, updateGeneralInformation, deleteGeneralInformation } from "../../services/generalInformationServices";
+import { getByInformationId } from "../../services/teachingPlanServices";
 const { confirm } = Modal;
 
 const GeneralInformation = () => {
@@ -115,8 +116,8 @@ const GeneralInformation = () => {
   };
 
   const GeneralInformationDetail = ({ faculty }) => {
-
-
+    const [creditSum, setCreditSum] = useState("");
+   
     const trainingCycleFacultyList = Array.isArray(faculty.trainingCycleFacultyList)
       ? faculty.trainingCycleFacultyList
       : [];
@@ -139,9 +140,31 @@ const GeneralInformation = () => {
       { value: "Ban hành", key: "issued" },
     ];
 
-    const countCredit = () => {
-      return 0; // Hoặc logic xử lý thực tế
+    useEffect(() => {
+      const fetchCredit = async () => {
+        const result = await countCredit(generalInformation.id);
+        setCreditSum(result);
+      };
+  
+      fetchCredit();
+    }, [generalInformation]);
+
+    const countCredit = async (generalInformationId) => {
+      try {
+        const teachingPlans = await getByInformationId(generalInformationId);
+        console.log(teachingPlans);
+        const total = teachingPlans.reduce((sum, teachingPlan) => {
+          return sum + (teachingPlan.course?.credits || 0);
+        }, 0);
+    
+        setCreditSum(total === 0 ? "Chưa có kế hoạch dạy học" : total + " tín chỉ");
+        return total === 0 ? "Chưa có kế hoạch dạy học" : total + " tín chỉ";
+      } catch (error) {
+        console.error("Lỗi khi tính tổng tín chỉ:", error);
+        return "Lỗi khi lấy dữ liệu";
+      }
     };
+    
 
     return (
       <>
@@ -171,7 +194,7 @@ const GeneralInformation = () => {
                           </a>
                         </td>
                       ) : item.key === "credits" ? (
-                        <td className="border px-2 py-1">{countCredit()} tín chỉ</td>
+                        <td className="border px-2 py-1">{creditSum}</td>
                       ) : item.key === "duration" ? (
                         <td className="border px-2 py-1">{generalInformation[item.key]} năm</td>
                       ) : (
