@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { getByInformationId } from "../../services/teachingPlanServices";
 import { getAllKnowledgeAreas } from "../../services/knowledgeAreasServices";
 import { message, Spin } from "antd";
+import { HiX } from "react-icons/hi";
 
 const CurriculumFrameworkDetail = () => {
     const [teachingPlans, setTeachingPlans] = useState([]);
@@ -12,6 +13,7 @@ const CurriculumFrameworkDetail = () => {
     const [knowledgeAreas, setKnowledgeAreas] = useState([]);
     const [areaCredits, setAreaCredits] = useState([]);
     const [parentSummary, setParentSummary] = useState([]);
+    const [areaId, setAreaId] = useState(0);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -57,7 +59,7 @@ const CurriculumFrameworkDetail = () => {
                     parent_id,
                     required: 0,
                     optional: 0,
-                    usage_count
+                    usage_count,
                 };
             }
 
@@ -73,28 +75,29 @@ const CurriculumFrameworkDetail = () => {
 
     function summarizeParentAreas(knowledgeAreas, areaCredits) {
         const parentSummary = {};
-    
+
         for (const parent of knowledgeAreas) {
             if (parent.parent_id !== 0) continue; // chỉ xử lý khối cha
             const parentId = parent.id;
-    
+
             parentSummary[parentId] = {
                 name: parent.name,
                 required: 0,
                 optional: 0,
                 children: []
             };
-    
+
             for (const child of parent.children) {
                 const childData = areaCredits[child.id];
-    
+
                 if (childData) {
                     if (childData.usage_count > 0) {
                         parentSummary[parentId].required += childData.required;
                         parentSummary[parentId].optional += childData.optional;
                     }
-    
+
                     parentSummary[parentId].children.push({
+                        id: childData.id,
                         name: childData.name,
                         required: childData.required,
                         optional: childData.optional,
@@ -103,13 +106,13 @@ const CurriculumFrameworkDetail = () => {
                 }
             }
         }
-    
+
         return parentSummary;
     }
-    
+
     const TableCurriculumFramework = ({ parentSummary }) => {
         return (
-            <table className="w-full table-auto ">
+            <table className="w-full table-auto border border-[var(--light-pink)] rounded-xl overflow-hidden border-separate border-spacing-0">
                 <thead className="text-center bg-[var(--dark-pink)] text-white ">
                     <tr className="">
                         <th rowSpan={2} className=" border px-4 py-2 ">Các khối kiến thức</th>
@@ -134,9 +137,9 @@ const CurriculumFrameworkDetail = () => {
                                 <tr key={`${parentId}-${index}`} className="text-[var(--dark-pink)] bg-white text-sm">
                                     {
                                         child.usage_count === 0 ? (
-                                            <td className=" px-4 py-2 pl-8 border-r-1 border-white">- {child.name} <span className="text-red-500 italic">(Không tính vào tổng số tín chỉ tích lũy)</span></td>
+                                            <td className=" px-4 py-2 pl-8 border-r-1 border-white "><abbr title="Nhấn để xem danh sách học phần theo khối này"><span className="cursor-pointer hover:text-blue-500" onClick={() => { setAreaId(child.id); console.log(child.id) }}>{child.name} </span></abbr> <span className="text-red-500 italic">(Không tính vào tổng số tín chỉ tích lũy)</span></td>
                                         ) : (
-                                            <td className=" px-4 py-2 pl-8 border-r-1 border-white">- {child.name}</td>
+                                            <td className=" px-4 py-2 pl-8 border-r-1 border-white"><abbr title="Nhấn để xem danh sách học phần theo khối này"><span className="cursor-pointer hover:text-blue-500" onClick={() => { setAreaId(child.id); console.log(child.id) }}>{child.name} </span></abbr></td>
                                         )
                                     }
                                     <td className=" px-4 py-2 text-center border-r-1 border-white">{child.required}</td>
@@ -166,6 +169,63 @@ const CurriculumFrameworkDetail = () => {
             </table>
         );
     };
+
+    const TableCourseByArea = ({ areaId, teachingPlans }) => {
+
+        // Lọc các học phần thuộc khối kiến thức có id === areaId
+        const courses = teachingPlans.filter(
+            item => item.course.knowledgeArea.id === areaId
+        );
+        console.log(courses);
+        return (
+            <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
+                <div className="w-[80%] flex flex-col items-center justify-center bg-white p-5 rounded-lg" >
+                    <div className="flex items-center justify-between w-full mb-5">
+                        <div className="text-[var(--dark-pink)] font-bold text-xl">Danh sách các học phần</div>
+                        <HiX onClick={() => setAreaId(0)} className="text-2xl cursor-pointer hover:text-red-500" />
+                    </div>
+                    <table className="w-full table-auto border border-white rounded-xl overflow-hidden border-separate border-spacing-0">
+                        <thead className=" bg-[var(--dark-pink)] text-white">
+                            <tr className="text-center  ">
+                                <th className="border py-2 w-[15%]">Mã học phần</th>
+                                <th className="border py-2 w-auto">Tên học phần</th>
+                                <th className="border py-2 w-[10%]">Số tín chỉ</th>
+                                <th className="border py-2 w-[10%]">Bắt buộc</th>
+                                <th className="border py-2 w-[10%]">Tự chọn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {courses.map((item, index) => (
+                                <tr key={index} className="text-[var(--dark-pink)] bg-white text-sm text-center">
+                                    <td className=" py-2 ">{item.course.id}</td>
+                                    <td className=" py-2 ">{item.course.name}</td>
+                                    <td className=" py-2 ">
+                                        {item.course.requirement === 1 ? item.course.credits : 0}
+                                    </td>
+                                    <td className=" py-2 ">
+                                        {item.course.requirement === 1 ? "x" : ""}
+                                    </td>
+                                    <td className=" py-2">
+                                        {item.course.requirement === 0 ? "x" : ""}
+                                    </td>
+                                </tr>
+                            ))}
+                            {courses.length === 0 && (
+                                <tr>
+                                    <td colSpan={3} className="text-center text-gray-400 py-4">
+                                        Không có học phần nào thuộc khối kiến thức này.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        );
+    };
+
 
     return (
         <>
@@ -203,7 +263,11 @@ const CurriculumFrameworkDetail = () => {
                     )
                 )
             }
-
+            {
+                areaId !== 0 && (
+                    <TableCourseByArea areaId={areaId} teachingPlans={teachingPlans} />
+                )
+            }
         </>
     );
 };

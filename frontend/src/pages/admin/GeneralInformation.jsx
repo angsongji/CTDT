@@ -169,7 +169,7 @@ const GeneralInformation = () => {
         {generalInformation && (
           <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
 
-            <div className="relative flex flex-col items-center justify-center gap-5 bg-white p-10 text-[var(--dark-pink)]">
+            <div className="rounded-lg relative flex flex-col items-center justify-center gap-5 bg-white p-10 text-[var(--dark-pink)]">
               <div onClick={() => setSelectFaculty({})} className='cursor-pointer text-white absolute right-0 top-0 p-1 translate-x-[100%] translate-y-[-50%]'>
                 <HiX size={28} />
               </div>
@@ -373,7 +373,7 @@ const GeneralInformation = () => {
 
     return (
       <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
-        <form onSubmit={handleSubmitForm} className="relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 rounded-md shadow-md">
+        <form onSubmit={handleSubmitForm} className="rounded-lg relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 shadow-md">
           <div className='font-bold text-xl text-center'>Thêm thông tin chung</div>
 
           <div className='w-full flex items-center'>
@@ -583,7 +583,7 @@ const GeneralInformation = () => {
 
     return (
       <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
-        <form onSubmit={handleSubmitForm} className="relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 rounded-md shadow-md">
+        <form onSubmit={handleSubmitForm} className="rounded-lg relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 shadow-md">
           <div className='font-bold text-xl text-center'>Cập nhật thông tin chung</div>
 
 
@@ -695,7 +695,7 @@ const GeneralInformation = () => {
         <Button onClick={() => handleAddGeneralInformation()} type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'><span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'><FaPlus />Thêm</span></Button>
       </div>
 
-      <table className="w-full text-center text-sm " style={{ fontFamily: "Arial" }}>
+      <table className="w-full table-auto border border-[var(--light-pink)] rounded-xl overflow-hidden border-separate border-spacing-0 text-center text-sm " style={{ fontFamily: "Arial" }}>
         <thead className="bg-[var(--dark-pink)] text-white h-[8vh]" >
           <tr>
             <th className="border-r-1 border-white">STT</th>
