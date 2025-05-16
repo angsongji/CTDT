@@ -62,4 +62,9 @@ public class TrainingCycleFaculty {
 		return generalInformation == null ? null : generalInformation.getStatus() == 1 ? generalInformation : null;
 	}
 
+	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@JsonManagedReference(value = "trainingCycleFaculty-group_opening_plan")
+	@JsonIgnore
+	private GroupOpeningPlan groupOpeningPlan;
+
 }

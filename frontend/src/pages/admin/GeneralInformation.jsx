@@ -151,9 +151,7 @@ const GeneralInformation = () => {
     const countCredit = async (generalInformationId) => {
       try {
         const teachingPlans = await getByInformationId(generalInformationId);
-        const total = teachingPlans.reduce((sum, teachingPlan) => {
-          return sum + (teachingPlan.course?.credits || 0);
-        }, 0);
+        const total = teachingPlans.reduce((sum, teachingPlan) => teachingPlan.course.knowledgeArea.usage_count!= 0 ? sum + teachingPlan.course.credits : sum, 0);
     
         setCreditSum(total === 0 ? "Chưa có kế hoạch dạy học" : total + " tín chỉ");
         return total === 0 ? "Chưa có kế hoạch dạy học" : total + " tín chỉ";

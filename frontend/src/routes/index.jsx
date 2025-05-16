@@ -26,6 +26,7 @@ import DetailGroupOpeningPlan from "../pages/admin/DetailGroupOpeningPlan";
 import EditGroupOpeningPlan from "../pages/admin/EditGroupOpeningPlan";
 import CourseOutlineDetail from "../pages/admin/CourseOulineDetail";
 import CurriculumFrameworkDetail from "../pages/admin/CurriculumFrameworkDetail";
+import LecturerStatistics from "../pages/admin/LecturerStatistics";
 import { Navigate } from "react-router-dom";
 
 const router = createBrowserRouter([
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
             { path: "course-outline/:id", element: <CourseOutlineDetail /> },
             { path: "teaching-plan", element: <TeachingPlan /> },
             { path: "lecturer", element: <Lecturer /> },
+            { path: "lecturer/statistics", element: <LecturerStatistics /> },
             { path: "group-opening-plan", element: <GroupOpeningPlan /> },
             { path: "group-opening-plan/create", element: <CreateGroupOpeningPlan /> },
             { path: "group-opening-plan/detail/:id", element: <DetailGroupOpeningPlan /> },
