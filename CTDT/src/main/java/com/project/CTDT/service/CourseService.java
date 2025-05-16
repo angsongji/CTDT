@@ -13,4 +13,6 @@ public interface CourseService {
 
 	void deleteCourse(Integer id);
 
+	List<Course> getByLecturerId(Integer idLecturer);
+
 }

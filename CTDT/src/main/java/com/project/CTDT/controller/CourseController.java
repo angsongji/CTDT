@@ -50,4 +50,10 @@ public class CourseController {
 		courseService.deleteCourse(id);
 	}
 
+	// Tìm Courses theo id_lecturer
+	@GetMapping("/lecturer/{idLecturer}")
+	public List<Course> getByLecturerId(@PathVariable Integer idLecturer) {
+		return courseService.getByLecturerId(idLecturer);
+	}
+
 }

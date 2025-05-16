@@ -1,39 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'antd';
 import { FaPlus } from 'react-icons/fa';
 import { Dropdown, Table } from 'antd';
 import { Link } from 'react-router-dom';
 import { FaEllipsisV } from 'react-icons/fa';
 import { CiImport, CiExport } from "react-icons/ci";
+import { getAllLecturers } from '../../services/lecturerServices';
 
-const lecturers = [
-  {
-    "id": 1,
-    "fullName": "Nguyễn Văn A",
-    "dateOfBirth": "1970-05-12",
-    "academicTitle": "Giáo sư",
-    "degree": "Tiến sĩ",
-    "gender": "Nữ",
-    "status": 1,
-    "lecturerCourses": [
-      {
-        "id": 12
-      },
-      {
-        "id": 1
-      },
-      {
-        "id": 13
-      },
-      {
-        "id": 11
-      }
-    ],
-  },
 
-];
 const Lecturer = () => {
+  const [lecturers, setLecturers] = useState([]);
 
+  useEffect(() => {
+    const fetchAPI = async () => {
+      const result = await getAllLecturers();
+      setLecturers(result);
+    }
+    fetchAPI();
+  }, []);
 
   const columns = [
     {
