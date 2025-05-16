@@ -3,6 +3,7 @@ package com.project.CTDT.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.project.CTDT.entity.Lecturer;
@@ -35,6 +36,18 @@ public class LecturerServiceImpl implements LecturerService {
 
 	@Override
 	public void deleteLecturer(Integer id) {
-		lecturerRepository.deleteById(id);
+		try {
+			lecturerRepository.deleteById(id);
+		} catch (DataIntegrityViolationException e) {
+			// Nếu có lỗi ràng buộc, không xóa mà update status về 0
+			Optional<Lecturer> optional = lecturerRepository.findById(id);
+			if (optional.isPresent()) {
+				Lecturer gi = optional.get();
+				gi.setStatus(0);
+				lecturerRepository.save(gi);
+			} else {
+				throw new RuntimeException("Không tìm thấy giảng viên với mã đã gửi: " + id);
+			}
+		}
 	}
 }

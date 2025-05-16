@@ -1,9 +1,20 @@
 package com.project.CTDT.controller;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.project.CTDT.entity.Lecturer;
 import com.project.CTDT.service.LecturerService;
@@ -19,7 +30,16 @@ public class LecturerController {
 	// Lấy danh sách tất cả giảng viên
 	@GetMapping
 	public List<Lecturer> getAllLecturers() {
-		return lecturerService.getAllLecturers();
+		List<Lecturer> list = lecturerService.getAllLecturers();
+		Iterator<Lecturer> iterator = list.iterator();
+
+		while (iterator.hasNext()) {
+			Lecturer lecturer = iterator.next();
+			if (lecturer.getStatus() == 0) {
+				iterator.remove(); // Xóa phần tử nếu là status = 0
+			}
+		}
+		return list;
 	}
 
 	// Lấy giảng viên theo ID
@@ -41,9 +61,13 @@ public class LecturerController {
 		return lecturerService.saveLecturer(lecturer);
 	}
 
-	// Xóa giảng viên theo ID
 	@DeleteMapping("/{id}")
-	public void deleteLecturer(@PathVariable Integer id) {
-		lecturerService.deleteLecturer(id);
+	public ResponseEntity<?> deleteLecturer(@PathVariable Integer id) {
+		try {
+			lecturerService.deleteLecturer(id);
+			return ResponseEntity.ok().build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+		}
 	}
 }

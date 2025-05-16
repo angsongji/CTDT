@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,5 +51,11 @@ public class GroupOpeningPlan {
 	@OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "groupPlan-groups")
 	private Set<Group> groups;
+
+	// Quan hệ 1-1 với bảng trung gian TrainingCycleFaculty
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "training_cycle_faculty_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_group_opening_plan_training_cycle_faculty"))
+	@JsonBackReference(value = "trainingCycleFaculty-group_opening_plan")
+	private TrainingCycleFaculty trainingCycleFaculty;
 
 }

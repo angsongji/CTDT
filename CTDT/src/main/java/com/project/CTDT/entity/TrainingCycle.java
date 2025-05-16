@@ -48,7 +48,7 @@ public class TrainingCycle {
 	@OneToMany(mappedBy = "trainingCycle", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	@JsonManagedReference(value = "trainingCycle-trainingCycleFaculty")
 	@JsonIgnore
-	private Set<TrainingCycleFaculty> trainingCycleFacultyList = new HashSet<>();;
+	private Set<TrainingCycleFaculty> trainingCycleFacultyList = new HashSet<>();
 
 	// Getter để trả về faculty
 	@JsonProperty("faculties")

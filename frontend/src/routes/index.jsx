@@ -26,6 +26,9 @@ import DetailGroupOpeningPlan from "../pages/admin/DetailGroupOpeningPlan";
 import EditGroupOpeningPlan from "../pages/admin/EditGroupOpeningPlan";
 import CourseOutlineDetail from "../pages/admin/CourseOulineDetail";
 import DetailTrainingCycle from "../pages/admin/DetailTrainingCycle";
+import CurriculumFrameworkDetail from "../pages/admin/CurriculumFrameworkDetail";
+import LecturerStatistics from "../pages/admin/LecturerStatistics";
+import { Navigate } from "react-router-dom";
 
 const router = createBrowserRouter([
     {
@@ -44,20 +47,26 @@ const router = createBrowserRouter([
         path: "/admin", //Phần quản lí của quyền quản trị
         element: <AdminLayout />,
         children: [
-            { path: "", element: <Faculty /> },
+            {
+                index: true, // Khi path là đúng "/admin"
+                element: <Navigate to="faculty" replace />, // ✅ Redirect sang /admin/faculty
+            },
+            { path: "faculty", element: <Faculty /> },
             { path: "knowledge-areas", element: <KnowledgeAreas /> },
             { path: "curriculum-framework", element: <CurriculumFramework /> },
+            { path: "curriculum-framework/:generalInformationId", element: <CurriculumFrameworkDetail /> },
             { path: "general-information", element: <GeneralInformation /> },
             { path: "course", element: <Course /> },
             { path: "course-list", element: <CourseList /> },
             { path: "course-outline", element: <CourseOutline /> },
-			{ path: "course-outline/:id", element: <CourseOutlineDetail /> },
+            { path: "course-outline/:id", element: <CourseOutlineDetail /> },
             { path: "teaching-plan", element: <TeachingPlan /> },
             { path: "lecturer", element: <Lecturer /> },
+            { path: "lecturer/statistics", element: <LecturerStatistics /> },
             { path: "group-opening-plan", element: <GroupOpeningPlan /> },
             { path: "group-opening-plan/create", element: <CreateGroupOpeningPlan /> },
-			{ path: "group-opening-plan/detail/:id", element: <DetailGroupOpeningPlan /> },
-			{ path: "group-opening-plan/edit/:id", element: <EditGroupOpeningPlan /> },
+            { path: "group-opening-plan/detail/:id", element: <DetailGroupOpeningPlan /> },
+            { path: "group-opening-plan/edit/:id", element: <EditGroupOpeningPlan /> },
             { path: "teaching-assignment", element: <TeachingAssignment /> },
             { path: "teaching-assignment/assignment", element: <Assignment /> },
             { path: "teaching-assignment/assignment/create", element: <CreateTeachingAssignment /> },

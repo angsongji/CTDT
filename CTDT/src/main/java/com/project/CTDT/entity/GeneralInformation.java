@@ -61,7 +61,10 @@ public class GeneralInformation {
 	private TrainingCycleFaculty trainingCycleFaculty;
 
 	// Mối quan hệ 1-N với TeachingPlan
-	@OneToMany(mappedBy = "generalInformation", cascade = CascadeType.ALL, orphanRemoval = true)
+//	@OneToMany(mappedBy = "generalInformation") // cái infor có liên kết với teaching plan thì sẽ error không xóa được
+	@OneToMany(mappedBy = "generalInformation", cascade = CascadeType.ALL, orphanRemoval = true) // xóa infor sẽ xóa
+																									// toàn bộ teaching
+																									// plan liên quan
 	@JsonIgnore
 	private Set<TeachingPlan> teachingPlans = new HashSet<>();
 }
