@@ -95,7 +95,9 @@ public class Course {
 			return new ArrayList<>();
 		List<Lecturer> list = new ArrayList<>();
 		for (LecturerCourse l : lecturerCourses) {
-			list.add(l.getLecturer());
+			Lecturer p = l.getLecturer();
+			if (p.getStatus() == 1)
+				list.add(p);
 		}
 		return list;
 	}
