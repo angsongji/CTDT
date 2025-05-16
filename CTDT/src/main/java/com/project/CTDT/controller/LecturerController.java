@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,9 +61,13 @@ public class LecturerController {
 		return lecturerService.saveLecturer(lecturer);
 	}
 
-	// Xóa giảng viên theo ID
 	@DeleteMapping("/{id}")
-	public void deleteLecturer(@PathVariable Integer id) {
-		lecturerService.deleteLecturer(id);
+	public ResponseEntity<?> deleteLecturer(@PathVariable Integer id) {
+		try {
+			lecturerService.deleteLecturer(id);
+			return ResponseEntity.ok().build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+		}
 	}
 }

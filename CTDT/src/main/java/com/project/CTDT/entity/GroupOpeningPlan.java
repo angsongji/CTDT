@@ -54,7 +54,7 @@ public class GroupOpeningPlan {
 
 	// Quan hệ 1-1 với bảng trung gian TrainingCycleFaculty
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "training_cycle_faculty_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_general_info_training_cycle_faculty"))
+	@JoinColumn(name = "training_cycle_faculty_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_group_opening_plan_training_cycle_faculty"))
 	@JsonBackReference(value = "trainingCycleFaculty-group_opening_plan")
 	private TrainingCycleFaculty trainingCycleFaculty;
 

@@ -1,22 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from 'antd';
+import { Button, message, Input, Radio, DatePicker } from 'antd';
 import { FaPlus } from 'react-icons/fa';
-import { Dropdown, Table } from 'antd';
+import { Dropdown, Table, Modal, Select } from 'antd';
 import { Link } from 'react-router-dom';
 import { FaEllipsisV } from 'react-icons/fa';
 import { CiImport, CiExport } from "react-icons/ci";
-import { getAllLecturers } from '../../services/lecturerServices';
-
+import { getAllLecturers, deleteLecturer, createLecturer } from '../../services/lecturerServices';
+import { getCourseByLecturerId } from '../../services/courseServices';
+import { getAllCourses } from '../../services/courseServices';
+import { createLecturerCourse } from '../../services/lecturerCourseServices';
+import { HiX } from "react-icons/hi";
+import dayjs from 'dayjs';
+const { confirm } = Modal;
 
 const Lecturer = () => {
   const [lecturers, setLecturers] = useState([]);
-
+  const [lecturerId, setLecturerId] = useState(0);
+  const [showFormAdd, setShowFormAdd] = useState(false);
+  const [courses, setCourses] = useState([]);
   useEffect(() => {
     const fetchAPI = async () => {
       const result = await getAllLecturers();
       setLecturers(result);
     }
     fetchAPI();
+    const fetchCourses = async () => {
+      const result = await getAllCourses();
+      setCourses(result);
+    }
+    fetchCourses();
   }, []);
 
   const columns = [
@@ -41,12 +53,12 @@ const Lecturer = () => {
       key: 'dateOfBirth',
     },
     {
-      title: 'Học vị',
+      title: 'Bằng cấp',
       dataIndex: 'degree',
       key: 'degree',
     },
     {
-      title: 'Bằng cấp',
+      title: 'Học vị',
       dataIndex: 'academicTitle',
       key: 'academicTitle',
     },
@@ -77,21 +89,44 @@ const Lecturer = () => {
     switch (key) {
       case "detail":
         console.log("Xem thông tin chi tiết", lecturer);
+        setLecturerId(lecturer.id);
         break;
       case "edit":
         console.log("Chỉnh sửa", lecturer);
         break;
       case "delete":
-        console.log("Xóa", lecturer);
+        confirm({
+          title: 'Bạn có chắc chắn muốn xóa?',
+          content: 'Hành động này sẽ không thể hoàn tác!',
+          okText: 'Xóa',
+          okType: 'danger',
+          cancelText: 'Hủy',
+          onOk() {
+            handleDeleteLecturer(lecturer.id);
+          },
+          onCancel() {
+            console.log('Hủy xóa');
+          },
+        });
         break;
       default:
         break;
     }
   };
 
+  const handleDeleteLecturer = async (id) => {
+    const result = await deleteLecturer(id);
+    if (result.status === 200) {
+      message.success("Xóa giảng viên thành công!");
+      setLecturers(prev => prev.filter(lecturer => lecturer.id !== id));
+    } else if (result.status === 409) {
+      message.error(result.message);
+    }
+  }
+
   const CustomButton = ({ icon, onClick, hoverText = "Click me" }) => {
     const [hovered, setHovered] = useState(false);
-  
+
     return (
       <Button
         type="primary"
@@ -115,6 +150,259 @@ const Lecturer = () => {
       </Button>
     );
   };
+
+  const TableCourseByArea = ({ lecturerId }) => {
+    const [courses, setCourses] = useState([]);
+    const [lecturer, setLecturer] = useState({});
+    useEffect(() => {
+      const fetchAPI = async () => {
+        const result = await getCourseByLecturerId(lecturerId);
+        setCourses(result);
+        const lecturerResult = lecturers.find(item => item.id === lecturerId);
+        setLecturer(lecturerResult);
+      }
+      fetchAPI();
+    }, []);
+    console.log(courses);
+    return (
+      <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
+        <div className="w-[80%] flex flex-col items-center justify-center bg-white p-5 rounded-lg gap-5" >
+          <div className="flex items-center justify-between w-full">
+            <div className="text-[var(--dark-pink)] font-bold text-xl">Danh sách học phần giảng dạy</div>
+            <HiX onClick={() => setLecturerId(0)} className="text-2xl cursor-pointer hover:text-red-500" />
+          </div>
+          <div className='w-full flex flex-col gap-5'>
+            <div className='flex gap-5'>
+              <div className='font-bold'>Mã giảng viên</div>
+              <div>{lecturer.id}</div>
+            </div>
+            <div className='flex gap-5'>
+              <div className='font-bold'>Tên giảng viên</div>
+              <div>{lecturer.fullName}</div>
+            </div>
+
+          </div>
+          {courses.length === 0 ? (
+            <div>
+              <div className="text-center text-gray-400 py-4">
+                Giảng viên chưa đảm nhận giảng dạy học phần nào.
+              </div>
+            </div>
+          ) :
+            <table className="w-full table-auto border border-white rounded-xl overflow-hidden border-separate border-spacing-0">
+              <thead className=" bg-[var(--dark-pink)] text-white">
+                <tr className="text-center  ">
+                  <th className="border py-2 w-[15%]">Mã học phần</th>
+                  <th className="border py-2 w-auto">Tên học phần</th>
+                </tr>
+              </thead>
+              <tbody>
+                {courses.map((item, index) => (
+                  <tr key={index} className="text-[var(--dark-pink)] bg-white text-sm text-center">
+                    <td className=" py-2 ">{item.id}</td>
+                    <td className=" py-2 ">{item.name}</td>
+                  </tr>
+                ))}
+
+              </tbody>
+            </table>
+          }
+        </div>
+
+      </div>
+
+    );
+  };
+
+  const FormAdd = () => {
+    console.log(courses);
+    const [dataAdd, setDataAdd] = useState({
+      fullName: "",
+      gender: "Nam",
+      dateOfBirth: "",
+      degree: "Thạc sĩ",
+      academicTitle: "Giảng viên",
+      status: 1
+    });
+    const [dataLecturerCourse, setDataLecturerCourse] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setDataAdd(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+
+    const handleDateChange = (date) => {
+      setDataAdd(prev => ({
+        ...prev,
+        dateOfBirth: date ? date.format('YYYY-MM-DD') : ''
+      }));
+    };
+
+    const handleSubmitForm = async (e) => {
+      e.preventDefault();
+      try {
+        setIsLoading(true);
+        message.loading({ content: "Đang thêm giảng viên...", key: "add" });
+        const result = await createLecturer(dataAdd);
+        if (result.status === 200) {
+          if (dataLecturerCourse.length === 0){
+            setLecturers(prev => [...prev, { id: result.data.id, ...dataAdd }]);
+            message.success({ content: "Thêm giảng viên thành công!", key: "add", duration: 2, style: { marginTop: '1vh' } });
+            setShowFormAdd(false);
+            return;
+          }
+          dataLecturerCourse.forEach(item => {
+            item.lecturer = { id: result.data.id };
+          });
+          console.log(dataLecturerCourse);
+          const result2 = await createLecturerCourse(dataLecturerCourse);
+          if (result2.status === 200) {
+            console.log(result2);
+            setLecturers(prev => [...prev, { id: result.data.id, ...dataAdd }]);
+            message.success({ content: "Thêm giảng viên thành công!", key: "add", duration: 2, style: { marginTop: '1vh' } });
+            setShowFormAdd(false);
+          }
+          else {
+            console.log(result2);
+            message.error({ content: "Thêm giảng viên thất bại!", key: "add", duration: 2, style: { marginTop: '1vh' } });
+          }
+        }
+        else {
+          console.log(result);
+          message.error({ content: "Thêm giảng viên thất bại!", key: "add", duration: 2, style: { marginTop: '1vh' } });
+        }
+
+      } catch (error) {
+        console.log(error);
+        message.error({
+          content: error.message,
+          duration: 2,
+          key: "add",
+          style: { marginTop: '1vh' },
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
+        <form onSubmit={handleSubmitForm} className="rounded-lg relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 shadow-md">
+          <div className='font-bold text-xl text-center'>Thêm giảng viên</div>
+          <div onClick={() => setShowFormAdd(false)} className='cursor-pointer absolute right-0 top-0 p-2'>
+            <HiX size={24} />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Họ và tên</span>
+            <Input
+              type="text"
+              required
+              name="fullName"
+              onChange={handleChange}
+              value={dataAdd.fullName}
+              placeholder="Nhập họ và tên"
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Giới tính</span>
+            <Radio.Group
+              name="gender"
+              onChange={handleChange}
+              value={dataAdd.gender}
+              style={{ width: "80%" }}
+              disabled={isLoading}
+            >
+              <Radio value="Nam">Nam</Radio>
+              <Radio value="Nữ">Nữ</Radio>
+            </Radio.Group>
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Ngày sinh</span>
+            <DatePicker
+              required
+              onChange={handleDateChange}
+              style={{ width: "80%" }}
+              format="DD/MM/YYYY"
+              placeholder="Chọn ngày sinh"
+              disabled={isLoading}
+              disabledDate={(current) => current && current > dayjs().endOf('day')}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Bằng cấp</span>
+            <Input
+              type="text"
+              required
+              name="degree"
+              onChange={handleChange}
+              value={dataAdd.degree}
+              placeholder="Nhập bằng cấp"
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Học vị</span>
+            <Input
+              type="text"
+              required
+              name="academicTitle"
+              onChange={handleChange}
+              value={dataAdd.academicTitle}
+              placeholder="Nhập học vị"
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Học phần giảng dạy</span>
+            <Select
+              mode="multiple"
+              style={{ width: "80%" }}
+              placeholder="Chọn học phần giảng dạy"
+              value={dataLecturerCourse.map(item => item.course.id)} // ✅ Sửa chỗ này
+              onChange={(values) =>
+                setDataLecturerCourse(
+                  values.map(value => ({ course: { id: value } }))
+                )
+              }
+              disabled={isLoading}
+              optionFilterProp="children"
+            >
+              {courses.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name}
+                </Select.Option>
+              ))}
+            </Select>
+
+          </div>
+
+          <div className='flex justify-end gap-2'>
+            <Button onClick={() => setShowFormAdd(false)} disabled={isLoading}>
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit" loading={isLoading}>
+              Thêm
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  };
+
   return (
     <div className='flex flex-col gap-5 mt-10'>
       <div className='flex justify-between items-center'>
@@ -123,18 +411,24 @@ const Lecturer = () => {
           <Link className="text-sm text-gray-400 p-2 rounded-md hover:bg-gray-200" to="/admin/lecturer/statistics">Thống kê</Link>
         </div>
         <div className='flex gap-2'>
-        <CustomButton icon={<FaPlus />} onClick={() => console.log("Add")} hoverText="Thêm giảng viên"/>
-        <CustomButton icon={<CiImport className="text-xl" />} onClick={() => console.log("Import")} hoverText="Import"/>
-        <CustomButton icon={<CiExport className="text-xl" />} onClick={() => console.log("Export")} hoverText="Export"/>
-      
+          <CustomButton icon={<FaPlus />} onClick={() => setShowFormAdd(true)} hoverText="Thêm giảng viên" />
+          <CustomButton icon={<CiImport className="text-xl" />} onClick={() => console.log("Import")} hoverText="Import" />
+          <CustomButton icon={<CiExport className="text-xl" />} onClick={() => console.log("Export")} hoverText="Export" />
+
         </div>
-        </div>
+      </div>
       <Table
         columns={columns}
         dataSource={lecturers}
         pagination={{ pageSize: 5 }}
         scrollToFirstRowOnChange={true}
       />
+      {
+        lecturerId !== 0 && (
+          <TableCourseByArea lecturerId={lecturerId} />
+        )
+      }
+      {showFormAdd && <FormAdd />}
     </div>
   );
 };

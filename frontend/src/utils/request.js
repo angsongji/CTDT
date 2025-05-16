@@ -71,6 +71,7 @@ export const postWithStatus = async (path, options) => {
         body: JSON.stringify(options)
     })
     const result = await responsive.json();
+    console.log(result);
     return {data: result, status: responsive.status};
 }
 
