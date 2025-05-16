@@ -11,31 +11,37 @@ import com.project.CTDT.repository.LecturerCourseRepository;
 @Service
 public class LecturerCourseServiceImpl implements LecturerCourseService {
 
-    private final LecturerCourseRepository lecturerCourseRepository;
+	private final LecturerCourseRepository lecturerCourseRepository;
 
-    // Constructor injection
-    public LecturerCourseServiceImpl(LecturerCourseRepository lecturerCourseRepository) {
-        this.lecturerCourseRepository = lecturerCourseRepository;
-    }
+	// Constructor injection
+	public LecturerCourseServiceImpl(LecturerCourseRepository lecturerCourseRepository) {
+		this.lecturerCourseRepository = lecturerCourseRepository;
+	}
 
-    @Override
-    public List<LecturerCourse> getAllLecturerCourses() {
-        return lecturerCourseRepository.findAll();
-    }
+	@Override
+	public List<LecturerCourse> getAllLecturerCourses() {
+		return lecturerCourseRepository.findAll();
+	}
 
-    @Override
-    public LecturerCourse getLecturerCourseById(Integer id) {
-        Optional<LecturerCourse> optional = lecturerCourseRepository.findById(id);
-        return optional.orElseThrow(() -> new RuntimeException("LecturerCourse not found with id " + id));
-    }
+	@Override
+	public LecturerCourse getLecturerCourseById(Integer id) {
+		Optional<LecturerCourse> optional = lecturerCourseRepository.findById(id);
+		return optional.orElseThrow(() -> new RuntimeException("LecturerCourse not found with id " + id));
+	}
 
-    @Override
-    public LecturerCourse saveLecturerCourse(LecturerCourse lecturerCourse) {
-        return lecturerCourseRepository.save(lecturerCourse);
-    }
+	@Override
+	public LecturerCourse saveLecturerCourse(LecturerCourse lecturerCourse) {
+		return lecturerCourseRepository.save(lecturerCourse);
+	}
 
-    @Override
-    public void deleteLecturerCourse(Integer id) {
-        lecturerCourseRepository.deleteById(id);
-    }
+	@Override
+	public void deleteLecturerCourse(Integer id) {
+		lecturerCourseRepository.deleteById(id);
+	}
+
+	@Override
+	public List<LecturerCourse> saveAll(List<LecturerCourse> list) {
+		return lecturerCourseRepository.saveAll(list);
+	}
+
 }

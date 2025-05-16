@@ -32,4 +32,8 @@ export const deleteCourse = async (id) => {
     return result;
 };
 
-
+// Lấy thông tin khoá học theo lecturerID
+export const getCourseByLecturerId = async (lecturerId) => {
+    const result = await get(`courses/lecturer/${lecturerId}`);
+    return result;
+};

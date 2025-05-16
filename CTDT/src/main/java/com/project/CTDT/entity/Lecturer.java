@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -50,14 +49,14 @@ public class Lecturer {
 	@Column(name = "status")
 	private Integer status = 1;
 
-	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(mappedBy = "lecturer", fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "lecturer-lecturerCourses")
 	@JsonIgnore
 	private Set<LecturerCourse> lecturerCourses;
 	// cascade = CascadeType.ALL : Khi bạn xóa một phần tử LecturerCourse khỏi danh
 	// sách lecturerCourses, thì Hibernate sẽ tự động xóa record đó khỏi database.
 
-	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "lecturer", fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "lecturer-teachingAssignments")
 	private Set<TeachingAssignment> teachingAssignments;
 
