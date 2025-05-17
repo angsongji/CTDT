@@ -3,6 +3,7 @@ package com.project.CTDT.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -30,12 +31,12 @@ public class TrainingCycleFaculty {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "training_cycle_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trainingCycle_faculty"))
-	@JsonIgnore
+	@JsonBackReference(value = "trainingCycle-trainingCycleFaculty")
 	private TrainingCycle trainingCycle;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "faculty_id", nullable = false, foreignKey = @ForeignKey(name = "fk_faculty_trainingCycle"))
-	@JsonIgnore
+	@JoinColumn(name = "faculty_id", nullable = false, foreignKey = @ForeignKey(name = "fk_faculty_trainingCycle")) 
+	@JsonBackReference(value = "trainingCycleFaculty-faculty")
 	private Faculty faculty;
 
 	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
