@@ -33,10 +33,12 @@ import { Navigate } from "react-router-dom";
 const router = createBrowserRouter([
     {
         path: "/", //Phần chung user và artist
-        element: <UserLayout />, // Layout chung
+        element: <AdminLayout />, // Layout chung
         children: [
-            { path: "", element: <Home /> },
-            { path: "curriculum", element: <Curriculum /> },
+            {
+                index: true, // Khi path là đúng "/"
+                element: <Navigate to="/admin/faculty" replace />, // ✅ Redirect sang /admin/faculty
+            },
         ],
     },
     {
