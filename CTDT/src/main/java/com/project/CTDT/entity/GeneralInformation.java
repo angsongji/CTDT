@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -67,4 +68,9 @@ public class GeneralInformation {
 																									// plan liên quan
 	@JsonIgnore
 	private Set<TeachingPlan> teachingPlans = new HashSet<>();
+	
+	@JsonProperty("trainingCycleFacultyId")
+	public Integer getTrainingCycleFacultyId() {
+	    return trainingCycleFaculty != null ? trainingCycleFaculty.getId() : null;
+	}
 }

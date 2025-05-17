@@ -4,6 +4,8 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -50,6 +52,7 @@ public class GroupOpeningPlan {
 
 	@OneToMany(mappedBy = "groupOpeningPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "groupPlan-groups")
+	//@JsonIgnore //them de test hi
 	private Set<Group> groups;
 
 	// Quan hệ 1-1 với bảng trung gian TrainingCycleFaculty
@@ -58,4 +61,8 @@ public class GroupOpeningPlan {
 	@JsonBackReference(value = "trainingCycleFaculty-group_opening_plan")
 	private TrainingCycleFaculty trainingCycleFaculty;
 
+	@JsonProperty("trainingCycleFacultyId")
+	public Integer getTrainingCycleFacultyId() {
+	    return trainingCycleFaculty != null ? trainingCycleFaculty.getId() : null;
+	}
 }
