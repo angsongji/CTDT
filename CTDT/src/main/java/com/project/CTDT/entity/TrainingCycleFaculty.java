@@ -5,8 +5,17 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import jakarta.persistence.*;
-
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,26 +31,23 @@ public class TrainingCycleFaculty {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "training_cycle_id", nullable = false, foreignKey = @ForeignKey(name = "fk_trainingCycle_faculty"))
-	//@JsonIgnore 
 	@JsonBackReference(value = "trainingCycle-trainingCycleFaculty")
 	private TrainingCycle trainingCycle;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "faculty_id", nullable = false, foreignKey = @ForeignKey(name = "fk_faculty_trainingCycle"))
-	//@JsonIgnore 
+	@JoinColumn(name = "faculty_id", nullable = false, foreignKey = @ForeignKey(name = "fk_faculty_trainingCycle")) 
 	@JsonBackReference(value = "trainingCycleFaculty-faculty")
 	private Faculty faculty;
 
 	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonManagedReference(value = "trainingCycleFaculty-generalInformation")
-	@JsonIgnore 
+	@JsonIgnore
 	private GeneralInformation generalInformation;
 
 	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonManagedReference(value = "trainingCycleFaculty-group_opening_plan")
 	@JsonIgnore
 	private GroupOpeningPlan groupOpeningPlan;
-
 
 	@JsonProperty("trainingCycleId")
 	public Integer getTrainingCycleId() {

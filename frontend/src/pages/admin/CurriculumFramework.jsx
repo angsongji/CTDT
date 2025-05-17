@@ -40,31 +40,35 @@ const CurriculumFramework = () => {
       <table className="w-full table-auto border border-[var(--light-pink)] rounded-xl overflow-hidden border-separate border-spacing-0 text-center text-sm " style={{ fontFamily: "Arial" }}>
         <thead className="bg-[var(--dark-pink)] text-white h-[8vh]" >
           <tr>
-            <th className="border-r-1 border-white">STT</th>
-            <th className="border-r-1 border-white">Tên chu kỳ đào tạo</th>
-            <th className="border-r-1 border-white">Tên ngành đào tạo</th>
-            <th className="border-r-1 border-white">&nbsp;</th>
+            <th className="">Mã chu kỳ</th>
+            <th className="">Tên chu kỳ đào tạo</th>
+            <th className="">Mã ngành</th>
+            <th className="">Tên ngành đào tạo</th>
+            <th className="">&nbsp;</th>
           </tr>
         </thead>
-        <tbody className='bg-white'>
-          {trainingCycles.map((trainingCycle, index) => {
-            return trainingCycle.faculties.map((faculty, facultyIndex) => (
-              <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
-                {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
-                {facultyIndex === 0 && (
-                  <>
-                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{index + 1}</td>
-                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{trainingCycle.name}</td>
-                  </>
-                )}
-                <td className='py-5'>{faculty.name}</td>
-                <td className='py-5 flex items-center justify-center'>
-                  <Link to={`/admin/curriculum-framework/${faculty.trainingCycleFacultyList[0].generalInformation?.id}`} className="text-blue-500 underline">Xem chi tiết</Link>
+         <tbody className='bg-white'>
+                  {trainingCycles.map((trainingCycle, index) => {
+                    return trainingCycle.faculties.map((faculty, facultyIndex) =>
+                      faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id) && (
+                        <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
+                          {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
+                          {facultyIndex === 0 && (
+                            <>
+        
+                              <td rowSpan={trainingCycle.faculties.length} className='py-5 bg-gray-100'>{trainingCycle.id}</td>
+                              <td rowSpan={trainingCycle.faculties.length} className='py-5 bg-gray-200'>{trainingCycle.name}</td>
+                            </>
+                          )}
+                          <td className='py-5 bg-gray-100'>{faculty.id}</td>
+                          <td className='py-5 '>{faculty.name}</td>
+                          <td className='py-5 flex items-center justify-center'>
+                  <Link to={`/admin/curriculum-framework/${faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id)?.generalInformation?.id}`} className="text-blue-500 underline">Xem chi tiết</Link>
                 </td>
-              </tr>
-            ));
-          })}
-        </tbody>
+                        </tr>
+                      ));
+                  })}
+                </tbody>
       </table>
       {/* {!showFormUpdate && selectFaculty && Object.keys(selectFaculty).length > 0 && (
         <GeneralInformationDetail faculty={selectFaculty} />
