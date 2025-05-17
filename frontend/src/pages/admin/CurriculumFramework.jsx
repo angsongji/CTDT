@@ -47,28 +47,26 @@ const CurriculumFramework = () => {
             <th className="">&nbsp;</th>
           </tr>
         </thead>
-         <tbody className='bg-white'>
-                  {trainingCycles.map((trainingCycle, index) => {
-                    return trainingCycle.faculties.map((faculty, facultyIndex) =>
-                      faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id) && (
-                        <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
-                          {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
-                          {facultyIndex === 0 && (
-                            <>
-        
-                              <td rowSpan={trainingCycle.faculties.length} className='py-5 bg-gray-100'>{trainingCycle.id}</td>
-                              <td rowSpan={trainingCycle.faculties.length} className='py-5 bg-gray-200'>{trainingCycle.name}</td>
-                            </>
-                          )}
-                          <td className='py-5 bg-gray-100'>{faculty.id}</td>
-                          <td className='py-5 '>{faculty.name}</td>
-                          <td className='py-5 flex items-center justify-center'>
+        <tbody className='bg-white'>
+          {trainingCycles.map((trainingCycle, index) => {
+            return trainingCycle.faculties.map((faculty, facultyIndex) => (
+              <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
+                {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
+                {facultyIndex === 0 && (
+                  <>
+                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{trainingCycle.id}</td>
+                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{trainingCycle.name}</td>
+                  </>
+                )}
+                <td className='py-5'>{faculty.id}</td>
+                <td className='py-5'>{faculty.name}</td>
+                <td className='py-5 flex items-center justify-center'>
                   <Link to={`/admin/curriculum-framework/${faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id)?.generalInformation?.id}`} className="text-blue-500 underline">Xem chi tiết</Link>
                 </td>
-                        </tr>
-                      ));
-                  })}
-                </tbody>
+              </tr>
+            ));
+          })}
+        </tbody>
       </table>
       {/* {!showFormUpdate && selectFaculty && Object.keys(selectFaculty).length > 0 && (
         <GeneralInformationDetail faculty={selectFaculty} />

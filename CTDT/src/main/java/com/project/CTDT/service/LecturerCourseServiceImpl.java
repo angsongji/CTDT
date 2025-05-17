@@ -44,4 +44,9 @@ public class LecturerCourseServiceImpl implements LecturerCourseService {
 		return lecturerCourseRepository.saveAll(list);
 	}
 
+	@Override
+	public void deleteAll(List<LecturerCourse> lecturerCourses) {
+		lecturerCourseRepository.deleteAll(lecturerCourses);
+	}
+
 }

@@ -5,10 +5,10 @@ import { Dropdown, Table, Modal, Select } from 'antd';
 import { Link } from 'react-router-dom';
 import { FaEllipsisV } from 'react-icons/fa';
 import { CiImport, CiExport } from "react-icons/ci";
-import { getAllLecturers, deleteLecturer, createLecturer } from '../../services/lecturerServices';
+import { getAllLecturers, deleteLecturer, createLecturer, updateLecturer, getLecturerById } from '../../services/lecturerServices';
 import { getCourseByLecturerId } from '../../services/courseServices';
 import { getAllCourses } from '../../services/courseServices';
-import { createLecturerCourse } from '../../services/lecturerCourseServices';
+import { createLecturerCourse, deleteLecturerCourse } from '../../services/lecturerCourseServices';
 import { HiX } from "react-icons/hi";
 import dayjs from 'dayjs';
 const { confirm } = Modal;
@@ -17,6 +17,7 @@ const Lecturer = () => {
   const [lecturers, setLecturers] = useState([]);
   const [lecturerId, setLecturerId] = useState(0);
   const [showFormAdd, setShowFormAdd] = useState(false);
+  const [showFormUpdate, setShowFormUpdate] = useState(false);
   const [courses, setCourses] = useState([]);
   useEffect(() => {
     const fetchAPI = async () => {
@@ -92,7 +93,8 @@ const Lecturer = () => {
         setLecturerId(lecturer.id);
         break;
       case "edit":
-        console.log("Chỉnh sửa", lecturer);
+        setLecturerId(lecturer.id);
+        setShowFormUpdate(true);
         break;
       case "delete":
         confirm({
@@ -249,7 +251,7 @@ const Lecturer = () => {
         message.loading({ content: "Đang thêm giảng viên...", key: "add" });
         const result = await createLecturer(dataAdd);
         if (result.status === 200) {
-          if (dataLecturerCourse.length === 0){
+          if (dataLecturerCourse.length === 0) {
             setLecturers(prev => [...prev, { id: result.data.id, ...dataAdd }]);
             message.success({ content: "Thêm giảng viên thành công!", key: "add", duration: 2, style: { marginTop: '1vh' } });
             setShowFormAdd(false);
@@ -403,6 +405,204 @@ const Lecturer = () => {
     );
   };
 
+  const FormUpdate = () => {
+    const [dataUpdate, setDataUpdate] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [oldLecturerCourses, setOldLecturerCourses] = useState([]);
+    useEffect(() => {
+      const fetchAPI = async () => {
+        const result = await getCourseByLecturerId(lecturerId);
+        let oldLecturerCourses;
+        if(result.length === 0){
+          oldLecturerCourses = [];
+        }else{
+          oldLecturerCourses = result[0].lecturers.find(item => item.id === lecturerId).lecturerCourses || [];
+        }
+        console.log(oldLecturerCourses);
+        setOldLecturerCourses(oldLecturerCourses);
+        setDataUpdate({
+          ...lecturers.find(item => item.id === lecturerId),
+          lecturerCourses: result.map(item => ({
+            course: {
+              id: item.id,
+            }
+          }))
+        });
+      }
+      fetchAPI();
+    }, []);
+
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setDataUpdate({
+        ...dataUpdate,
+        [name]: value
+      });
+    };
+
+    const handleDateChange = (date) => {
+      setDataUpdate({
+        ...dataUpdate,
+        dateOfBirth: date ? date.format('YYYY-MM-DD') : ''
+      });
+    };
+
+    const handleSubmitForm = async (e) => {
+      e.preventDefault();
+      console.log(dataUpdate);
+      console.log(oldLecturerCourses);
+      try {
+        setIsLoading(true);
+        message.loading({ content: "Đang cập nhật giảng viên...", key: "update" });
+        const result = await updateLecturer(lecturerId, dataUpdate);
+        if (result.status === 200) {
+          const result2 = await deleteLecturerCourse(oldLecturerCourses);
+          if (result2.status === 200) {
+            const newLecturerCourses = dataUpdate.lecturerCourses.map(item => {
+              item.lecturer = { id: lecturerId };
+              return item;
+            });
+            console.log(newLecturerCourses);
+            const result3 = await createLecturerCourse(newLecturerCourses);
+            if (result3.status === 200) {
+              setLecturers(prev => prev.map(item =>
+                item.id === lecturerId ? { ...item, ...dataUpdate } : item
+              ));
+              message.success({ content: "Cập nhật giảng viên thành công!", key: "update", duration: 2, style: { marginTop: '1vh' } });
+              setShowFormUpdate(false);
+              setLecturerId(0);
+            } else {
+              console.log(result3);
+              message.error({ content: "Cập nhật giảng viên thất bại 3!", key: "update", duration: 2, style: { marginTop: '1vh' } });
+            }
+          } else {
+            console.log(result2);
+            message.error({ content: "Cập nhật giảng viên thất bại 2!", key: "update", duration: 2, style: { marginTop: '1vh' } });
+          }
+        } else {
+          console.log(result);
+          message.error({ content: "Cập nhật giảng viên thất bại 1!", key: "update", duration: 2, style: { marginTop: '1vh' } });
+        }
+      } catch (error) {
+        console.log(error);
+        message.error({
+          content: error.message,
+          duration: 2,
+          key: "update",
+          style: { marginTop: '1vh' },
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
+        <form onSubmit={handleSubmitForm} className="rounded-lg relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 shadow-md">
+          <div className='font-bold text-xl text-center'>Cập nhật giảng viên</div>
+          <div onClick={() => { setShowFormUpdate(false); setLecturerId(0) }} className='cursor-pointer absolute right-0 top-0 p-2'>
+            <HiX size={24} />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Họ và tên</span>
+            <Input
+              name="fullName"
+              value={dataUpdate.fullName}
+              onChange={handleChange}
+              required
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Giới tính</span>
+            <Radio.Group
+              name="gender"
+              value={dataUpdate.gender}
+              onChange={handleChange}
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+            >
+              <Radio value="Nam">Nam</Radio>
+              <Radio value="Nữ">Nữ</Radio>
+            </Radio.Group>
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Ngày sinh</span>
+            <DatePicker
+              value={dataUpdate.dateOfBirth ? dayjs(dataUpdate.dateOfBirth) : null}
+              onChange={handleDateChange}
+              format="DD/MM/YYYY"
+              placeholder='Chọn ngày sinh'
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Bằng cấp</span>
+            <Input
+              type="text"
+              required
+              name="degree"
+              onChange={handleChange}
+              value={dataUpdate.degree}
+              placeholder="Nhập bằng cấp"
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Học vị</span>
+            <Input
+              type="text"
+              required
+              name="academicTitle"
+              onChange={handleChange}
+              value={dataUpdate.academicTitle}
+              placeholder="Nhập học vị"
+              style={{ width: "80%", padding: '0.25rem 0.5rem' }}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className='w-full flex items-center'>
+            <span className='flex-1'>Học phần giảng dạy</span>
+            <Select
+              mode="multiple"
+              style={{ width: "80%" }}
+              placeholder="Chọn học phần giảng dạy"
+              value={dataUpdate.lecturerCourses?.map(item => item.course.id)}
+
+              onChange={(values) =>
+                setDataUpdate(prev => ({
+                  ...prev,
+                  lecturerCourses: values.map(value => ({ course: { id: value } }))
+                }))
+              }
+              disabled={isLoading}
+              optionFilterProp="children"
+            >
+              {courses.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name}
+                </Select.Option>
+              ))}
+            </Select>
+
+          </div>
+
+          <div className='flex justify-end gap-2'>
+            <Button onClick={() => { setShowFormUpdate(false); setLecturerId(0) }}>Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={isLoading}>Cập nhật</Button>
+          </div>
+        </form>
+      </div>
+    );
+  };
+
+
   return (
     <div className='flex flex-col gap-5 mt-10'>
       <div className='flex justify-between items-center'>
@@ -424,11 +624,12 @@ const Lecturer = () => {
         scrollToFirstRowOnChange={true}
       />
       {
-        lecturerId !== 0 && (
+        !showFormUpdate && lecturerId !== 0 && (
           <TableCourseByArea lecturerId={lecturerId} />
         )
       }
       {showFormAdd && <FormAdd />}
+      {showFormUpdate && <FormUpdate />}
     </div>
   );
 };
