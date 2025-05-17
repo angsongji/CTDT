@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Snackbar, Alert } from "@mui/material";
 import "../../index.css";
 
@@ -6,8 +6,12 @@ function TopBar() {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [openNotification, setOpenNotification] = useState(false);
     const [currentMessage, setCurrentMessage] = useState("");
-    const audio = new Audio("notification.mp3");
-    audio.load();
+    const audioRef = useRef(null);
+
+    useEffect(() => {
+        audioRef.current = new Audio("/notification.mp3"); // Đường dẫn từ public folder
+        audioRef.current.load();
+    }, []);
 
     const notifications = [
         "Lo mà làm bài, có người đang giám sát đây!",
@@ -36,10 +40,15 @@ function TopBar() {
             const randomMessage = notifications[Math.floor(Math.random() * notifications.length)];
             setCurrentMessage(randomMessage);
             setOpenNotification(true);
-            audio.play();
+
+            if (audioRef.current) {
+                audioRef.current.play().catch(err => {
+                    console.warn("Không thể phát âm thanh:", err);
+                });
+            }
         };
 
-        // Random interval between 2-5 minutes (120000-300000 ms)
+        // Khoảng thời gian ngẫu nhiên từ 2-5 phút
         const randomInterval = Math.floor(Math.random() * (300000 - 120000 + 1) + 120000);
         const notificationTimer = setInterval(showRandomNotification, randomInterval);
 
