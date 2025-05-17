@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 import com.project.CTDT.entity.TrainingCycle;
 import com.project.CTDT.service.TrainingCycleService;
@@ -48,23 +49,29 @@ public class TrainingCycleController {
 	// Tạo mới training cycle
 	@PostMapping("/create")
 	public TrainingCycle createTrainingCycle(@RequestBody TrainingCycle trainingCycle) {
-		System.out.println("hello");
 		System.out.println(trainingCycle);
 		return trainingCycleService.saveTrainingCycle(trainingCycle);
 	}
 
 	// Cập nhật training cycle
-	@PutMapping("/update/{id}")
-	public ResponseEntity<TrainingCycle> updateTrainingCycle(@PathVariable Integer id,
-			@RequestBody TrainingCycle trainingCycle) {
-		TrainingCycle existingCycle = trainingCycleService.getTrainingCycleById(id);
-		if (existingCycle == null) {
-			return ResponseEntity.notFound().build(); // Trả về 404 nếu không tìm thấy
-		}
-		trainingCycle.setId(id); // Cập nhật id trước khi lưu
-		TrainingCycle updated = trainingCycleService.saveTrainingCycle(trainingCycle);
-		return ResponseEntity.ok(updated);
+	@PatchMapping("/edit/{id}")
+	public ResponseEntity<TrainingCycle> updateTrainingCycle(
+	        @PathVariable Integer id,
+	        @RequestBody TrainingCycle trainingCycle) {
+
+	    TrainingCycle existingCycle = trainingCycleService.getTrainingCycleById(id);
+	    if (existingCycle == null) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    existingCycle.setName(trainingCycle.getName());
+	    existingCycle.setStartYear(trainingCycle.getStartYear());
+	    existingCycle.setEndYear(trainingCycle.getEndYear());
+
+	    TrainingCycle updated = trainingCycleService.saveTrainingCycle(existingCycle);
+	    return ResponseEntity.ok(updated);
 	}
+
 
 	// Xoá training cycle
 	@DeleteMapping("/delete/{id}")

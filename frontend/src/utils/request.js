@@ -33,12 +33,22 @@ export const patch = async (path, id , options) => {
 }
 
 export const del = async (path, id) => {
-    const responsive = await fetch(`${API_DOMAIN}${path}/${id}`,{
+    const response = await fetch(`${API_DOMAIN}${path}/${id}`, {
         method: "DELETE"
-    })
-    const result = await responsive.json();
-    return result;
-}
+    });
+    if (response.status === 204) return null;
+
+    const text = await response.text();
+    if (!text) return null;
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Lỗi parse JSON:", error);
+        return null;
+    }
+};
+
 
 export const getWithStatus = async (path) => {
     const responsive = await fetch(API_DOMAIN + path);

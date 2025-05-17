@@ -67,3 +67,4 @@ public class TrainingCycle {
 //		private Set<Faculty> faculties;
 
 }
+
