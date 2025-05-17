@@ -6,6 +6,8 @@ function TopBar() {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [openNotification, setOpenNotification] = useState(false);
     const [currentMessage, setCurrentMessage] = useState("");
+    const audio = new Audio("notification.mp3");
+    audio.load();
 
     const notifications = [
         "Lo mà làm bài, có người đang giám sát đây!",
@@ -34,6 +36,7 @@ function TopBar() {
             const randomMessage = notifications[Math.floor(Math.random() * notifications.length)];
             setCurrentMessage(randomMessage);
             setOpenNotification(true);
+            audio.play();
         };
 
         // Random interval between 2-5 minutes (120000-300000 ms)
