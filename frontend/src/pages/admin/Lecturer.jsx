@@ -11,6 +11,7 @@ import { getAllCourses } from '../../services/courseServices';
 import { createLecturerCourse, deleteLecturerCourse } from '../../services/lecturerCourseServices';
 import { HiX } from "react-icons/hi";
 import dayjs from 'dayjs';
+import * as XLSX from 'xlsx-js-style';
 const { confirm } = Modal;
 
 const Lecturer = () => {
@@ -125,6 +126,62 @@ const Lecturer = () => {
       message.error(result.message);
     }
   }
+
+
+  const handleExport = () => {
+    //Các cột sẽ xuất hiện trong file excel
+    const filteredData = lecturers.map(item => ({
+      "Mã giảng viên": item.id,
+      "Tên giảng viên": item.fullName,
+      "Giới tính": item.gender,
+      "Ngày sinh": dayjs(item.dateOfBirth).format("DD/MM/YYYY"),
+      "Bằng cấp": item.degree,
+      "Học vị": item.academicTitle,
+      "Học phần giảng dạy": courses
+        .filter(course => course.lecturers.some(lect => lect.id === item.id))
+        .map(course => course.id + " - " + course.name)
+        .join("\n")
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+
+    // Style tất cả các ô: căn giữa các ô, nền xanh và chữ trắng cho hàng đầu (tiêu đề), font times new roman
+    for (let row = range.s.r; row <= range.e.r; ++row) {
+      for (let col = range.s.c; col <= range.e.c; ++col) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        const cell = worksheet[cellAddress];
+        if (!cell || !cell.s) cell.s = {};
+
+        // Căn giữa tất cả
+        cell.s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+        //Font times new roman
+        cell.s.font = { name: 'Times New Roman' };
+
+        // Nếu là hàng tiêu đề (hàng đầu tiên)
+        if (row === 0) {
+          cell.s.fill = {
+            fgColor: { rgb: '4472C4' } // Nền xanh dương
+          };
+          cell.s.font = {
+            bold: true,
+            color: { rgb: 'FFFFFF' } // Chữ trắng
+          };
+        }
+      }
+    }
+
+    // Độ rộng cột
+    worksheet['!cols'] = Array(range.e.c + 1).fill({ width: 20 });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "GiangVien"); //GiangVien là tên của sheet á
+
+    XLSX.writeFile(workbook, `lecturers_${Date.now()}.xlsx`);
+    message.success("Xuất file excel thành công!");
+
+  };
 
   const CustomButton = ({ icon, onClick, hoverText = "Click me" }) => {
     const [hovered, setHovered] = useState(false);
@@ -413,9 +470,9 @@ const Lecturer = () => {
       const fetchAPI = async () => {
         const result = await getCourseByLecturerId(lecturerId);
         let oldLecturerCourses;
-        if(result.length === 0){
+        if (result.length === 0) {
           oldLecturerCourses = [];
-        }else{
+        } else {
           oldLecturerCourses = result[0].lecturers.find(item => item.id === lecturerId).lecturerCourses || [];
         }
         console.log(oldLecturerCourses);
@@ -613,7 +670,7 @@ const Lecturer = () => {
         <div className='flex gap-2'>
           <CustomButton icon={<FaPlus />} onClick={() => setShowFormAdd(true)} hoverText="Thêm giảng viên" />
           <CustomButton icon={<CiImport className="text-xl" />} onClick={() => console.log("Import")} hoverText="Import" />
-          <CustomButton icon={<CiExport className="text-xl" />} onClick={() => console.log("Export")} hoverText="Export" />
+          <CustomButton icon={<CiExport className="text-xl" />} onClick={() => handleExport()} hoverText="Export" />
 
         </div>
       </div>
