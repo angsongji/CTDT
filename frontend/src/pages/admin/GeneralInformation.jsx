@@ -30,13 +30,13 @@ const GeneralInformation = () => {
     if (key === "edit") {
       setSelectFaculty(faculty);
       setSelectTrainingCycle(trainingCycle);
-      if (faculty.trainingCycleFacultyList[0].generalInformation) {
+      if (faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id)?.generalInformation) {
         setShowFormUpdate(true);
       } else {
         message.error("Chưa có thông tin chung của ngành này!");
       }
     } else if (key === "delete") {
-      const generalInformationId = faculty.trainingCycleFacultyList[0].generalInformation?.id;
+      const generalInformationId = faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id)?.generalInformation?.id;
       if (generalInformationId) {
         confirm({
           title: 'Bạn có chắc chắn muốn xóa?',
@@ -45,7 +45,7 @@ const GeneralInformation = () => {
           okType: 'danger',
           cancelText: 'Hủy',
           onOk() {
-            handleDeleteGeneralInformation();
+            handleDeleteGeneralInformation(generalInformationId);
           },
           onCancel() {
             console.log('Hủy xóa');
@@ -57,6 +57,7 @@ const GeneralInformation = () => {
 
     } else if (key === "detail") {
       setSelectFaculty(faculty);
+      setSelectTrainingCycle(trainingCycle);
     }
   };
 
@@ -66,28 +67,32 @@ const GeneralInformation = () => {
       .filter(tc =>
         tc.faculties.some(faculty =>
           faculty.trainingCycleFacultyList.length > 0 &&
-          faculty.trainingCycleFacultyList[0].generalInformation == null
+          faculty.trainingCycleFacultyList.some(item => item.trainingCycleId === tc.id && item.facultyId === faculty.id && item.generalInformation === null)
         )
       );
-    if(optionsTrainingCycles.length === 0){
+    if (optionsTrainingCycles.length === 0) {
       message.error("Không có ngành đào tạo theo chu kỳ nào trống thông tin chung!");
-    }else{
+    } else {
       setShowFormAdd(true);
     }
   }
-    
+
 
   const removeGeneralInformationById = (trainingCycles, idToRemove) => {
     return trainingCycles.map(trainingCycle => ({
       ...trainingCycle,
       faculties: trainingCycle.faculties.map(faculty => ({
         ...faculty,
-        trainingCycleFacultyList: faculty.trainingCycleFacultyList.map(tcf => ({
-          ...tcf,
-          generalInformation: tcf.generalInformation && tcf.generalInformation.id === idToRemove
-            ? null
-            : tcf.generalInformation
-        }))
+        trainingCycleFacultyList: faculty.trainingCycleFacultyList.map(tcf => {
+          if (tcf.trainingCycleId !== trainingCycle.id || tcf.facultyId !== faculty.id)
+            return tcf;
+          return {
+            ...tcf,
+            generalInformation: tcf.generalInformation && tcf.generalInformation.id === idToRemove
+              ? null
+              : tcf.generalInformation
+          }
+        })
       }))
     }));
   };
@@ -114,17 +119,18 @@ const GeneralInformation = () => {
     }
   };
 
-  const GeneralInformationDetail = ({ faculty }) => {
+  const GeneralInformationDetail = ({ faculty, trainingCycle }) => {
     const [creditSum, setCreditSum] = useState("");
-   
+
     const trainingCycleFacultyList = Array.isArray(faculty.trainingCycleFacultyList)
       ? faculty.trainingCycleFacultyList
       : [];
 
-    const generalInformation = trainingCycleFacultyList[0]?.generalInformation;
+    const generalInformation = trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id)?.generalInformation;
     if (!generalInformation) {
       message.error("Chưa có thông tin chung của ngành này!");
       setSelectFaculty({});
+      setSelectTrainingCycle({});
       return null;
     }
     const title = [
@@ -144,15 +150,15 @@ const GeneralInformation = () => {
         const result = await countCredit(generalInformation.id);
         setCreditSum(result);
       };
-  
+
       fetchCredit();
     }, [generalInformation]);
 
     const countCredit = async (generalInformationId) => {
       try {
         const teachingPlans = await getByInformationId(generalInformationId);
-        const total = teachingPlans.reduce((sum, teachingPlan) => teachingPlan.course.knowledgeArea.usage_count!= 0 ? sum + teachingPlan.course.credits : sum, 0);
-    
+        const total = teachingPlans.reduce((sum, teachingPlan) => teachingPlan.course.knowledgeArea.usage_count != 0 ? sum + teachingPlan.course.credits : sum, 0);
+
         setCreditSum(total === 0 ? "Chưa có kế hoạch dạy học" : total + " tín chỉ");
         return total === 0 ? "Chưa có kế hoạch dạy học" : total + " tín chỉ";
       } catch (error) {
@@ -160,7 +166,7 @@ const GeneralInformation = () => {
         return "Lỗi khi lấy dữ liệu";
       }
     };
-    
+
 
     return (
       <>
@@ -217,7 +223,7 @@ const GeneralInformation = () => {
     useEffect(() => {
       const trainingCycle = trainingCycles.find(item => item.id === selectValueTrainingCycle);
       if (trainingCycle) {
-        const facultiesFilter = trainingCycle.faculties.filter(item => item.trainingCycleFacultyList[0].generalInformation == null);
+        const facultiesFilter = trainingCycle.faculties.filter(item => item.trainingCycleFacultyList.some(item => item.generalInformation === null));
         setFaculties(facultiesFilter);
         setSelectValueFaculty(facultiesFilter[0]?.id);
       }
@@ -243,14 +249,15 @@ const GeneralInformation = () => {
       .filter(tc =>
         tc.faculties.some(faculty =>
           faculty.trainingCycleFacultyList.length > 0 &&
-          faculty.trainingCycleFacultyList[0].generalInformation == null
+          faculty.trainingCycleFacultyList.some(item => item.trainingCycleId === tc.id && item.facultyId === faculty.id && item.generalInformation === null)
         )
       )
       .map(tc => ({
         value: tc.id,
         label: tc.name
       }));
-    setSelectValueTrainingCycle(optionsTrainingCycles[0]?.value);
+    if (selectValueTrainingCycle === 0)
+      setSelectValueTrainingCycle(optionsTrainingCycles[0]?.value);
     const handleChangeTrainingCycle = (value) => {
       setSelectValueTrainingCycle(value);
     };
@@ -321,7 +328,7 @@ const GeneralInformation = () => {
         //Them doan ma tim trainingCycleFacultyid
         const trainingCycle = trainingCycles.find(item => item.id === selectValueTrainingCycle);
         const faculty = trainingCycle.faculties.find(item => item.id === selectValueFaculty);
-        const trainingCycleFaculty = faculty.trainingCycleFacultyList[0];
+        const trainingCycleFaculty = faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === selectValueTrainingCycle && item.facultyId === selectValueFaculty);
         dataAdd.trainingCycleFaculty = { id: trainingCycleFaculty.id };
         setIsLoading(true);
         message.loading({ content: "Đang tạo thông tin chung...", key: "add" });
@@ -502,17 +509,18 @@ const GeneralInformation = () => {
   }
 
   const FormUpdate = () => {
+    const generalInformation = selectFaculty.trainingCycleFacultyList.find(item => item.trainingCycleId === selectTrainingCycle.id && item.facultyId === selectFaculty.id)?.generalInformation;
     const [dataUpdate, setDataUpdate] = useState({
-      name: selectFaculty.trainingCycleFacultyList[0].generalInformation.name,
-      level: selectFaculty.trainingCycleFacultyList[0].generalInformation.level,
-      degreeType: selectFaculty.trainingCycleFacultyList[0].generalInformation.degreeType,
-      modeOfEducation: selectFaculty.trainingCycleFacultyList[0].generalInformation.modeOfEducation,
-      duration: selectFaculty.trainingCycleFacultyList[0].generalInformation.duration,
-      language: selectFaculty.trainingCycleFacultyList[0].generalInformation.language,
-      issued: selectFaculty.trainingCycleFacultyList[0].generalInformation.issued,
+      name: generalInformation.name,
+      level: generalInformation.level,
+      degreeType: generalInformation.degreeType,
+      modeOfEducation: generalInformation.modeOfEducation,
+      duration: generalInformation.duration,
+      language: generalInformation.language,
+      issued: generalInformation.issued,
       status: 1,
       trainingCycleFaculty: {
-        id: selectFaculty.trainingCycleFacultyList[0].id
+        id: selectFaculty.trainingCycleFacultyList.find(item => item.trainingCycleId === selectTrainingCycle.id && item.facultyId === selectFaculty.id)?.id
       }
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -528,7 +536,7 @@ const GeneralInformation = () => {
     const handleSubmitForm = async (e) => {
       e.preventDefault();
       try {
-        const generalInformationId = selectFaculty.trainingCycleFacultyList[0].generalInformation.id;
+        const generalInformationId = selectFaculty.trainingCycleFacultyList.find(item => item.trainingCycleId === selectTrainingCycle.id && item.facultyId === selectFaculty.id)?.generalInformation.id;
         setIsLoading(true);
         message.loading({ content: "Đang cập nhật thông tin chung...", key: "update" });
         const result = await updateGeneralInformation(generalInformationId, dataUpdate);
@@ -568,6 +576,8 @@ const GeneralInformation = () => {
             return {
               ...faculty,
               trainingCycleFacultyList: faculty.trainingCycleFacultyList.map((item) => {
+                if (item.trainingCycleId !== trainingCycleId)
+                  return item;
                 return {
                   ...item,
                   generalInformation: generalInformation
@@ -696,48 +706,52 @@ const GeneralInformation = () => {
       <table className="w-full table-auto border border-[var(--light-pink)] rounded-xl overflow-hidden border-separate border-spacing-0 text-center text-sm " style={{ fontFamily: "Arial" }}>
         <thead className="bg-[var(--dark-pink)] text-white h-[8vh]" >
           <tr>
-            <th className="border-r-1 border-white">STT</th>
-            <th className="border-r-1 border-white">Tên chu kỳ đào tạo</th>
-            <th className="border-r-1 border-white">Tên ngành đào tạo</th>
-            <th className="border-r-1 border-white">&nbsp;</th>
+            <th className="">Mã chu kỳ</th>
+            <th className="">Tên chu kỳ đào tạo</th>
+            <th className="">Mã ngành</th>
+            <th className="">Tên ngành đào tạo</th>
+            <th className="">&nbsp;</th>
           </tr>
         </thead>
         <tbody className='bg-white'>
           {trainingCycles.map((trainingCycle, index) => {
-            return trainingCycle.faculties.map((faculty, facultyIndex) => (
-              <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
-                {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
-                {facultyIndex === 0 && (
-                  <>
-                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{index + 1}</td>
-                    <td rowSpan={trainingCycle.faculties.length} className='py-5'>{trainingCycle.name}</td>
-                  </>
-                )}
-                <td className='py-5'>{faculty.name}</td>
-                <td className='py-5 flex items-center justify-center'>
-                  <Dropdown
-                    menu={{
-                      items: [
-                        { key: "detail", label: "Xem thông tin chung" },
-                        { key: "edit", label: "Chỉnh sửa" },
-                        { key: "delete", label: "Xóa", danger: true },
-                      ],
-                      onClick: ({ key }) => handleMenuClick(key, trainingCycle, faculty),
-                    }}
-                    trigger={["click"]}
-                  >
-                    <span className="cursor-pointer">
-                      <FaEllipsisV className="text-gray-500 hover:text-[var(--main-green)]" />
-                    </span>
-                  </Dropdown>
-                </td>
-              </tr>
-            ));
+            return trainingCycle.faculties.map((faculty, facultyIndex) =>
+              faculty.trainingCycleFacultyList.find(item => item.trainingCycleId === trainingCycle.id && item.facultyId === faculty.id) && (
+                <tr key={`${trainingCycle.id}-${facultyIndex}`} className=''>
+                  {/* Chỉ hiển thị STT và tên chu kỳ ở dòng đầu tiên */}
+                  {facultyIndex === 0 && (
+                    <>
+
+                      <td rowSpan={trainingCycle.faculties.length} className='py-5 bg-gray-100'>{trainingCycle.id}</td>
+                      <td rowSpan={trainingCycle.faculties.length} className='py-5 bg-gray-200'>{trainingCycle.name}</td>
+                    </>
+                  )}
+                  <td className='py-5 bg-gray-100'>{faculty.id}</td>
+                  <td className='py-5 '>{faculty.name}</td>
+                  <td className='py-5 flex items-center justify-center'>
+                    <Dropdown
+                      menu={{
+                        items: [
+                          { key: "detail", label: "Xem thông tin chung" },
+                          { key: "edit", label: "Chỉnh sửa" },
+                          { key: "delete", label: "Xóa", danger: true },
+                        ],
+                        onClick: ({ key }) => handleMenuClick(key, trainingCycle, faculty),
+                      }}
+                      trigger={["click"]}
+                    >
+                      <span className="cursor-pointer">
+                        <FaEllipsisV className="text-gray-500 hover:text-[var(--main-green)]" />
+                      </span>
+                    </Dropdown>
+                  </td>
+                </tr>
+              ));
           })}
         </tbody>
       </table>
       {!showFormUpdate && selectFaculty && Object.keys(selectFaculty).length > 0 && (
-        <GeneralInformationDetail faculty={selectFaculty} />
+        <GeneralInformationDetail faculty={selectFaculty} trainingCycle={selectTrainingCycle} />
       )}
       {showFormAdd && <FormAdd />}
       {showFormUpdate && <FormUpdate />}
