@@ -15,4 +15,6 @@ public interface LecturerCourseService {
 
 	List<LecturerCourse> saveAll(List<LecturerCourse> list);
 
+	void deleteAll(List<LecturerCourse> lecturerCourses);
+
 }

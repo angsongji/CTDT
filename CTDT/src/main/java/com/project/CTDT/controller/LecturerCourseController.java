@@ -3,6 +3,8 @@ package com.project.CTDT.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,8 +47,14 @@ public class LecturerCourseController {
 		return lecturerCourseService.saveLecturerCourse(lecturerCourse);
 	}
 
-	@DeleteMapping("/{id}")
-	public void deleteLecturerCourse(@PathVariable Integer id) {
-		lecturerCourseService.deleteLecturerCourse(id);
+	@DeleteMapping
+	public ResponseEntity<?> deleteAllLecturerCourses(@RequestBody List<LecturerCourse> lecturerCourses) {
+		try {
+			lecturerCourseService.deleteAll(lecturerCourses);
+			return ResponseEntity.ok().build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body("Xóa thất bại!");
+		}
 	}
+
 }
