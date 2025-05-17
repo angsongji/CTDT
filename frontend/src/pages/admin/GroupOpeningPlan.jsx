@@ -231,18 +231,21 @@ function GroupOpeningPlan() {
             onChange={handleFacultyChange}
             disabled={!selectedCycle}
           >
-            {selectedCycle &&
-              trainingCycleList
-                .find(cycle => cycle.id === selectedCycle)
-                ?.faculties
-                .flatMap(faculty =>
-                  faculty.trainingCycleFacultyList.map(tcf => (
-                    <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
-                      {tcf.generalInformation.name} ({tcf.generalInformation.language})
-                    </Option>
-                  ))
-                )
-            }
+		  {selectedCycle &&
+		    trainingCycleList
+		      .find(cycle => cycle.id === selectedCycle)
+		      ?.faculties
+		      ?.flatMap(faculty => {
+		        const list = faculty.trainingCycleFacultyList;
+		        // Nếu là array, trả về list luôn; nếu là object thì đưa vào array
+		        const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
+		        return normalizedList.map(tcf => (
+		          <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
+		            {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
+		          </Option>
+		        ));
+		      })
+		  }
           </Select>
 
           <Link to="/admin/group-opening-plan/create" className="ml-auto">

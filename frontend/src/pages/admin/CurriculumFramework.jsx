@@ -59,7 +59,7 @@ const CurriculumFramework = () => {
                 )}
                 <td className='py-5'>{faculty.name}</td>
                 <td className='py-5 flex items-center justify-center'>
-                  <Link to={`/admin/curriculum-framework/${faculty.trainingCycleFacultyList[0].generalInformation.id}`} className="text-blue-500 underline">Xem chi tiết</Link>
+                  <Link to={`/admin/curriculum-framework/${faculty.trainingCycleFacultyList[0].generalInformation?.id}`} className="text-blue-500 underline">Xem chi tiết</Link>
                 </td>
               </tr>
             ));
