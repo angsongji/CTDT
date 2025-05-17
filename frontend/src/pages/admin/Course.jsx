@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Row, Col } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Row, Col, Select } from 'antd';
 import { FaPlus } from "react-icons/fa6";
 import { MdDelete, MdModeEdit } from "react-icons/md";
 import { getAllCourses, createCourse, updateCourse, deleteCourse } from "../../services/courseServices";
-
+import { getAllKnowledgeAreas } from "../../services/knowledgeAreasServices";
 function Course() {
 	const [originalDataCourse, setOriginalDataCourse] = useState([]); //Lưu bản gốc
 	const [dataCourse, setDataCourse] = useState([]);
@@ -15,26 +15,27 @@ function Course() {
 	const [confirmLoading, setConfirmLoading] = useState(false);
 	const [searchText, setSearchText] = useState('');
 	const [form] = Form.useForm();
+	const [knowledgeAreas, setKnowledgeAreas] = useState([]);
 
 	useEffect(() => {
 		fetchCourses();
+		fetchKnowledgeAreas();
 	}, []);
 
 	const fetchCourses = async () => {
 		try {
 			setLoading(true);
 			const response = await getAllCourses();
-			console.log("response", response);
 
 			const formattedCourses = response.map(course => {
-
+				const { children, ...rest } = course;
 				return {
-					...course,
+					...rest,
 					key: course.id,
 					require: course.requirement === 1,
 					id_KnowledgeAreas: course.knowledgeArea?.id,
 					name_KnowledgeAreas: course.knowledgeArea?.name || '-',
-					parent_id: course.parent?.id
+					parent_id: course.parent?.id,
 				};
 			});
 
@@ -48,6 +49,22 @@ function Course() {
 		}
 	};
 
+
+	const fetchKnowledgeAreas = async () => {
+		try {
+			const response = await getAllKnowledgeAreas();
+			console.log("response KnowledgeAreas", response);
+			const formattedKnowledgeAreas = response.data.map(area => ({
+				value: area.id,
+				label: `${area.id} - ${area.name}`
+			}));
+
+			setKnowledgeAreas(formattedKnowledgeAreas);
+		} catch (error) {
+			console.error('Error fetching knowledge areas:', error);
+		}
+	};
+
 	const columns = [
 		{
 			title: 'Mã HP',
@@ -57,10 +74,10 @@ function Course() {
 		},
 		{ title: 'Tên HP', dataIndex: 'name', key: 'name' },
 		{ title: 'STC', dataIndex: 'credits', key: 'credits' },
-		{ title: 'Lý thuyết', dataIndex: 'lectureHours', key: 'lectureHours' },
-		{ title: 'Thực hành', dataIndex: 'practiceHours', key: 'practiceHours' },
-		{ title: 'Thực tập', dataIndex: 'internshipHours', key: 'internshipHours' },
-		{ title: 'Hệ số học phần', dataIndex: 'weightingFactor', key: 'weightingFactor' },
+		{ title: 'LT', dataIndex: 'lectureHours', key: 'lectureHours' },
+		{ title: 'TT', dataIndex: 'practiceHours', key: 'practiceHours' },
+		{ title: 'TT', dataIndex: 'internshipHours', key: 'internshipHours' },
+		{ title: 'Hệ số HP', dataIndex: 'weightingFactor', key: 'weightingFactor' },
 		{
 			title: 'Khối kiến thức',
 			dataIndex: 'name_KnowledgeAreas',
@@ -83,17 +100,15 @@ function Course() {
 						key={`edit-${record.id}`}
 						icon={<MdModeEdit />}
 						onClick={() => handleEdit(record)}
-					>
-						Sửa
-					</Button>
+						title='Chỉnh sửa'
+					></Button>
 					<Button
 						key={`delete-${record.id}`}
 						danger
 						icon={<MdDelete />}
 						onClick={() => showModalDelete(record)}
-					>
-						Xoá
-					</Button>
+						title='Xoá'
+					></Button>
 				</div>
 			),
 		},
@@ -121,7 +136,6 @@ function Course() {
 	};
 
 	const handleEdit = (record) => {
-		//		console.log("record", record);
 		setMode('edit');
 		setSelectedRecord(record);
 		form.setFieldsValue(record);
@@ -130,7 +144,6 @@ function Course() {
 
 	const handleSave = async (values) => {
 		try {
-			//			console.log("values", values);
 			setLoading(true);
 			if (mode === 'add') {
 				// Chuẩn bị dữ liệu để gửi lên server
@@ -164,6 +177,7 @@ function Course() {
 					parent: selectedRecord.parent_id ? { id: selectedRecord.parent_id } : null
 				};
 
+				console.log(updatedCourse);
 				// Gọi API cập nhật
 				await updateCourse(selectedRecord.id, updatedCourse);
 				message.success('Cập nhật học phần thành công!');
@@ -207,8 +221,6 @@ function Course() {
 	return (
 		<>
 			<div className="p-6">
-				<h1 className="text-2xl font-bold mb-4">Khóa học</h1>
-
 				<Row justify="space-between" align="middle" className="mb-4">
 					<Col className="mr-5">
 						<Input
@@ -219,8 +231,7 @@ function Course() {
 						/>
 					</Col>
 					<Col>
-						<Button
-							className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
+						<Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
 							onClick={handleAdd}
 						>
 							<span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
@@ -263,13 +274,23 @@ function Course() {
 						internshipHours: 0,
 						weightingFactor: 0,
 					}}>
+
+					{/* Mã học phần trước */}
 					<Form.Item
-						label="Mã học phần"
-						name="id"
+						label="Mã học phần trước"
+						name="parent_id"
 						style={{ marginBottom: '8px' }}
-						rules={[{ required: true, message: 'Vui lòng nhập mã học phần' }]}
+						rules={[{ required: true, message: 'Vui lòng chọn mã học phần trước' }]}
 					>
-						<Input disabled={mode === 'edit'} />
+						<Select
+							placeholder="Chọn mã học phần trước"
+							options={originalDataCourse.map((area) => ({
+								label: `${area.id} - ${area.name}`,
+								value: area.id
+							}))}
+							showSearch
+							optionFilterProp="label"
+						/>
 					</Form.Item>
 
 					<Form.Item
@@ -323,13 +344,18 @@ function Course() {
 						<Input />
 					</Form.Item>
 
-
 					<Form.Item
 						label="Khối kiến thức"
-						name="name_KnowledgeAreas"
+						name="id_KnowledgeAreas"
 						style={{ marginBottom: '8px' }}
-						rules={[{ required: true, message: 'Vui lòng nhập khối kiến thức' }]}>
-						<Input />
+						rules={[{ required: true, message: 'Vui lòng chọn khối kiến thức' }]}
+					>
+						<Select
+							placeholder="Chọn khối kiến thức"
+							options={knowledgeAreas}
+							showSearch
+							optionFilterProp="label"
+						/>
 					</Form.Item>
 
 					<Form.Item

@@ -26,6 +26,7 @@ function CourseOutline() {
         // Lấy danh sách đề cương chi tiết
         const outlineData = await getAllOutlines();
         setCourseOutlines(outlineData);
+		console.log(outlineData);
         
         // Lọc và chuyển đổi dữ liệu để lấy thông tin course
         const uniqueCourses = Array.from(new Set(outlineData.map(item => item.course.id)))
@@ -42,6 +43,7 @@ function CourseOutline() {
 
         // Lấy danh sách tất cả học phần
         const allCoursesData = await getAllCourses();
+		console.log(allCoursesData);
         setAllCourses(allCoursesData);
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu:', error);
@@ -169,9 +171,6 @@ function CourseOutline() {
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
-        {courses.length === 0 && !loading && (
-          <div className="text-center text-gray-500">Không có dữ liệu.</div>
-        )}
         <Table
           columns={columns}
           dataSource={courses}

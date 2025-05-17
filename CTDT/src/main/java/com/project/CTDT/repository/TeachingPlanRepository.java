@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface TeachingPlanRepository extends JpaRepository<TeachingPlan, Integer> {
     List<TeachingPlan> findByGeneralInformationId(Integer idInformation);
+    
+    List<TeachingPlan> findByCourseId(Integer courseId);
 }

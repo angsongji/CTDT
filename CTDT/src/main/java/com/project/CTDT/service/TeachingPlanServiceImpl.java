@@ -43,4 +43,9 @@ public class TeachingPlanServiceImpl implements TeachingPlanService {
         }
         repository.deleteById(id);
     }
+    
+    @Override
+    public List<TeachingPlan> getByCourseId(Integer courseId) {
+        return repository.findByCourseId(courseId);
+    }
 }

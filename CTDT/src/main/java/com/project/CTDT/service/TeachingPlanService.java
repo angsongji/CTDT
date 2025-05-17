@@ -12,4 +12,6 @@ public interface TeachingPlanService {
     TeachingPlan saveTeachingPlan(TeachingPlan teachingPlan);
     
     void deleteTeachingPlan(Integer id);
+    
+    List<TeachingPlan> getByCourseId(Integer courseId);
 }

@@ -1,4 +1,4 @@
-package com.project.CTDT.controller;
+	package com.project.CTDT.controller;
 
 import java.util.List;
 
@@ -21,6 +21,10 @@ import com.project.CTDT.entity.Course;
 import com.project.CTDT.service.CourseService;
 import com.project.CTDT.entity.KnowledgeAreas;
 import com.project.CTDT.service.KnowledgeAreasService;
+import com.project.CTDT.entity.CourseOutline;
+import com.project.CTDT.service.CourseOutlineService;
+import com.project.CTDT.entity.TeachingPlan;
+import com.project.CTDT.service.TeachingPlanService;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -32,7 +36,13 @@ public class CourseController {
 
 	@Autowired
 	private KnowledgeAreasService knowledgeAreasService;
+	
+	@Autowired
+	private CourseOutlineService courseOutlineService;
 
+	@Autowired
+	private TeachingPlanService teachingPlanService;
+	
 	@GetMapping
 	public List<Course> getAllCourses() {
 		return courseService.getAllCourses();
@@ -89,6 +99,8 @@ public class CourseController {
 
 		return courseService.saveCourse(existing);
 	}
+	
+	
 
 	@PutMapping("/soft-delete/{id}")
 	public ResponseEntity<?> deleteCourse(@PathVariable Integer id) {
@@ -98,21 +110,54 @@ public class CourseController {
 	                .body(Collections.singletonMap("message", "Course not found"));
 	    }
 
-	    // Lấy danh sách course con
+	    // 1. Lấy danh sách course con
 	    List<Course> childCourses = courseService.getCoursesByParentId(id);
 
-	    // Cập nhật status course con
+	    // 2. Xử lý cho course con: set status và set các bảng liên quan
 	    for (Course child : childCourses) {
 	        child.setStatus(0);
 	        courseService.saveCourse(child);
+
+	        // Cập nhật status cho CourseOutline của course con
+	        List<CourseOutline> childOutlines = courseOutlineService.getCourseOutlinesByCourseId(child.getId());
+	        if (childOutlines != null) {
+	            for (CourseOutline outline : childOutlines) {
+	                outline.setStatus(0);
+	                courseOutlineService.saveCourseOutline(outline);
+	            }
+	        }
+
+//	        // Cập nhật status cho TeachingPlan của course con
+//	        List<TeachingPlan> childPlans = teachingPlanService.getByCourseId(child.getId());
+//	        if (childPlans != null) {
+//	            for (TeachingPlan plan : childPlans) {
+//	                plan.setStatus(0);
+//	                teachingPlanService.saveTeachingPlan(plan);
+//	            }
+//	        }
 	    }
 
-	    // Cập nhật status của parent
-	    parentCourse.setStatus(0); // hoặc 0 nếu bạn dùng 0 là soft delete
+	    // 3. Xử lý parent course: set status và các bảng liên quan
+	    parentCourse.setStatus(0);
 	    courseService.saveCourse(parentCourse);
 
-	    //Trả về phản hồi JSON
+	    List<CourseOutline> parentOutlines = courseOutlineService.getCourseOutlinesByCourseId(id);
+	    if (parentOutlines != null) {
+	        for (CourseOutline outline : parentOutlines) {
+	            outline.setStatus(0);
+	            courseOutlineService.saveCourseOutline(outline);
+	        }
+	    }
+
+//	    List<TeachingPlan> parentPlans = teachingPlanService.getByCourseId(id);
+//	    if (parentPlans != null) {
+//	        for (TeachingPlan plan : parentPlans) {
+//	            plan.setStatus(0);
+//	            teachingPlanService.saveTeachingPlan(plan);
+//	        }
+//	    }
+
+	    // 4. Trả về phản hồi JSON
 	    return ResponseEntity.ok(Collections.singletonMap("message", "Xóa mềm thành công"));
 	}
-
 }

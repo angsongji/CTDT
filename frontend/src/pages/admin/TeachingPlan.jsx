@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Select } from 'antd';
+import { Table, Button, Modal, Select, Row, Col } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { getAll, updateTeachingPlan } from '../../services/teachingPlanServices';
-
+import { FaPlus } from "react-icons/fa6";
 function TeachingPlan() {
 	const [dataCourse, setDataCourse] = useState([]);
 	const [isModalVisible, setIsModalVisible] = useState(false);
@@ -16,6 +16,7 @@ function TeachingPlan() {
 	const fetchData = async () => {
 		try {
 			const response = await getAll();
+			console.log("response: ", response);
 
 			if (Array.isArray(response)) {
 				const formattedData = response.map((item, index) => {
@@ -45,6 +46,14 @@ function TeachingPlan() {
 			console.error('Lỗi khi lấy dữ liệu:', error);
 			setDataCourse([]);
 		}
+	};
+
+
+	const handleAdd = () => {
+		// setMode('add');
+		// setSelectedRecord(null);
+		// form.resetFields();
+		// setModalVisible(true);
 	};
 
 	const handleEdit = (record) => {
@@ -140,7 +149,17 @@ function TeachingPlan() {
 
 	return (
 		<div className="p-6">
-			<h1 className="text-2xl font-bold mb-4">Kế hoạch giảng dạy</h1>
+			<Row justify="space-between" align="middle" className="mb-4">
+				<Col>
+					<Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
+						onClick={handleAdd}
+					>
+						<span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
+							<FaPlus /> Thêm học phần
+						</span>
+					</Button>
+				</Col>
+			</Row>
 			<div className="bg-white rounded-lg shadow p-6">
 				<Table
 					columns={columns}

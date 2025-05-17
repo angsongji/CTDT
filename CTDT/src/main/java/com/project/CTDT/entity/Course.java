@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -103,11 +104,15 @@ public class Course {
 	@JsonIgnoreProperties({ "course" })
 	@JsonProperty("groupOpeningPlans")
 	private Set<GroupOpeningPlan> groupOpeningPlans = new HashSet<>();
-	
-//	 // Mối quan hệ 1:N với TeachingPlan
-//	@OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//	@JsonIgnoreProperties({"course"})
-//	@JsonProperty("teachingPlans")
-//	private Set<TeachingPlan> teachingPlans = new HashSet<>();
+
+	// 1-N với TeachingPlan - IGNORE để tránh vòng lặp JSON
+	@OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
+	private Set<TeachingPlan> teachingPlans = new HashSet<>();
+
+	// 1-N với CourseOutline - IGNORE để tránh vòng lặp JSON
+	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
+	private Set<CourseOutline> courseOutlines = new HashSet<>();
 
 }
