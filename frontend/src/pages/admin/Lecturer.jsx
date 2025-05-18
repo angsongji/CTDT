@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button, message, Input, Radio, DatePicker } from 'antd';
 import { FaPlus } from 'react-icons/fa';
 import { Dropdown, Table, Modal, Select } from 'antd';
 import { Link } from 'react-router-dom';
 import { FaEllipsisV } from 'react-icons/fa';
 import { CiImport, CiExport } from "react-icons/ci";
-import { getAllLecturers, deleteLecturer, createLecturer, updateLecturer, getLecturerById } from '../../services/lecturerServices';
+import { getAllLecturers, deleteLecturer, createLecturer, updateLecturer, getLecturerById, addLecturers } from '../../services/lecturerServices';
 import { getCourseByLecturerId } from '../../services/courseServices';
 import { getAllCourses } from '../../services/courseServices';
 import { createLecturerCourse, deleteLecturerCourse } from '../../services/lecturerCourseServices';
@@ -20,6 +20,7 @@ const Lecturer = () => {
   const [showFormAdd, setShowFormAdd] = useState(false);
   const [showFormUpdate, setShowFormUpdate] = useState(false);
   const [courses, setCourses] = useState([]);
+  const fileInputRef = useRef();
   useEffect(() => {
     const fetchAPI = async () => {
       const result = await getAllLecturers();
@@ -182,6 +183,115 @@ const Lecturer = () => {
     message.success("Xuất file excel thành công!");
 
   };
+
+  const exportTemplate = () => {
+    const filteredData = [
+      {
+        "Tên giảng viên": "Nguyễn Văn A",
+        "Giới tính": "Nam",
+        "Ngày sinh": "01/01/2000",
+        "Bằng cấp": "Thạc sĩ",
+        "Học vị": "Thạc sĩ",
+      },
+      {
+        "Tên giảng viên": "Nguyễn Văn B",
+        "Giới tính": "Nữ",
+        "Ngày sinh": "01/01/1998",
+        "Bằng cấp": "Thạc sĩ",
+        "Học vị": "Thạc sĩ",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "GiangVien");
+
+    XLSX.writeFile(workbook, `lecturer_template.xlsx`);
+    message.success("Đã xuất file excel mẫu thành công!");
+  };
+
+  const afkBeforeImport = () => {
+    confirm({
+      title: 'Nhập file excel',
+      content: 'Bạn đã có file excel mẫu để điền thông tin giảng viên chưa?',
+      okText: 'Chưa có',       // Xuất file mẫu
+      cancelText: 'Đã có',     // Nhập file
+      onOk() {
+        exportTemplate();
+      },
+      onCancel() {
+        fileInputRef.current.click();
+        message.info("Vui lòng chọn file excel muốn nhập");
+      },
+    });
+  };
+
+  const handleImport = async (e) => {
+    const titleExcelTable = ['Tên giảng viên', 'Giới tính', 'Ngày sinh', 'Bằng cấp', 'Học vị'];
+    const file = e.target.files[0];
+  
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const firstRow = json[0];
+      const isValid = titleExcelTable.every((title, index) => title === firstRow[index]);
+  
+      if (!isValid) {
+        message.error("File excel không đúng định dạng!");
+        fileInputRef.current.value = ""; // ✅ reset input
+        return;
+      }
+  
+      try {
+        const dataAddLecturer = json.slice(1).map((row, index) => {
+          const fullName = row[0]?.trim() || "";
+          const gender = row[1]?.trim() || "";
+          const dateOfBirth = row[2]?.trim() || "";
+          const degree = row[3]?.trim() || "";
+          const academicTitle = row[4]?.trim() || "";
+  
+          if (!fullName) throw new Error(`Dòng ${index + 2}: Tên giảng viên không được để trống!`);
+          if (!gender) throw new Error(`Dòng ${index + 2}: Giới tính không được để trống!`);
+          if (!dateOfBirth) throw new Error(`Dòng ${index + 2}: Ngày sinh không được để trống!`);
+          if (!degree) throw new Error(`Dòng ${index + 2}: Bằng cấp không được để trống!`);
+  
+          return {
+            fullName,
+            gender,
+            dateOfBirth: dateOfBirth.split('/').reverse().join('-'),
+            degree,
+            academicTitle,
+            status: 1
+          };
+        });
+  
+        const result = await addLecturers(dataAddLecturer);
+        if (result.status === 200) {
+          setLecturers(prev => [...prev, ...result.data]);
+          message.success("Thêm giảng viên thành công!");
+        } else {
+          message.error(result.message || "Có lỗi xảy ra khi thêm giảng viên.");
+        }
+      } catch (error) {
+        message.error(error.message || "Lỗi xử lý dữ liệu!");
+      }
+  
+      fileInputRef.current.value = ""; // ✅ reset lại input
+    };
+  
+    reader.readAsArrayBuffer(file);
+  };
+  
+  
+  
+
+
 
   const CustomButton = ({ icon, onClick, hoverText = "Click me" }) => {
     const [hovered, setHovered] = useState(false);
@@ -415,7 +525,6 @@ const Lecturer = () => {
             <span className='flex-1'>Học vị</span>
             <Input
               type="text"
-              required
               name="academicTitle"
               onChange={handleChange}
               value={dataAdd.academicTitle}
@@ -614,7 +723,6 @@ const Lecturer = () => {
             <span className='flex-1'>Học vị</span>
             <Input
               type="text"
-              required
               name="academicTitle"
               onChange={handleChange}
               value={dataUpdate.academicTitle}
@@ -669,9 +777,15 @@ const Lecturer = () => {
         </div>
         <div className='flex gap-2'>
           <CustomButton icon={<FaPlus />} onClick={() => setShowFormAdd(true)} hoverText="Thêm giảng viên" />
-          <CustomButton icon={<CiImport className="text-xl" />} onClick={() => console.log("Import")} hoverText="Import" />
+          <CustomButton icon={<CiImport className="text-xl" />} onClick={() => afkBeforeImport()} hoverText="Import" />
           <CustomButton icon={<CiExport className="text-xl" />} onClick={() => handleExport()} hoverText="Export" />
-
+          <input
+            type="file"
+            accept=".xlsx"
+            ref={fileInputRef}
+            onChange={handleImport}
+            style={{ display: 'none' }} // ẩn input
+          />
         </div>
       </div>
       <Table
