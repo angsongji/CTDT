@@ -50,4 +50,9 @@ public class LecturerServiceImpl implements LecturerService {
 			}
 		}
 	}
+
+	@Override
+	public List<Lecturer> saveAll(List<Lecturer> list) {
+		return lecturerRepository.saveAll(list);
+	}
 }

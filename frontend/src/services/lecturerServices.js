@@ -24,3 +24,8 @@ export const updateLecturer = async (id, data) => {
     const result = await putWithStatus(`lecturers`, id, data);
     return result;
 }
+
+export const addLecturers = async (data) => {
+    const result = await postWithStatus(`lecturers/list`, data);
+    return result;
+}
