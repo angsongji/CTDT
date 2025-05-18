@@ -3,6 +3,7 @@ package com.project.CTDT.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.project.CTDT.entity.GeneralInformation;
@@ -35,6 +36,19 @@ public class GeneralInformationServiceImpl implements GeneralInformationService 
 
 	@Override
 	public void deleteGeneralInformation(Integer id) {
-		generalInformationRepository.deleteById(id);
+		try {
+			generalInformationRepository.deleteById(id);
+		} catch (DataIntegrityViolationException e) {
+			// Nếu có lỗi ràng buộc, không xóa mà update status về 0
+			Optional<GeneralInformation> optional = generalInformationRepository.findById(id);
+			if (optional.isPresent()) {
+				GeneralInformation gi = optional.get();
+				gi.setStatus(0);
+				generalInformationRepository.save(gi);
+			} else {
+				throw new RuntimeException("Không tìm thấy thông tin chung với mã thông tin: " + id);
+			}
+		}
 	}
+
 }

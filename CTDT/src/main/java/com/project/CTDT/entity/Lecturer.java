@@ -3,9 +3,9 @@ package com.project.CTDT.entity;
 import java.util.Date;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,6 +23,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "Lecturer")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Lecturer {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,16 +42,19 @@ public class Lecturer {
 	@Column(name = "degree", nullable = false, length = 255)
 	private String degree;
 
+	@Column(name = "gender", nullable = false, length = 255)
+	private String gender;
+
 	@Column(name = "status")
 	private Integer status = 1;
 
-	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(mappedBy = "lecturer", fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "lecturer-lecturerCourses")
 	private Set<LecturerCourse> lecturerCourses;
 	// cascade = CascadeType.ALL : Khi bạn xóa một phần tử LecturerCourse khỏi danh
 	// sách lecturerCourses, thì Hibernate sẽ tự động xóa record đó khỏi database.
 
-	@OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "lecturer", fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "lecturer-teachingAssignments")
 	private Set<TeachingAssignment> teachingAssignments;
 

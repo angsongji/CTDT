@@ -42,4 +42,9 @@ public class CourseServiceImpl implements CourseService {
 	public List<Course> getCoursesByParentId(Integer parentId) {
 	    return courseRepository.findByParentId(parentId);
 	}
+
+	@Override
+	public List<Course> getByLecturerId(Integer idLecturer) {
+		return courseRepository.getByLecturerId(idLecturer);
+	}
 }

@@ -1,47 +1,83 @@
-import { Button, Form, Input, Space, InputNumber, Select } from 'antd';
+import { Button, Form, InputNumber, Select, Space } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { getAllCourses } from "../../services/courseServices";
 import { createGroupOpenPlan } from "../../services/groupOpeningPlanServices";
 import { createGroup } from "../../services/groupServices";
+import { getAllTraningCycle } from "../../services/trainingCycleServices";
+import { getAll } from "../../services/teachingPlanServices";
 
 function CreateGroupOpeningPlan() {
-
     const navigate = useNavigate();
     const [form] = Form.useForm();
     const [submittable, setSubmittable] = useState(false);
+
+    const [trainingCycles, setTrainingCycles] = useState([]);
+    const [majors, setMajors] = useState([]);
     const [courses, setCourses] = useState([]);
 
+    const [selectedCycleId, setSelectedCycleId] = useState(null);
+    const [selectedMajor, setSelectedMajor] = useState(null);
+    const [teachingPlans, setTeachingPlans] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const cycleData = await getAllTraningCycle();
+            const teachingPlanData = await getAll();
+            setTrainingCycles(cycleData);
+            setTeachingPlans(teachingPlanData);
+        };
+        fetchData();
+    }, []);
+
     const handleFieldChange = () => {
-        const nameField = form.getFieldValue("course_id");
-        const semesterField = form.getFieldValue("implementationSemester"); 
-        setSubmittable(!!nameField && !!semesterField); 
+        const courseField = form.getFieldValue("course_id");
+        const semesterField = form.getFieldValue("implementationSemester");
+        setSubmittable(!!courseField && !!semesterField);
     };
 
-    const semester = [
-        { value: 1, label: '1' },
-        { value: 2, label: '2' },
-        { value: 3, label: '3' },
-        { value: 4, label: '4' },
-        { value: 5, label: '5' },
-		{ value: 6, label: '6' },
-		{ value: 7, label: '7' },
-		{ value: 8, label: '8' },
-    ];
-    
-    useEffect(() => {
-        const fetchAPI = async () => {
-            const result = await getAllCourses();
-            const dataNew = result.map((item) => ({
-                ...item,
-                value: item.id,
-                label: item.name,
-            }));
-            setCourses(dataNew);
-        };
-        fetchAPI();
-    },[]);
+    const handleCycleChange = (value) => {
+        setSelectedCycleId(value);
+        form.resetFields(["major", "course_id", "implementationSemester"]);
+        const cycle = trainingCycles.find(c => c.id === value);
+        const faculties = cycle?.faculties || [];
+        const majorsList = faculties.flatMap(faculty =>
+            faculty.trainingCycleFacultyList.map(tcfl => ({
+                value: `${faculty.id}-${tcfl.id}`,
+                label: `${tcfl.generalInformation.name} (${tcfl.generalInformation.language})`,
+                facultyId: faculty.id,
+                majorInfo: tcfl.generalInformation
+            }))
+        );
+        setMajors(majorsList);
+        setCourses([]);
+    };
+
+    const handleMajorChange = (value) => {
+        setSelectedMajor(value);
+        form.resetFields(["course_id", "implementationSemester"]);
+
+        const [facultyId, majorId] = value.split("-").map(Number);
+        const filteredCourses = teachingPlans.filter(tp =>
+            tp.generalInformation.id === majorId
+        ).map(tp => ({
+            value: tp.course.id,
+            label: tp.course.name,
+            semester: tp.implementationSemester
+        }));
+
+        setCourses(filteredCourses);
+    };
+
+    const handleCourseChange = (value) => {
+        const selectedCourse = courses.find(c => c.value === value);
+        if (selectedCourse) {
+            form.setFieldsValue({
+                implementationSemester: selectedCourse.semester
+            });
+        }
+        handleFieldChange();
+    };
 
 	const onFinish = async (values) => {
 	    const bodyData = {
@@ -54,167 +90,136 @@ function CreateGroupOpeningPlan() {
 	    };
 
 	    try {
+	        const result = await createGroupOpenPlan(bodyData);
+			console.log("result", result);
 
-	       const result = await createGroupOpenPlan(bodyData);
+	        if (result?.id) {
+	            const baseStudentsPerGroup = Math.floor(values.numberOfStudents / values.numberOfGroups);
+	            let remainder = values.numberOfStudents % values.numberOfGroups;
 
-	        if (result && result.id) {
-	            const groupOpeningPlanId = result.id;
-	            const numberOfGroups = values.numberOfGroups;
-	            const totalStudents = values.numberOfStudents;
-
-	            const baseStudentsPerGroup = Math.floor(totalStudents / numberOfGroups);
-	            let remainder = totalStudents % numberOfGroups; // số dư
-
-	            const groupRequests = [];
-
-	            for (let i = 1; i <= numberOfGroups; i++) {
+	            const groupPromises = Array.from({ length: values.numberOfGroups }, (_, index) => {
 	                let studentsInGroup = baseStudentsPerGroup;
+
 	                if (remainder > 0) {
 	                    studentsInGroup += 1;
 	                    remainder -= 1;
 	                }
 
 	                const groupBody = {
-	                    groupNumber: i,
+	                    groupNumber: index + 1,
 	                    maxStudents: studentsInGroup,
-	                    groupOpeningPlan: {
-	                        id: groupOpeningPlanId
-	                    }
+	                    groupOpeningPlan: { id: result.id },
 	                };
-					
-					const request = await createGroup(groupBody);
-	                groupRequests.push(request);
-	            }
 
-	            // Bước 3: Gửi tất cả requests song song
-	            await Promise.all(groupRequests);
-
-	            Swal.fire({
-	                title: "Tạo thành công!",
-	                text: "Mở nhóm học mới và các nhóm đã được thêm.",
-	                icon: "success",
-	                confirmButtonText: "OK"
-	            }).then(() => {
-	                navigate("/admin/group-opening-plan");
+	                return createGroup(groupBody); 
 	            });
 
-	        } else {
-	            throw new Error("Không nhận được ID GroupOpeningPlan sau khi tạo.");
+	            await Promise.all(groupPromises); 
+
+	            Swal.fire('Thành công', 'Tạo kế hoạch mở lớp thành công', 'success');
+	            navigate(-1);
 	        }
 	    } catch (error) {
-	        console.error('Lỗi:', error);
-	        Swal.fire({
-	            title: "Lỗi!",
-	            text: "Đã xảy ra lỗi khi tạo mở nhóm học mới.",
-	            icon: "error",
-	            confirmButtonText: "OK"
-	        });
+	        Swal.fire('Lỗi', 'Có lỗi xảy ra khi tạo kế hoạch mở lớp', 'error');
 	    }
 	};
 
 
-
     return (
-        <>
-            <div className="p-6">
-                <h1 className="text-2xl font-bold mb-4">Mở lớp mới</h1>
-                <div className="bg-white rounded-lg shadow p-6">
-                    <Form
-                        form={form}
-                        name="validateOnly"
-                        layout="vertical"
-                        autoComplete="off"
-                        onFinish={onFinish}
-                        initialValues={{
-                            NumberOfGroups: 1,
-                            NumberOfStudents: 30,
-                        }}
-                        onValuesChange={handleFieldChange}  // Detect changes to form fields
-                    >
-                        <div className="flex space-x-6 justify-between w-full">
-                            <Form.Item
-                                style={{ marginBottom: '20px', width: '48%' }}
-                                name="course_id"
-                                label="Tên học phần"
-                                rules={[{ required: true, message: 'Tên học phần là bắt buộc!' }]}>
-                                <Select
-                                    placeholder="Chọn học phần"
-                                    className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
-                                >
-                                    {courses.map(course => (
-                                        <Select.Option key={course.value} value={course.value}>
-                                            {course.label}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                style={{ marginBottom: '20px', width: '48%' }}
-                                name="implementationSemester"
-                                label="Học kỳ"
-                                rules={[{ required: true, message: 'Học kỳ là bắt buộc!' }]}>
-                                <Select
-                                    placeholder="Học kỳ"
-                                    className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
-                                >
-                                    {semester.map(semester => (
-                                        <Select.Option key={semester.value} value={semester.value}>
-                                            {semester.label}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </div>
-
-                        <div className="flex space-x-6 justify-between w-full">
-                            <Form.Item
-                                style={{ marginBottom: '20px', width: '48%' }}
-                                name="numberOfGroups"
-                                label="Số lượng Nhóm"
-                                rules={[{ required: true, message: 'Số lượng Nhóm là bắt buộc!' }]}>
-                                <InputNumber
-                                    min={1}
-                                    max={10}
-                                    className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                style={{ marginBottom: '20px', width: '48%' }}
-                                name="numberOfStudents"
-                                label="Số Sinh Viên"
-                                rules={[{ required: true, message: 'Số Sinh Viên là bắt buộc!' }]}>
-                                <InputNumber
-                                    min={30}
-                                    max={1000}
-                                    className="border rounded-md py-2 px-4 focus:ring-2 focus:ring-blue-500"
-                                />
-                            </Form.Item>
-                        </div>
-
-                        <Form.Item>
-                            <Space className="flex justify-end w-full">
-                                <Button
-                                    onClick={() => navigate(-1)}
-                                    className="bg-gray-200 hover:bg-gray-300 text-gray-800"
-                                >
-                                    Quay lại
-                                </Button>
-                                <Button
-                                    type="primary"
-                                    htmlType="submit"
-                                    disabled={!submittable}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                >
-                                    Tạo mới
-                                </Button>
-                            </Space>
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Tạo kế hoạch mở lớp</h1>
+            <div className="bg-white rounded-lg shadow p-6">
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={onFinish}
+                    onFieldsChange={handleFieldChange}
+                >
+                    <div className="flex space-x-6 justify-between w-full">
+                        <Form.Item
+                            name="trainingCycle"
+                            label="Chương trình đào tạo"
+                            style={{ width: '48%' }}
+                            rules={[{ required: true, message: 'Vui lòng chọn chương trình' }]}
+                        >
+                            <Select onChange={handleCycleChange} placeholder="Chọn chương trình">
+                                {trainingCycles.map(cycle => (
+                                    <Select.Option key={cycle.id} value={cycle.id}>
+                                        {cycle.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
                         </Form.Item>
-                    </Form>
-                </div>
+
+                        <Form.Item
+                            name="major"
+                            label="Ngành"
+                            style={{ width: '48%' }}
+                            rules={[{ required: true, message: 'Vui lòng chọn ngành' }]}
+                        >
+                            <Select onChange={handleMajorChange} placeholder="Chọn ngành">
+                                {majors.map(major => (
+                                    <Select.Option key={major.value} value={major.value}>
+                                        {major.label}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </div>
+
+                    <Form.Item
+                        name="course_id"
+                        label="Học phần"
+                        rules={[{ required: true, message: 'Vui lòng chọn học phần' }]}
+                    >
+                        <Select onChange={handleCourseChange} placeholder="Chọn học phần">
+                            {courses.map(course => (
+                                <Select.Option key={course.value} value={course.value}>
+                                    {course.label}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <div className="flex space-x-6 justify-between w-full">
+                        <Form.Item
+                            name="implementationSemester"
+                            label="Học kỳ"
+                            style={{ width: '48%' }}
+                            rules={[{ required: true, message: 'Vui lòng nhập học kỳ' }]}
+                        >
+                            <InputNumber min={1} max={12} style={{ width: '100%' }} disabled />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="numberOfGroups"
+                            label="Số nhóm"
+                            style={{ width: '48%' }}
+                            rules={[{ required: true, message: 'Vui lòng nhập số nhóm' }]}
+                        >
+                            <InputNumber min={1} style={{ width: '100%' }} />
+                        </Form.Item>
+                    </div>
+
+                    <Form.Item
+                        name="numberOfStudents"
+                        label="Số sinh viên"
+                        rules={[{ required: true, message: 'Vui lòng nhập số sinh viên' }]}
+                    >
+                        <InputNumber min={1} style={{ width: '100%' }} />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <Space className="flex justify-end w-full">
+                            <Button onClick={() => navigate(-1)}>Quay lại</Button>
+                            <Button type="primary" htmlType="submit" disabled={!submittable}>
+                                Tạo mới
+                            </Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
             </div>
-        </>
+        </div>
     );
 }
 

@@ -1,11 +1,15 @@
 package com.project.CTDT.entity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -29,11 +33,10 @@ import lombok.Setter;
 @Entity
 @Table(name = "course")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Course {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false)
-	@JsonProperty("id")
 	private Integer id;
 
 	@Column(name = "name", nullable = false, length = 255)
@@ -82,9 +85,23 @@ public class Course {
 
 	// Mối quan hệ 1-N với LecturerCourse
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	@JsonIgnoreProperties({ "course" })
-	@JsonProperty("lecturerCourses")
-	private Set<LecturerCourse> lecturerCourses;
+	@JsonManagedReference(value = "lecturerCourses-course")
+	@JsonIgnore
+	private Set<LecturerCourse> lecturerCourses = new HashSet<>();
+
+	// Getter để trả về Lecturer
+	@JsonProperty("lecturers")
+	public List<Lecturer> getLecturers() {
+		if (lecturerCourses == null)
+			return new ArrayList<>();
+		List<Lecturer> list = new ArrayList<>();
+		for (LecturerCourse l : lecturerCourses) {
+			Lecturer p = l.getLecturer();
+			if (p.getStatus() == 1)
+				list.add(p);
+		}
+		return list;
+	}
 
 	// Mối quan hệ N-1 với KnowledgeAreas
 	@ManyToOne(fetch = FetchType.EAGER)

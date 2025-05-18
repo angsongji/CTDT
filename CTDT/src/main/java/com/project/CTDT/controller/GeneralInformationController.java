@@ -3,6 +3,8 @@ package com.project.CTDT.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,32 +23,38 @@ import com.project.CTDT.service.GeneralInformationService;
 @CrossOrigin
 public class GeneralInformationController {
 
-    @Autowired
-    private GeneralInformationService generalInformationService;
+	@Autowired
+	private GeneralInformationService generalInformationService;
 
-    @GetMapping
-    public List<GeneralInformation> getAllGeneralInformations() {
-        return generalInformationService.getAllGeneralInformations();
-    }
+	@GetMapping
+	public List<GeneralInformation> getAllGeneralInformations() {
+		return generalInformationService.getAllGeneralInformations();
+	}
 
-    @GetMapping("/{id}")
-    public GeneralInformation getGeneralInformationById(@PathVariable Integer id) {
-        return generalInformationService.getGeneralInformationById(id);
-    }
+	@GetMapping("/{id}")
+	public GeneralInformation getGeneralInformationById(@PathVariable Integer id) {
+		return generalInformationService.getGeneralInformationById(id);
+	}
 
-    @PostMapping
-    public GeneralInformation createGeneralInformation(@RequestBody GeneralInformation generalInformation) {
-        return generalInformationService.saveGeneralInformation(generalInformation);
-    }
+	@PostMapping
+	public GeneralInformation createGeneralInformation(@RequestBody GeneralInformation generalInformation) {
+		return generalInformationService.saveGeneralInformation(generalInformation);
+	}
 
-    @PutMapping("/{id}")
-    public GeneralInformation updateGeneralInformation(@PathVariable Integer id, @RequestBody GeneralInformation generalInformation) {
-        generalInformation.setId(id);
-        return generalInformationService.saveGeneralInformation(generalInformation);
-    }
+	@PutMapping("/{id}")
+	public GeneralInformation updateGeneralInformation(@PathVariable Integer id,
+			@RequestBody GeneralInformation generalInformation) {
+		generalInformation.setId(id);
+		return generalInformationService.saveGeneralInformation(generalInformation);
+	}
 
-    @DeleteMapping("/{id}")
-    public void deleteGeneralInformation(@PathVariable Integer id) {
-        generalInformationService.deleteGeneralInformation(id);
-    }
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> deleteGeneralInformation(@PathVariable Integer id) {
+		try {
+			generalInformationService.deleteGeneralInformation(id);
+			return ResponseEntity.ok().build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+		}
+	}
 }

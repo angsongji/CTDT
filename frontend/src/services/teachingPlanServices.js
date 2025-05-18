@@ -1,4 +1,4 @@
-import { get, post, put, del } from "../utils/request";
+import { get, post, put} from "../utils/request";
 
 // Lấy tất cả TeachingPlans
 export const getAll = async () => {
@@ -27,6 +27,6 @@ export const updateTeachingPlan = async (id, data) => {
 
 // Xoá TeachingPlan theo id
 export const deleteTeachingPlan = async (id) => {
-	const result = await del("teaching-plans", id);
+	const result = await put("teaching-plans/delete", id);
 	return result;
 };

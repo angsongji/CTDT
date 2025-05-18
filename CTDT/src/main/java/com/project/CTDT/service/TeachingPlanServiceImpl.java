@@ -1,5 +1,6 @@
 package com.project.CTDT.service;
 
+import com.project.CTDT.entity.Course;
 import com.project.CTDT.entity.TeachingPlan;
 import com.project.CTDT.repository.TeachingPlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class TeachingPlanServiceImpl implements TeachingPlanService {
     // Tìm TeachingPlan theo id của GeneralInformation
     @Override
     public List<TeachingPlan> getByInformationId(Integer idInformation) {
-        return repository.findByGeneralInformationId(idInformation);
+        return repository.findByGeneralInformationIdAndStatus(idInformation, 1);
     }
 
     @Override
@@ -48,4 +49,10 @@ public class TeachingPlanServiceImpl implements TeachingPlanService {
     public List<TeachingPlan> getByCourseId(Integer courseId) {
         return repository.findByCourseId(courseId);
     }
+    
+	@Override
+	public TeachingPlan getTeachingPlanById(Integer id) {
+		Optional<TeachingPlan> optional = repository.findById(id);
+		return optional.orElseThrow(() -> new RuntimeException("Course not found with id " + id));
+	}
 }

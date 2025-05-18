@@ -14,6 +14,8 @@ public interface CourseService {
 
 	void deleteCourse(Integer id);
 	
-	List<Course> getCoursesByParentId(Integer parentId)
+	List<Course> getCoursesByParentId(Integer parentId);
+
+	List<Course> getByLecturerId(Integer idLecturer);
 
 }

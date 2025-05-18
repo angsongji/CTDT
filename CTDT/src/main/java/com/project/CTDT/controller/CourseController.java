@@ -160,4 +160,10 @@ public class CourseController {
 	    // 4. Trả về phản hồi JSON
 	    return ResponseEntity.ok(Collections.singletonMap("message", "Xóa mềm thành công"));
 	}
+
+	// Tìm Courses theo id_lecturer
+	@GetMapping("/lecturer/{idLecturer}")
+	public List<Course> getByLecturerId(@PathVariable Integer idLecturer) {
+		return courseService.getByLecturerId(idLecturer);
+	}
 }

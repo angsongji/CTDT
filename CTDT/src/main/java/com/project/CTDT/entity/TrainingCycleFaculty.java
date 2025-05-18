@@ -1,8 +1,9 @@
 package com.project.CTDT.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -33,25 +34,33 @@ public class TrainingCycleFaculty {
 	@JsonBackReference(value = "trainingCycle-trainingCycleFaculty")
 	private TrainingCycle trainingCycle;
 
-	// Getter để trả về trainingCycle
-	@JsonProperty("trainingCycle")
-	public TrainingCycle getTrainingCycle() {
-		return trainingCycle;
-	}
-
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "faculty_id", nullable = false, foreignKey = @ForeignKey(name = "fk_faculty_trainingCycle"))
+	@JoinColumn(name = "faculty_id", nullable = false, foreignKey = @ForeignKey(name = "fk_faculty_trainingCycle")) 
 	@JsonBackReference(value = "trainingCycleFaculty-faculty")
 	private Faculty faculty;
 
-	// Getter để trả về faculty
-	@JsonProperty("faculty")
-	public Faculty getFaculty() {
-		return faculty;
-	}
-
 	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonManagedReference(value = "trainingCycleFaculty-generalInformation")
+	@JsonIgnore
 	private GeneralInformation generalInformation;
 
+	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@JsonManagedReference(value = "trainingCycleFaculty-group_opening_plan")
+	@JsonIgnore
+	private GroupOpeningPlan groupOpeningPlan;
+
+	@JsonProperty("trainingCycleId")
+	public Integer getTrainingCycleId() {
+		return trainingCycle != null ? trainingCycle.getId() : null;
+	}
+
+	@JsonProperty("facultyId")
+	public Integer getFacultyId() {
+		return faculty != null ? faculty.getId() : null;
+	}
+
+	@JsonProperty("generalInformation")
+	public GeneralInformation getFilteredGeneralInformation() {
+		return generalInformation != null && generalInformation.getStatus() == 1 ? generalInformation : null;
+	}
 }

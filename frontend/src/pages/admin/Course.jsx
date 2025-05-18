@@ -17,6 +17,7 @@ function Course() {
 	const [form] = Form.useForm();
 	const [knowledgeAreas, setKnowledgeAreas] = useState([]);
 
+
 	useEffect(() => {
 		fetchCourses();
 		fetchKnowledgeAreas();

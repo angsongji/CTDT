@@ -1,4 +1,4 @@
-const API_DOMAIN = `http://localhost:8081/api/`;
+export const API_DOMAIN = `http://localhost:8081/api/`;
 
 export const get = async (path) => {
     const responsive = await fetch(API_DOMAIN + path);
@@ -46,12 +46,22 @@ export const put = async (path, id , options) => {
 }
 
 export const del = async (path, id) => {
-    const responsive = await fetch(`${API_DOMAIN}${path}/${id}`,{
+    const response = await fetch(`${API_DOMAIN}${path}/${id}`, {
         method: "DELETE"
-    })
-    const result = await responsive.json();
-    return result;
-}
+    });
+    if (response.status === 204) return null;
+
+    const text = await response.text();
+    if (!text) return null;
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Lỗi parse JSON:", error);
+        return null;
+    }
+};
+
 
 export const getWithStatus = async (path) => {
     const responsive = await fetch(API_DOMAIN + path);
@@ -84,6 +94,7 @@ export const postWithStatus = async (path, options) => {
         body: JSON.stringify(options)
     })
     const result = await responsive.json();
+    console.log(result);
     return {data: result, status: responsive.status};
 }
 

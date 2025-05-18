@@ -14,4 +14,6 @@ public interface TeachingPlanService {
     void deleteTeachingPlan(Integer id);
     
     List<TeachingPlan> getByCourseId(Integer courseId);
+    
+    TeachingPlan getTeachingPlanById(Integer id);
 }

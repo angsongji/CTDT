@@ -4,26 +4,41 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 import { editGroupOpenPlan } from "../../services/groupOpeningPlanServices";
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
+import { getAll } from "../../services/teachingPlanServices";
 import Swal from 'sweetalert2';
+import { useLocation } from 'react-router-dom';
 
 const { Option } = Select;
 
 function GroupOpeningPlan() {
   const [searchTerm, setSearchTerm] = useState("");
   const [trainingCycleList, setTrainingCycleList] = useState([]);
+  const [teachingPlanList, setTeachingPlanList] = useState([]);
   const [selectedCycle, setSelectedCycle] = useState(null);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [reset, setReset] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  useEffect(() => {
+      if(location.state?.selectedCycle) {
+        setSelectedCycle(location.state.selectedCycle);
+      }
+      if(location.state?.selectedFaculty) {
+        setSelectedFaculty(location.state.selectedFaculty);
+      }
+    }, [location.state]);
 
   useEffect(() => {
     const fetchApi = async () => {
       try {
-        const trainingCycles = await getAllTraningCycle();
-        setTrainingCycleList(trainingCycles);
+        const trainingCycleData = await getAllTraningCycle();
+        const teachingPlanData = await getAll();
+        setTrainingCycleList(trainingCycleData);
+        setTeachingPlanList(teachingPlanData);
       } catch (error) {
-        console.error("Error fetching training cycles:", error);
+        console.error("Error fetching data:", error);
       }
     };
     fetchApi();
@@ -31,33 +46,39 @@ function GroupOpeningPlan() {
 
   useEffect(() => {
     if (selectedCycle && selectedFaculty) {
-      const selectedCycleData = trainingCycleList.find(cycle => cycle.id === selectedCycle);
-      const selectedFacultyData = selectedCycleData?.faculties.find(faculty => faculty.id === selectedFaculty);
+      const selectedCycleObj = trainingCycleList.find(c => c.id === selectedCycle);
+      const selectedFacultyObj = selectedCycleObj?.faculties.find(f => f.id === selectedFaculty.facultyId);
+      const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(tcf => tcf.id === selectedFaculty.tcfId);
+      const generalInfoIds = selectedTcf ? [selectedTcf.generalInformation.id] : [];
 
-      const result = [];
+      const filteredTeachingPlans = teachingPlanList.filter(
+        tp => generalInfoIds.includes(tp.generalInformation?.id)
+      );
 
-      selectedFacultyData?.generalInformations?.forEach((info) => {
-        info.curriculumFramework?.courses?.forEach((course) => {
-          course.groupOpeningPlans?.forEach((plan) => {
-            result.push({
-              key: result.length + 1,
-              nameCourse: course.name,
-              numberOfGroups: plan.numberOfGroups,
-              numberOfStudents: plan.numberOfStudents,
-              status: plan.status,
-              id: plan.id,
-            });
+      const groupPlans = [];
+
+      filteredTeachingPlans.forEach((plan) => {
+        const course = plan.course;
+        const gops = course?.groupOpeningPlans || [];
+
+        gops.forEach(gop => {
+          groupPlans.push({
+            key: groupPlans.length + 1,
+            id: gop.id,
+            nameCourse: course?.name,
+			idCourse: course?.id,
+            numberOfGroups: gop.numberOfGroups,
+            numberOfStudents: gop.numberOfStudents,
+            status: gop.status
           });
         });
       });
 
-      console.log("filteredData", result);
-      setFilteredData(result);
+      setFilteredData(groupPlans);
     } else {
       setFilteredData([]);
     }
-  }, [selectedCycle, selectedFaculty, trainingCycleList]);
-
+  }, [selectedCycle, selectedFaculty, trainingCycleList, teachingPlanList]);
 
   const handleCycleChange = (value) => {
     setSelectedCycle(value);
@@ -65,15 +86,21 @@ function GroupOpeningPlan() {
   };
 
   const handleFacultyChange = (value) => {
-    setSelectedFaculty(value);
+    const [facultyId, tcfId] = value.split('-').map(Number);
+    setSelectedFaculty({ facultyId, tcfId });
   };
 
   const handleEdit = (record) => {
-    navigate(`/admin/group-opening-plan/edit/${record.id}`, { state: { groupData: record } });
+    navigate(`/admin/group-opening-plan/edit/${record.id}`, {state: {record, selectedCycle, selectedFaculty}});
   };
 
   const handleDetail = (key) => {
-    navigate(`/admin/group-opening-plan/detail/${key}`);
+    navigate(`/admin/group-opening-plan/detail/${key}`, {
+      state: {
+        selectedCycle, 
+        selectedFaculty,  
+      },
+    });
   };
 
   const handleDel = async (id) => {
@@ -90,7 +117,7 @@ function GroupOpeningPlan() {
 
     if (result.isConfirmed) {
       try {
-        const planToDelete = trainingCycleList.find(item => item.id === id);
+        const planToDelete = filteredData.find(item => item.id === id);
         if (!planToDelete) return;
 
         const updatedData = { ...planToDelete, status: 3 };
@@ -186,7 +213,7 @@ function GroupOpeningPlan() {
 
           <Select
             allowClear
-            placeholder="Chọn chu kỳ đào tạo"
+            placeholder="Chọn chương trình đào tạo"
             style={{ width: 250 }}
             value={selectedCycle}
             onChange={handleCycleChange}
@@ -198,20 +225,27 @@ function GroupOpeningPlan() {
 
           <Select
             allowClear
-            placeholder="Chọn chương trình đào tạo"
+            placeholder="Chọn ngành"
             style={{ width: 300 }}
-            value={selectedFaculty}
+            value={selectedFaculty ? `${selectedFaculty.facultyId}-${selectedFaculty.tcfId}` : undefined}
             onChange={handleFacultyChange}
             disabled={!selectedCycle}
           >
-            {selectedCycle &&
-              trainingCycleList
-                .find(cycle => cycle.id === selectedCycle)
-                ?.faculties
-                .map(faculty => (
-                  <Option key={faculty.id} value={faculty.id}>{faculty.name}</Option>
-                ))
-            }
+		  {selectedCycle &&
+		    trainingCycleList
+		      .find(cycle => cycle.id === selectedCycle)
+		      ?.faculties
+		      ?.flatMap(faculty => {
+		        const list = faculty.trainingCycleFacultyList;
+		        // Nếu là array, trả về list luôn; nếu là object thì đưa vào array
+		        const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
+		        return normalizedList.map(tcf => (
+		          <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
+		            {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
+		          </Option>
+		        ));
+		      })
+		  }
           </Select>
 
           <Link to="/admin/group-opening-plan/create" className="ml-auto">
