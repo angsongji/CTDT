@@ -96,15 +96,6 @@ function CreateTrainingCycle() {
         );
     };
 
-    const handleDateChange = (dates) => {
-        if (dates && dates.length === 2) {
-            const startYear = dates[0].year();
-            const endYear = dates[1].year();
-            const name = `Chu kỳ đào tạo ${startYear}-${endYear}`;
-            form.setFieldsValue({ name });
-        }
-    };
-
     return (
         <div className="p-6">
             <h1 className="text-2xl font-bold mb-4">Thêm mới chu kỳ đào tạo</h1>
@@ -120,9 +111,8 @@ function CreateTrainingCycle() {
                         name="name"
                         label="Tên chương trình"
                         rules={[{ required: true, message: 'Tên chương trình là bắt buộc!' }]}
-                        
                     >
-                        <Input disabled placeholder="Tên chương trình được tạo tự động sau khi chọn khoảng thời gian" />
+                        <Input />
                     </Form.Item>
 
                     <Form.Item
@@ -130,7 +120,7 @@ function CreateTrainingCycle() {
                         label="Khoảng thời gian"
                         rules={[{ required: true, message: 'Vui lòng chọn khoảng thời gian!' }]}
                     >
-                        <RangePicker picker="year" style={{ width: '100%' }} onChange={handleDateChange} />
+                        <RangePicker picker="year" style={{ width: '100%' }} />
                     </Form.Item>
 
                     <Form.Item
