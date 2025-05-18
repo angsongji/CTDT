@@ -268,7 +268,12 @@ function GroupOpeningPlan() {
                 const list = faculty.trainingCycleFacultyList;
                 const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
                 return normalizedList
-                  .filter(tcf => tcf?.trainingCycleId === selectedCycle)
+                  .filter(
+					tcf => 
+						tcf?.trainingCycleId === selectedCycle &&
+						tcf.generalInformation &&
+				        Object.keys(tcf.generalInformation).length > 0
+				  )
                   .map(tcf => (
                     <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
                       {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
