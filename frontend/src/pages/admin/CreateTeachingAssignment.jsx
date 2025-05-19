@@ -2,104 +2,74 @@ import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Select, message } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
-import { getAllLecturers } from "../../services/lecturerServices";
 import { createTeachingAssignment } from "../../services/teachingAssignmentServices";
+import { getLecturerCoursesByCourseId } from "../../services/lecturerCourseServices";
 
-
-const  CreateTeachingAssignment = () => {
+const CreateTeachingAssignment = () => {
     const location = useLocation();
     const record = location.state?.record;
-	const [lecturers, setLecturers] = useState([]);
-	const navigate = useNavigate();
+    const [lecturers, setLecturers] = useState([]);
+    const navigate = useNavigate();
 
-	
-	useEffect(() => {
-		const fetchApi = async () => {
-			const lecturerCourses = (record.course.lecturerCourses || []);
-			const lecturerIds = lecturerCourses.map(lc => lc.id); // Lấy ra id của lecturerCourses
-			// Gọi API để lấy danh sách giảng viên
-			const listLecturers = await getAllLecturers();
+    const [selectedLecturers, setSelectedLecturers] = useState({});
 
-			// Lọc ra những giảng viên có lecturerCourses trùng với lecturerIds
-			const formattedResults = listLecturers.filter(lecturer => {
-				// kiểm tra nếu lecturerCourses của từng lecturer có id trùng với lecturerIds
-				const lecturerCourseIds = (lecturer.lecturerCourses || []).map(lc => lc.id);
-				return lecturerCourseIds.some(id => lecturerIds.includes(id));
-			});
+    useEffect(() => {
+        if (!record) return;
 
-			setLecturers(formattedResults);
-		};
+        const fetchApi = async () => {
+            const lecturersData = await getLecturerCoursesByCourseId(record.courseId);
+            setLecturers(lecturersData);
+        };
 
-		fetchApi();
-	}, []);
-	
+        fetchApi();
+    }, [record]);
 
+    const dataSource = record?.groups.map((group) => ({
+        key: `${record.courseId}-${group.groupNumber}`,
+        Id_Course: record.courseId,
+        Name_Course: record.nameCourse,
+        GroupNumber: group.id,
+    })) || [];
 
-    const lecturerMap = lecturers.reduce((acc, lecturer) => {
-        acc[lecturer.id] = lecturer.fullName;
-        return acc;
-    }, {});
+    const handleLecturerChange = (groupId, value) => {
+        setSelectedLecturers((prev) => ({
+            ...prev,
+            [groupId]: value,
+        }));
+    };
 
-    const dataSource = record.groups.map((group) => ({
-        key: `${record.course.id}-${group.groupNumber}`,
-        Id_Course: record.course.id,
-        Name_Course: record.nameCourse || record.course.name,
-        GroupNumber: group.groupNumber,
-    }));
+    const handleSubmit = async () => {
+        const unassignedGroups = record.groups.filter(group => !selectedLecturers[group.id] || selectedLecturers[group.id].length === 0);
 
-    const [selectedLecturer, setSelectedLecturer] = useState({});
-    const [selectedLecturerName, setSelectedLecturerName] = useState({});
+        if (unassignedGroups.length > 0) {
+            message.warning("Vui lòng chọn giảng viên cho tất cả các nhóm trước khi xác nhận.");
+            return;
+        }
 
-    const handleLecturerChange = (groupKey, value, isIdLecturer) => {
-        if (isIdLecturer) {
-            setSelectedLecturer((prev) => ({
-                ...prev,
-                [groupKey]: value,
-            }));
-            const name = lecturerMap[value];
-            setSelectedLecturerName((prev) => ({
-                ...prev,
-                [groupKey]: name,
-            }));
-        } else {
-            setSelectedLecturerName((prev) => ({
-                ...prev,
-                [groupKey]: value,
-            }));
-            const id = lecturers.find((lecturer) => lecturer.fullName === value)?.id;
-            setSelectedLecturer((prev) => ({
-                ...prev,
-                [groupKey]: id,
-            }));
+        const requests = [];
+        record.groups.forEach((group) => {
+            const lecturerIds = selectedLecturers[group.id];
+            lecturerIds.forEach((lecturerId) => {
+                requests.push(
+                    createTeachingAssignment({
+                        status: 1,
+                        group: { id: group.id },
+                        lecturer: { id: lecturerId }
+                    })
+                );
+            });
+        });
+
+        try {
+            await Promise.all(requests);
+			console.log("requests",requests);
+            message.success("Tạo phân công giảng dạy thành công!");
+            navigate(-1);
+        } catch (error) {
+            console.error("Lỗi khi gửi dữ liệu:", error);
+            message.error("Đã xảy ra lỗi khi tạo phân công giảng dạy.");
         }
     };
-	
-	const handleSubmit = async () => {
-	    const unassignedGroups = record.groups.filter(group => !selectedLecturer[group.groupNumber]);
-
-	    if (unassignedGroups.length > 0) {
-	        message.warning("Vui lòng chọn giảng viên cho tất cả các nhóm trước khi xác nhận.");
-	        return;
-	    }
-
-	    const requests = record.groups.map((group) =>
-	        createTeachingAssignment({
-	            status: 1,
-	            group: { id: group.id },
-	            lecturer: { id: selectedLecturer[group.groupNumber] }
-	        })
-	    );
-
-	    try {
-	        await Promise.all(requests);
-	        message.success("Tạo phân công giảng dạy thành công!");
-			navigate(-1);
-	    } catch (error) {
-	        console.error("Lỗi khi gửi dữ liệu:", error);
-	        message.error("Đã xảy ra lỗi khi tạo phân công giảng dạy.");
-	    }
-	};
-
 
     const columns = [
         {
@@ -116,39 +86,21 @@ const  CreateTeachingAssignment = () => {
             title: 'Nhóm',
             dataIndex: 'GroupNumber',
             key: 'GroupNumber',
-			sorter: (a, b) => a.GroupNumber - b.GroupNumber, 
         },
         {
-            title: 'Mã CBGD',
+            title: 'Chọn giảng viên (ID)',
             key: 'lecturerIds',
             render: (text, record) => (
                 <Select
+                    mode="multiple"
                     style={{ width: '100%' }}
                     placeholder="Chọn mã CBGD"
-                    value={selectedLecturer[record.GroupNumber]}
-                    onChange={(value) => handleLecturerChange(record.GroupNumber, value, true)}
+                    value={selectedLecturers[record.GroupNumber] || []}
+                    onChange={(value) => handleLecturerChange(record.GroupNumber, value)}
                 >
                     {lecturers.map((lecturer) => (
-                        <Select.Option key={lecturer.id} value={lecturer.id}>
-                            {lecturer.id}
-                        </Select.Option>
-                    ))}
-                </Select>
-            ),
-        },
-        {
-            title: 'Họ và tên CBGD',
-            key: 'lecturerNames',
-            render: (text, record) => (
-                <Select
-                    style={{ width: '100%' }}
-                    placeholder="Chọn tên CBGD"
-                    value={selectedLecturerName[record.GroupNumber]}
-                    onChange={(value) => handleLecturerChange(record.GroupNumber, value, false)}
-                >
-                    {lecturers.map((lecturer) => (
-                        <Select.Option key={lecturer.fullName} value={lecturer.fullName}>
-                            {lecturer.fullName}
+                        <Select.Option key={lecturer.lecturerId} value={lecturer.lecturerId}>
+                            {lecturer.lecturerId} - {lecturer.lecturerName}
                         </Select.Option>
                     ))}
                 </Select>

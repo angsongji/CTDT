@@ -42,10 +42,33 @@ public class GroupOpenPlanController {
 	
 	
 	@PatchMapping("/edit/{id}")
-	public GroupOpeningPlan updateGroupOpeningPlan(@PathVariable Integer id, @RequestBody GroupOpeningPlan groupOpeningPlan) {
-		groupOpeningPlan.setId(id);
-		return groupOpenPlanService.saveGroupOpeningPlan(groupOpeningPlan);
+	public GroupOpeningPlan updateGroupOpeningPlan(@PathVariable Integer id, @RequestBody GroupOpeningPlan input) {
+	    GroupOpeningPlan existing = groupOpenPlanService.getGroupOpeningPlanById(id);
+
+	    if (input.getNumberOfGroups() != null) {
+	        existing.setNumberOfGroups(input.getNumberOfGroups());
+	    }
+	    if (input.getNumberOfStudents() != null) {
+	        existing.setNumberOfStudents(input.getNumberOfStudents());
+	    }
+	    if (input.getImplementationSemester() != null) {
+	        existing.setImplementationSemester(input.getImplementationSemester());
+	    }
+	    if (input.getStatus() != null) {
+	        existing.setStatus(input.getStatus());
+	    }
+
+	    if (input.getCourse() != null && input.getCourse().getId() != null) {
+	        existing.setCourse(input.getCourse());
+	    }
+
+	    if (input.getTrainingCycleFaculty() != null && input.getTrainingCycleFaculty().getId() != null) {
+	        existing.setTrainingCycleFaculty(input.getTrainingCycleFaculty()); // hoặc lấy từ DB nếu muốn kiểm tra kỹ hơn
+	    }
+
+	    return groupOpenPlanService.saveGroupOpeningPlan(existing);
 	}
+
 
 	@DeleteMapping("/del/{id}")
 	public void deleteGroupOpeningPlan(@PathVariable Integer id) {

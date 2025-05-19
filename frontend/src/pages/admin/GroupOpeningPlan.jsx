@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Button, Table, Tag, Select } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaPlus } from "react-icons/fa6";
 import { editGroupOpenPlan } from "../../services/groupOpeningPlanServices";
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
 import { getAll } from "../../services/teachingPlanServices";
 import Swal from 'sweetalert2';
-import { useLocation } from 'react-router-dom';
 
 const { Option } = Select;
 
@@ -20,15 +19,15 @@ function GroupOpeningPlan() {
   const [filteredData, setFilteredData] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   useEffect(() => {
-      if(location.state?.selectedCycle) {
-        setSelectedCycle(location.state.selectedCycle);
-      }
-      if(location.state?.selectedFaculty) {
-        setSelectedFaculty(location.state.selectedFaculty);
-      }
-    }, [location.state]);
+    if (location.state?.selectedCycle) {
+      setSelectedCycle(location.state.selectedCycle);
+    }
+    if (location.state?.selectedFaculty) {
+      setSelectedFaculty(location.state.selectedFaculty);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const fetchApi = async () => {
@@ -48,11 +47,14 @@ function GroupOpeningPlan() {
     if (selectedCycle && selectedFaculty) {
       const selectedCycleObj = trainingCycleList.find(c => c.id === selectedCycle);
       const selectedFacultyObj = selectedCycleObj?.faculties.find(f => f.id === selectedFaculty.facultyId);
-      const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(tcf => tcf.id === selectedFaculty.tcfId);
-      const generalInfoIds = selectedTcf ? [selectedTcf.generalInformation.id] : [];
+      const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(
+        tcf => tcf.id === selectedFaculty.tcfId
+      );
+
+      const targetTcfId = selectedTcf?.id;
 
       const filteredTeachingPlans = teachingPlanList.filter(
-        tp => generalInfoIds.includes(tp.generalInformation?.id)
+        tp => tp.generalInformation?.trainingCycleFacultyId === targetTcfId
       );
 
       const groupPlans = [];
@@ -60,25 +62,30 @@ function GroupOpeningPlan() {
       filteredTeachingPlans.forEach((plan) => {
         const course = plan.course;
         const gops = course?.groupOpeningPlans || [];
+		console.log("gops",gops)
 
         gops.forEach(gop => {
-          groupPlans.push({
-            key: groupPlans.length + 1,
-            id: gop.id,
-            nameCourse: course?.name,
-			idCourse: course?.id,
-            numberOfGroups: gop.numberOfGroups,
-            numberOfStudents: gop.numberOfStudents,
-            status: gop.status
-          });
+          if (gop.trainingCycleFacultyId === targetTcfId) {
+            groupPlans.push({
+              key: groupPlans.length + 1,
+              id: gop.id,
+              nameCourse: course?.name,
+              idCourse: course?.id,
+              numberOfGroups: gop.numberOfGroups,
+              numberOfStudents: gop.numberOfStudents,
+              status: gop.status,
+			  isAssigned: gop.groups.some(group => group.teachingAssignments && group.teachingAssignments.length > 0)
+            });
+          }
         });
       });
-
+	  
       setFilteredData(groupPlans);
     } else {
       setFilteredData([]);
     }
   }, [selectedCycle, selectedFaculty, trainingCycleList, teachingPlanList]);
+
 
   const handleCycleChange = (value) => {
     setSelectedCycle(value);
@@ -91,15 +98,23 @@ function GroupOpeningPlan() {
   };
 
   const handleEdit = (record) => {
-    navigate(`/admin/group-opening-plan/edit/${record.id}`, {state: {record, selectedCycle, selectedFaculty}});
+    if (record.status === 2) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Không thể sửa',
+        text: 'Kế hoạch mở lớp đã bị xóa và không thể sửa.',
+      });
+      return;
+    }
+
+    navigate(`/admin/group-opening-plan/edit/${record.id}`, {
+      state: { record, selectedCycle, selectedFaculty }
+    });
   };
 
   const handleDetail = (key) => {
     navigate(`/admin/group-opening-plan/detail/${key}`, {
-      state: {
-        selectedCycle, 
-        selectedFaculty,  
-      },
+      state: { selectedCycle, selectedFaculty },
     });
   };
 
@@ -118,9 +133,10 @@ function GroupOpeningPlan() {
     if (result.isConfirmed) {
       try {
         const planToDelete = filteredData.find(item => item.id === id);
+		console.log(planToDelete);
         if (!planToDelete) return;
 
-        const updatedData = { ...planToDelete, status: 3 };
+        const updatedData = { ...planToDelete, status: 2 };
         const response = await editGroupOpenPlan(id, updatedData);
         if (response) {
           Swal.fire('Đã xóa!', 'Kế hoạch mở lớp đã được xóa thành công.', 'success');
@@ -128,11 +144,7 @@ function GroupOpeningPlan() {
         }
       } catch (error) {
         console.log("error", error);
-        Swal.fire({
-          title: 'Lỗi!',
-          text: 'Không thể xóa kế hoạch mở lớp.',
-          icon: 'error'
-        });
+        Swal.fire('Lỗi!', 'Không thể xóa kế hoạch mở lớp.', 'error');
       }
     }
   };
@@ -162,10 +174,30 @@ function GroupOpeningPlan() {
       title: 'Trạng Thái',
       key: 'status',
       dataIndex: 'status',
-      render: (_, { status }) => {
-        let color = status === 1 ? 'geekblue' : 'volcano';
-        return <Tag color={color}>{status === 1 ? 'Hoạt động' : 'Đã kết thúc'}</Tag>;
-      },
+	  render: (_, { status }) => {
+	    let color = '';
+	    let text = '';
+
+	    switch(status) {
+	      case 1:
+	        color = 'green';      
+	        text = 'Đang mở';
+	        break;
+	      case 0:
+	        color = 'volcano';   
+	        text = 'Đang đóng';
+	        break;
+	      case 2:
+	        color = 'gray';     
+	        text = 'Đã xóa';
+	        break;
+	      default:
+	        color = 'default';
+	        text = 'Không xác định';
+	    }
+
+	    return <Tag color={color}>{text}</Tag>;
+		},
     },
     {
       title: 'Thao tác',
@@ -213,7 +245,7 @@ function GroupOpeningPlan() {
 
           <Select
             allowClear
-            placeholder="Chọn chương trình đào tạo"
+            placeholder="Chọn chu kỳ đào tạo"
             style={{ width: 250 }}
             value={selectedCycle}
             onChange={handleCycleChange}
@@ -231,21 +263,24 @@ function GroupOpeningPlan() {
             onChange={handleFacultyChange}
             disabled={!selectedCycle}
           >
-		  {selectedCycle &&
-		    trainingCycleList
-		      .find(cycle => cycle.id === selectedCycle)
-		      ?.faculties
-		      ?.flatMap(faculty => {
-		        const list = faculty.trainingCycleFacultyList;
-		        // Nếu là array, trả về list luôn; nếu là object thì đưa vào array
-		        const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
-		        return normalizedList.map(tcf => (
-		          <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
-		            {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
-		          </Option>
-		        ));
-		      })
-		  }
+            {selectedCycle &&
+              trainingCycleList.find(cycle => cycle.id === selectedCycle)?.faculties?.flatMap(faculty => {
+                const list = faculty.trainingCycleFacultyList;
+                const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
+                return normalizedList
+                  .filter(
+					tcf => 
+						tcf?.trainingCycleId === selectedCycle &&
+						tcf.generalInformation &&
+				        Object.keys(tcf.generalInformation).length > 0
+				  )
+                  .map(tcf => (
+                    <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
+                      {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
+                    </Option>
+                  ));
+              })
+            }
           </Select>
 
           <Link to="/admin/group-opening-plan/create" className="ml-auto">

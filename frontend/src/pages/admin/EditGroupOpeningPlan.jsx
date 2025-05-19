@@ -1,85 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Form, InputNumber, Select, Button, Table, Card, message } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import Swal from 'sweetalert2';
-import { editGroupOpenPlan } from "../../services/groupOpeningPlanServices";
-import { editGroup } from "../../services/groupServices";
-import { getGroupOpenPlanById } from "../../services/groupOpeningPlanServices";
-
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Form,
+  InputNumber,
+  Table,
+  message,
+  Select,
+  Card,
+} from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+import Swal from "sweetalert2";
+import {
+  getGroupOpenPlanById,
+  editGroupOpenPlan,
+} from "../../services/groupOpeningPlanServices";
+import { createGroup, editGroup } from "../../services/groupServices";
 
 const { Option } = Select;
 
 function EditGroupOpeningPlan() {
-  const [groups, setGroups] = useState([]);
   const [form] = Form.useForm();
-  const navigate = useNavigate();
-  const params = useParams();
-  const [groupData, setGroupData] = useState([]);
   const location = useLocation();
-  const {record, selectedCycle, selectedFaculty } = location.state || {};
-  
-  console.log(record);
+  const navigate = useNavigate();
+  const record = location.state.record;
+  const selectedCycle = location.state.selectedCycle;
+  const selectedFaculty = location.state.selectedFaculty;
+
+  const [groups, setGroups] = useState([]);
 
   useEffect(() => {
-       const fetchAPI = async () => {
-         const result = await getGroupOpenPlanById(params.id);
-		 setGroupData(result);
-       };
-       fetchAPI();
-     }, [params.id]);
-
-  useEffect(() => {
-    if (groupData) {
-      form.setFieldsValue({
-        id: groupData.id,
-        implementationSemester: groupData.implementationSemester,
-        numberOfGroups: groupData.numberOfGroups,
-        numberOfStudents: groupData.numberOfStudents,
-        status: groupData.status,
+    if (record) {
+      getGroupOpenPlanById(record.id).then((res) => {
+        form.setFieldsValue(res);
+        setGroups(res.groups);
       });
-      setGroups(groupData.groups);
     }
-  }, [groupData, form]);
+  }, [record, form]);
 
-  const handleGroupChange = (value, index) => {
-    const newGroups = [...groups];
-    newGroups[index].maxStudents = value;
-    setGroups(newGroups);
+  const handleGroupCountChange = (value) => {
+    const currentCount = groups.length;
+    const existingGroups = groups.filter((g) => g.id);
+
+    if (value < existingGroups.length) {
+      message.warning(
+        `Không thể giảm số lượng nhóm xuống dưới ${existingGroups.length} vì có ${existingGroups.length} nhóm đã tồn tại.`
+      );
+      form.setFieldValue("numberOfGroups", currentCount);
+      return;
+    }
+
+    if (value > currentCount) {
+      const newGroups = [...groups];
+      for (let i = currentCount; i < value; i++) {
+        newGroups.push({
+          groupNumber: i + 1,
+          maxStudents: 0,
+        });
+      }
+      setGroups(newGroups);
+    } else if (value < currentCount) {
+      Swal.fire({
+        title: "Giảm số nhóm?",
+        text: `Bạn đang giảm số lượng nhóm từ ${currentCount} xuống ${value}. Các nhóm chưa tồn tại sẽ bị xóa.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Tiếp tục",
+        cancelButtonText: "Hủy",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const newGroups = groups.slice(0, value);
+          setGroups(newGroups);
+          form.setFieldValue("numberOfGroups", value);
+        } else {
+          form.setFieldValue("numberOfGroups", currentCount);
+        }
+      });
+    }
   };
-
-
-  const columns = [
-    {
-      title: "Mã nhóm",
-      dataIndex: "groupNumber",
-      key: "groupNumber",
-      align: "center",
-    },
-    {
-      title: "Số lượng tối đa",
-      dataIndex: "maxStudents",
-      key: "maxStudents",
-      align: "center",
-      render: (text, record, index) => (
-        <InputNumber
-          min={1}
-          value={record.maxStudents}
-          onChange={(value) => handleGroupChange(value, index)}
-        />
-      ),
-    },
-  ];
 
   const handleBackClick = () => {
-    navigate('/admin/group-opening-plan', { state: { selectedCycle, selectedFaculty }});
+    navigate("/admin/group-opening-plan", {
+      state: { selectedCycle, selectedFaculty },
+    });
   };
-  
+
+  const handleSubmit = () => {
+    const totalMax = groups.reduce(
+      (sum, g) => sum + Number(g.maxStudents || 0),
+      0
+    );
+    const totalStudents = form.getFieldValue("numberOfStudents");
+
+    if (totalMax !== totalStudents) {
+      message.error(
+        "Tổng số lượng tối đa của các nhóm phải bằng Tổng số sinh viên!"
+      );
+      return;
+    }
+
+    const updatedData = {
+      ...form.getFieldsValue(),
+      groups,
+    };
+
+    onUpdate(updatedData);
+  };
+
   const onUpdate = async (values) => {
     const bodyData = {
       numberOfGroups: values.numberOfGroups,
       numberOfStudents: values.numberOfStudents,
       implementationSemester: values.implementationSemester,
+      status: values.status,
       course: {
         id: record.idCourse,
       },
@@ -87,24 +120,23 @@ function EditGroupOpeningPlan() {
 
     try {
       const result = await editGroupOpenPlan(values.id, bodyData);
-
-      if (!result || !result.id) {
+      if (!result || !result.id)
         throw new Error("Không nhận được ID GroupOpeningPlan sau khi cập nhật.");
-      }
 
       const groupOpeningPlanId = result.id;
 
-
-      const groupUpdateRequests = values.groups.map((group) => {
+      const groupUpdateRequests = groups.map((group, index) => {
         const groupBody = {
-          groupNumber: group.groupNumber,
+          groupNumber: index + 1,
           maxStudents: group.maxStudents,
-          groupOpeningPlan: {
-            id: groupOpeningPlanId,
-          },
+          groupOpeningPlan: { id: groupOpeningPlanId },
         };
 
-        return editGroup(group.id, groupBody); 
+        if (group.id) {
+          return editGroup(group.id, groupBody);
+        } else {
+          return createGroup(groupBody);
+        }
       });
 
       await Promise.all(groupUpdateRequests);
@@ -113,60 +145,66 @@ function EditGroupOpeningPlan() {
         title: "Cập nhật thành công!",
         text: "Thông tin nhóm học đã được cập nhật.",
         icon: "success",
-        confirmButtonText: "OK"
+        confirmButtonText: "OK",
       }).then(() => {
-		navigate('/admin/group-opening-plan', { state: { selectedCycle, selectedFaculty }});
+        navigate("/admin/group-opening-plan", {
+          state: { selectedCycle, selectedFaculty },
+        });
       });
-
     } catch (error) {
       console.error("Lỗi cập nhật:", error);
       Swal.fire({
         title: "Lỗi!",
         text: "Đã xảy ra lỗi khi cập nhật nhóm học.",
         icon: "error",
-        confirmButtonText: "OK"
+        confirmButtonText: "OK",
       });
     }
   };
 
-
-
-  const handleSubmit = () => {
-      const totalMax = groups.reduce((sum, g) => sum + Number(g.maxStudents), 0);
-      const totalStudents = form.getFieldValue('numberOfStudents');
-
-      if (totalMax !== totalStudents) {
-        message.error('Tổng số lượng tối đa của các nhóm phải bằng Tổng số sinh viên!');
-        return;
-      }
-
-      const updatedData = {
-        ...form.getFieldsValue(),
-        groups,
-      };
-
-      console.log('Submitted data:', updatedData);
-      onUpdate(updatedData);
-    };
+  const columns = [
+    {
+      title: "Nhóm",
+      dataIndex: "groupNumber",
+      key: "groupNumber",
+      render: (_, __, index) => `Nhóm ${index + 1}`,
+    },
+    {
+      title: "Số lượng tối đa",
+      dataIndex: "maxStudents",
+      key: "maxStudents",
+      render: (_, record, index) => (
+        <InputNumber
+          min={1}
+          value={groups[index].maxStudents}
+          onChange={(value) => {
+            const newGroups = [...groups];
+            newGroups[index].maxStudents = value;
+            setGroups(newGroups);
+          }}
+        />
+      ),
+    },
+  ];
 
   return (
-    <div style={{ padding: '24px' }}>
-	<Button
-       type="primary"
-       icon={<ArrowLeftOutlined />}
-       onClick={handleBackClick}
-       style={{
-         marginBottom: "16px",
-         backgroundColor: "#FF8C00", 
-         borderColor: "#FF8C00",
-         color: "#fff", 
-         padding: "8px 16px", 
-         borderRadius: "8px",
-         fontWeight: "bold", 
-       }}
-	   
-     > Quay lại
-     </Button>
+    <div style={{ padding: "24px" }}>
+      <Button
+        type="primary"
+        icon={<ArrowLeftOutlined />}
+        onClick={handleBackClick}
+        style={{
+          marginBottom: "16px",
+          backgroundColor: "#FF8C00",
+          borderColor: "#FF8C00",
+          color: "#fff",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          fontWeight: "bold",
+        }}
+      >
+        Quay lại
+      </Button>
 
       <Card title="Chỉnh sửa Kế hoạch mở nhóm học phần">
         <Form form={form} layout="vertical">
@@ -187,7 +225,11 @@ function EditGroupOpeningPlan() {
               label="Số lượng nhóm"
               style={{ flex: 1 }}
             >
-              <InputNumber disabled style={{ width: "100%" }} />
+              <InputNumber
+                min={1}
+                style={{ width: "100%" }}
+                onChange={handleGroupCountChange}
+              />
             </Form.Item>
           </div>
 
@@ -199,11 +241,7 @@ function EditGroupOpeningPlan() {
             >
               <InputNumber min={1} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item
-              name="status"
-              label="Trạng thái"
-              style={{ flex: 1 }}
-            >
+            <Form.Item name="status" label="Trạng thái" style={{ flex: 1 }}>
               <Select>
                 <Option value={1}>Đang mở</Option>
                 <Option value={0}>Đã đóng</Option>
@@ -216,15 +254,12 @@ function EditGroupOpeningPlan() {
         <Table
           dataSource={groups}
           columns={columns}
-          rowKey="id"
+          rowKey={(record, index) => record.id || `new-${index}`}
           pagination={false}
         />
 
         <div style={{ textAlign: "right", marginTop: "20px" }}>
-          <Button
-            type="primary"
-            onClick={handleSubmit}
-          >
+          <Button type="primary" onClick={handleSubmit}>
             Lưu thay đổi
           </Button>
         </div>

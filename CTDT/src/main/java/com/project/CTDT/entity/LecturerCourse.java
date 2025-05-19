@@ -45,4 +45,18 @@ public class LecturerCourse {
 	@JsonBackReference(value = "lecturerCourses-course")
 	private Course course;
 
+	@JsonProperty("lecturerId")
+    public Integer getLecturerId() {
+        return lecturer != null ? lecturer.getId() : null;
+    }
+	
+	@JsonProperty("courseId")
+    public Integer getCourseId() {
+        return course != null ? course.getId() : null;
+    }
+	
+	@JsonProperty("lecturerName")
+    public String getLecturerName() {
+        return lecturer != null ? lecturer.getFullName() : null;
+    }
 }

@@ -1,79 +1,87 @@
 import React, { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa6";
-import { Input, Button, Table } from 'antd';
-import { Link } from 'react-router-dom';
-import { getAllCourses } from "../../services/courseServices";
-import { getAllLecturers } from "../../services/lecturerServices";
+import { Input, Button, Table, Select, message } from 'antd';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { getAllTraningCycle } from "../../services/trainingCycleServices";
+import { getAll as getTeachingPlan } from "../../services/teachingPlanServices";
+import  { toSlug } from "../../helpers/regex";
+
+const { Option } = Select;
 
 const TeachingAssignment = () => {
-  const [dataSource, setDataSource] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [trainingCycle, setTrainingCycle] = useState([]);
+  const [teachingPlans, setTeachingPlans] = useState([]);
+  const [selectedCycle, setSelectedCycle] = useState(null);
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const [dataSource, setDataSource] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   useEffect(() => {
-    const fetchApi = async () => {
-      const courses = await getAllCourses();
-      const lecturers = await getAllLecturers();
-	  const result = courses
-	    .flatMap(course => {
-	      const courseId = course.id;
-	      const courseName = course.name;
-	      const lecturerIds = course.lecturerCourses.map(lc => lc.id);
-	      const matchedLecturers = lecturers.filter(lecturer =>
-	        lecturer.lecturerCourses.some(lc => lecturerIds.includes(lc.id))
-	      );
-
-	      return course.groupOpeningPlans
-	        .filter(plan => plan.status === 1)
-	        .map(plan => {
-	          const planGroups = plan.groups || [];
-
-	          const groupAssignments = planGroups.map(group => ({
-	            groupNumber: group.groupNumber,
-	            assignmentIds: group.teachingAssignments.map(ta => ta.id)
-	          }));
-
-	          const groupLecturerPairs = [];
-
-	          matchedLecturers.forEach(lecturer => {
-	            const lecturerAssignmentIds = lecturer.teachingAssignments.map(ta => ta.id);
-
-	            groupAssignments.forEach(group => {
-	              const isAssigned = group.assignmentIds.some(id => lecturerAssignmentIds.includes(id));
-	              if (isAssigned) {
-	                groupLecturerPairs.push({
-	                  GroupNumber: group.groupNumber,
-	                  Id_Lecturer: lecturer.id,
-	                  Name_Lecturer: lecturer.fullName
-	                });
-	              }
-	            });
-	          });
-
-	          return {
-	            key: `${courseId}_${plan.id}`,
-	            Id_Course: courseId,
-	            Name_Course: courseName,
-	            groups: groupLecturerPairs
-	          };
-	        });
-	    });
-
-	  const finalData = result.filter(item => item.groups.length > 0).map((item, index) => ({
-	    ...item,
-	    stt: index + 1
-	  }));
-
-	  setDataSource(finalData);
+      if (location.state?.selectedCycle) {
+        setSelectedCycle(location.state.selectedCycle);
+      }
+      if (location.state?.selectedFaculty) {
+        setSelectedFaculty(location.state.selectedFaculty);
+      }
+  }, [location.state]);
+  
+  
+  useEffect(() => {
+    const fetchAPI = async () => {
+      const cycles = await getAllTraningCycle();
+	  const teachings = await getTeachingPlan();
+	  
+      setTrainingCycle(cycles);
+	  setTeachingPlans(teachings);
     };
-
-    fetchApi();
+    fetchAPI();
   }, []);
+  
+  
+  useEffect(() => {
+    const fetchAPI = async () => {
+      if (selectedCycle && selectedFaculty){
+		const selectedCycleObj = trainingCycle.find(c => c.id === selectedCycle);
+		const selectedFacultyObj = selectedCycleObj?.faculties.find(f => f.id === selectedFaculty.facultyId);
+		const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(
+        	tcf => tcf.id === selectedFaculty.tcfId
+      	);  
+		
+		const teaching = teachingPlans.filter(item => 
+			item.generalInformation.id === selectedTcf.generalInformation.id &&
+			item.course.groupOpeningPlans[0].trainingCycleFacultyId == selectedTcf.generalInformation.trainingCycleFacultyId
+		);		
+		
+		const data = teaching
+		  .filter(item =>
+		    item.course.groupOpeningPlans?.some(group =>
+		      group.groups?.some(g => g.teachingAssignments?.length > 0)
+		    )
+		  )
+		  .map(item => ({
+		    ...item,
+		    Id_Course: item.course.id,
+		    Name_Course: item.course.name,
+		    groups: item.course.groupOpeningPlans?.filter(group =>
+		      group.groups?.some(g => g.teachingAssignments?.length > 0)
+		    ) || [],
+		  }));		  
+
+		setDataSource(data);
+	  }
+	  		
+     }
+	  fetchAPI();
+  }, [selectedCycle, selectedFaculty, teachingPlans]);
 
   const columns = [
     {
       title: 'STT',
-      dataIndex: 'stt',
       key: 'stt',
+      render: (_, __, index) => index + 1,
     },
     {
       title: 'Mã HP',
@@ -85,63 +93,84 @@ const TeachingAssignment = () => {
       dataIndex: 'Name_Course',
       key: 'Name_Course',
     },
-    {
-      title: 'Nhóm',
-      key: 'groups',
-      render: (text, record) => (
-        <div>
-          {record.groups.map((group, idx) => (
-            <div key={idx}>{group.GroupNumber}</div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      title: 'Mã CBGD',
-      key: 'groups',
-      render: (text, record) => (
-        <div>
-          {record.groups.map((group, idx) => (
-            <div key={idx}>{group.Id_Lecturer}</div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      title: 'Họ và tên CBGD',
-      key: 'groups',
-      render: (text, record) => (
-        <div>
-          {record.groups.map((group, idx) => (
-            <div key={idx}>{group.Name_Lecturer}</div>
-          ))}
-        </div>
-      ),
-    },
+	{
+	  title: 'Nhóm',
+	  key: 'groups',
+	  render: (_, record) => {
+	    const groupList = record.groups?.[0]?.groups || [];
+	    return (
+	      <div>
+	        {groupList.map((group, idx) => (
+	          <div key={idx}>{group.id}</div>
+	        ))}
+	      </div>
+	    );
+	  },
+	},
+	{
+	  title: 'Mã CBGD',
+	  key: 'Id_Lecturer',
+	  render: (_, record) => {
+	    const groupList = record.groups?.[0]?.groups || [];
+	    return (
+	      <div>
+	        {groupList.map((group, idx) => {
+	          const lecturerIds = group.teachingAssignments
+	            ?.map(ta => ta.lecturerId)
+	            .filter((v, i, a) => a.indexOf(v) === i) 
+	            .join(', ');
+	          return <div key={idx}>{lecturerIds || "Chưa phân công"}</div>;
+	        })}
+	      </div>
+	    );
+	  },
+	},
+	{
+	  title: 'Họ và tên CBGD',
+	  key: 'Name_Lecturer',
+	  render: (_, record) => {
+	    const lecturerMap = new Map();
+	    record.course.lecturers.forEach(lc => {
+	      lecturerMap.set(lc.id, lc.fullName);
+	    });
+
+	    const groupList = record.groups?.[0]?.groups || [];
+	    return (
+	      <div>
+	        {groupList.map((group, idx) => {
+	          const lecturerNames = group.teachingAssignments
+	            ?.map(ta => lecturerMap.get(ta.lecturerId) || "Chưa cập nhật")
+	            .filter((v, i, a) => a.indexOf(v) === i) 
+	            .join(', ');
+	          return <div key={idx}>{lecturerNames || "Chưa phân công"}</div>;
+	        })}
+	      </div>
+	    );
+	  }
+	},
     {
       title: 'Thao tác',
-      dataIndex: 'actions',
       key: 'actions',
       render: (_, record) => (
         <>
           <Button
             type="primary"
             style={{ backgroundColor: '#007bff', marginRight: '10px' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record)}
           >
             Chi tiết
           </Button>
           <Button
             type="primary"
             style={{ backgroundColor: '#4CAF50', marginRight: '10px' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record)}
           >
             Sửa
           </Button>
           <Button
             type="primary"
             style={{ backgroundColor: '#F44336' }}
-            onClick={() => handleEdit(record.key)}
+            onClick={() => handleEdit(record)}
           >
             Xóa
           </Button>
@@ -150,14 +179,26 @@ const TeachingAssignment = () => {
     },
   ];
 
-  const handleEdit = (key) => {
-    console.log("Edit row with key:", key);
+  const handleEdit = (record) => {
+    const slug = toSlug(record.Name_Course);
+    navigate(`/admin/teaching-assignment/edit/${slug}`, { state: { record ,selectedCycle, selectedFaculty } });
   };
 
-  const filteredData = dataSource.filter(item =>
-    item.Name_Course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.Id_Course.toString().includes(searchTerm)
-  );
+  const handleTrainingCycleChange = (value) => {
+    setSelectedCycle(value);
+    setSelectedFaculty(null); 
+  };
+
+  const handleFacultyChange = (value) => {
+	const [facultyId, tcfId] = value.split('-').map(Number);
+    setSelectedFaculty({ facultyId, tcfId });
+  };
+
+  const handleSummaryClick = () => {
+    message.info(`Tổng hợp thống kê cho chu kỳ ${selectedCycle}${selectedFaculty ? ` - ngành ${selectedFaculty}` : ''}`);
+	navigate(`/admin/teaching-assignment/statistics`)
+  };
+
 
   return (
     <div className="p-6">
@@ -175,8 +216,54 @@ const TeachingAssignment = () => {
             </Button>
           </Link>
         </div>
+
+        <div className="flex items-center mb-4 gap-4">
+          <Select
+		    allowClear
+            placeholder="Chọn chu kỳ đào tạo"
+            value={selectedCycle}
+            onChange={handleTrainingCycleChange}
+            style={{ width: 200 }}
+          >
+            {trainingCycle.map(cycle => (
+              <Option key={cycle.id} value={cycle.id}>{cycle.name}</Option>
+            ))}
+          </Select>
+
+          <Select
+		  	allowClear
+            placeholder="Chọn ngành"
+            style={{ width: 250 }}
+            value={selectedFaculty ? `${selectedFaculty.facultyId}-${selectedFaculty.tcfId}` : undefined}
+            onChange={handleFacultyChange}
+            disabled={!selectedCycle}
+          >
+		  	{selectedCycle &&
+                trainingCycle.find(cycle => cycle.id === selectedCycle)?.faculties?.flatMap(faculty => {
+                  const list = faculty.trainingCycleFacultyList;
+                  const normalizedList = Array.isArray(list) ? list : list ? [list] : [];
+                  return normalizedList
+                    .filter(
+  					tcf => 
+  						tcf?.trainingCycleId === selectedCycle &&
+  						tcf.generalInformation &&
+  				        Object.keys(tcf.generalInformation).length > 0
+  				  )
+                    .map(tcf => (
+                      <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
+                        {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
+                      </Option>
+                    ));
+                })
+              }
+          </Select>
+
+          <Button type="primary" onClick={handleSummaryClick}>
+            Tổng hợp Thống kê phân công
+          </Button>
+        </div>
         <Table
-          dataSource={filteredData}
+          dataSource={dataSource}
           columns={columns}
           pagination={{ pageSize: 5 }}
           rowKey="Id_Course"

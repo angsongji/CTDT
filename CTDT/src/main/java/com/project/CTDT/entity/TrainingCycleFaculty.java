@@ -15,9 +15,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Set;
 
 @Getter
 @Setter
@@ -44,10 +47,16 @@ public class TrainingCycleFaculty {
 	@JsonIgnore
 	private GeneralInformation generalInformation;
 
-	@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	/*@OneToOne(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonManagedReference(value = "trainingCycleFaculty-group_opening_plan")
 	@JsonIgnore
-	private GroupOpeningPlan groupOpeningPlan;
+	private GroupOpeningPlan groupOpeningPlan;*/
+	
+	@OneToMany(mappedBy = "trainingCycleFaculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@JsonManagedReference(value = "trainingCycleFaculty-group_opening_plan")
+	@JsonIgnore
+	private Set<GroupOpeningPlan> groupOpeningPlans;
+
 
 	@JsonProperty("trainingCycleId")
 	public Integer getTrainingCycleId() {

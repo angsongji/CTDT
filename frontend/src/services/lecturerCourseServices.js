@@ -1,9 +1,24 @@
+
+import { get, postWithStatus } from "../utils/request";
 import { postWithStatus } from "../utils/request";
 import { API_DOMAIN } from "../utils/request";
+
 
 export const createLecturerCourse = async (dataArray) => {
     const result = await postWithStatus(`lecturer-courses`, dataArray);
     return result;
+}
+
+
+
+export const getLecturerCoursesByCourseId = async(idCourse) => {
+	const result = await get(`lecturer-courses?courseId=${idCourse}`)
+	return result;
+}
+
+export const getLecturerCourses = async() => {
+	const result = await get(`lecturer-courses`)
+	return result;
 }
 
 export const deleteLecturerCourse = async (dataArray) => {
@@ -19,3 +34,4 @@ export const deleteLecturerCourse = async (dataArray) => {
     return { status: response.status, message: result };
   };
   
+
