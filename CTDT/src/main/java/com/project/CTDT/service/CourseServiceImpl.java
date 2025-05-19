@@ -19,7 +19,7 @@ public class CourseServiceImpl implements CourseService {
 
 	@Override
 	public List<Course> getAllCourses() {
-		return courseRepository.findAll();
+		return courseRepository.findByStatus(1);
 	}
 
 	@Override
@@ -37,10 +37,14 @@ public class CourseServiceImpl implements CourseService {
 	public void deleteCourse(Integer id) {
 		courseRepository.deleteById(id);
 	}
+	
+	@Override
+	public List<Course> getCoursesByParentId(Integer parentId) {
+	    return courseRepository.findByParentId(parentId);
+	}
 
 	@Override
 	public List<Course> getByLecturerId(Integer idLecturer) {
 		return courseRepository.getByLecturerId(idLecturer);
 	}
-
 }

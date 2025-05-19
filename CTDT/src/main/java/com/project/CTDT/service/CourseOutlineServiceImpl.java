@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import com.project.CTDT.entity.CourseOutline;
 import com.project.CTDT.repository.CourseOutlineRepository;
 
 @Service
 public class CourseOutlineServiceImpl implements CourseOutlineService {
 
-    private final CourseOutlineRepository courseOutlineRepository;
+    @Autowired
+    private CourseOutlineRepository courseOutlineRepository;
 
     public CourseOutlineServiceImpl(CourseOutlineRepository courseOutlineRepository) {
         this.courseOutlineRepository = courseOutlineRepository;
@@ -19,7 +20,7 @@ public class CourseOutlineServiceImpl implements CourseOutlineService {
 
     @Override
     public List<CourseOutline> getAllCourseOutlines() {
-        return courseOutlineRepository.findAll();
+        return courseOutlineRepository.findByStatus(1);
     }
 
     @Override
@@ -30,7 +31,7 @@ public class CourseOutlineServiceImpl implements CourseOutlineService {
 
     @Override
     public List<CourseOutline> getCourseOutlinesByCourseId(Integer courseId) {
-        return courseOutlineRepository.findByCourseId(courseId);
+    	return courseOutlineRepository.findByCourseIdAndStatus(courseId, 1);
     }
 
     @Override
@@ -47,4 +48,9 @@ public class CourseOutlineServiceImpl implements CourseOutlineService {
     public void deleteCourseOutline(Integer id) {
         courseOutlineRepository.deleteById(id);
     }
+    
+	@Override
+	public List<CourseOutline> getChildrenByParentId(Integer parentId) {
+	    return courseOutlineRepository.findByParentId(parentId);
+	}
 }

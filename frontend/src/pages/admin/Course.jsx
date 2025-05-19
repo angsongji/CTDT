@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Row, Col } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Row, Col, Select } from 'antd';
 import { FaPlus } from "react-icons/fa6";
 import { MdDelete, MdModeEdit } from "react-icons/md";
 import { getAllCourses, createCourse, updateCourse, deleteCourse } from "../../services/courseServices";
-
+import { getAllKnowledgeAreas } from "../../services/knowledgeAreasServices";
 function Course() {
+	const [originalDataCourse, setOriginalDataCourse] = useState([]); //Lưu bản gốc
 	const [dataCourse, setDataCourse] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [modalVisible, setModalVisible] = useState(false);
@@ -12,10 +13,14 @@ function Course() {
 	const [selectedRecord, setSelectedRecord] = useState(null);
 	const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 	const [confirmLoading, setConfirmLoading] = useState(false);
+	const [searchText, setSearchText] = useState('');
 	const [form] = Form.useForm();
+	const [knowledgeAreas, setKnowledgeAreas] = useState([]);
+
 
 	useEffect(() => {
 		fetchCourses();
+		fetchKnowledgeAreas();
 	}, []);
 
 	const fetchCourses = async () => {
@@ -24,18 +29,19 @@ function Course() {
 			const response = await getAllCourses();
 
 			const formattedCourses = response.map(course => {
-				
+				const { children, ...rest } = course;
 				return {
-					...course,
+					...rest,
 					key: course.id,
 					require: course.requirement === 1,
-					id_KnowledgeAreas: course.knowledgeAreas?.id,
-					name_KnowledgeAreas: course.knowledgeAreasData?.name || '-',
-					parent_id: course.parent?.id
+					id_KnowledgeAreas: course.knowledgeArea?.id,
+					name_KnowledgeAreas: course.knowledgeArea?.name || '-',
+					parent_id: course.parent?.id,
 				};
 			});
 
 			setDataCourse(formattedCourses);
+			setOriginalDataCourse(formattedCourses); // lưu mảng gốc
 		} catch (error) {
 			message.error('Không thể tải danh sách học phần!');
 			console.error('Error fetching courses:', error);
@@ -44,22 +50,38 @@ function Course() {
 		}
 	};
 
+
+	const fetchKnowledgeAreas = async () => {
+		try {
+			const response = await getAllKnowledgeAreas();
+			console.log("response KnowledgeAreas", response);
+			const formattedKnowledgeAreas = response.data.map(area => ({
+				value: area.id,
+				label: `${area.id} - ${area.name}`
+			}));
+
+			setKnowledgeAreas(formattedKnowledgeAreas);
+		} catch (error) {
+			console.error('Error fetching knowledge areas:', error);
+		}
+	};
+
 	const columns = [
-		{ 
-			title: 'Mã HP', 
-			dataIndex: 'id', 
+		{
+			title: 'Mã HP',
+			dataIndex: 'id',
 			key: 'id',
 			render: (id) => id
 		},
 		{ title: 'Tên HP', dataIndex: 'name', key: 'name' },
 		{ title: 'STC', dataIndex: 'credits', key: 'credits' },
-		{ title: 'Lý thuyết', dataIndex: 'lectureHours', key: 'lectureHours' },
-		{ title: 'Thực hành', dataIndex: 'practiceHours', key: 'practiceHours' },
-		{ title: 'Thực tập', dataIndex: 'internshipHours', key: 'internshipHours' },
-		{ title: 'Hệ số học phần', dataIndex: 'weightingFactor', key: 'weightingFactor' },
-		{ 
-			title: 'Khối kiến thức', 
-			dataIndex: 'name_KnowledgeAreas', 
+		{ title: 'LT', dataIndex: 'lectureHours', key: 'lectureHours' },
+		{ title: 'TT', dataIndex: 'practiceHours', key: 'practiceHours' },
+		{ title: 'TT', dataIndex: 'internshipHours', key: 'internshipHours' },
+		{ title: 'Hệ số HP', dataIndex: 'weightingFactor', key: 'weightingFactor' },
+		{
+			title: 'Khối kiến thức',
+			dataIndex: 'name_KnowledgeAreas',
 			key: 'name_KnowledgeAreas',
 			render: (text) => text || '-'
 		},
@@ -75,25 +97,37 @@ function Course() {
 			key: 'actions',
 			render: (_, record) => (
 				<div className="flex gap-2" key={`actions-${record.id}`}>
-					<Button 
+					<Button
 						key={`edit-${record.id}`}
-						icon={<MdModeEdit />} 
+						icon={<MdModeEdit />}
 						onClick={() => handleEdit(record)}
-					>
-						Sửa
-					</Button>
-					<Button 
+						title='Chỉnh sửa'
+					></Button>
+					<Button
 						key={`delete-${record.id}`}
-						danger 
-						icon={<MdDelete />} 
+						danger
+						icon={<MdDelete />}
 						onClick={() => showModalDelete(record)}
-					>
-						Xoá
-					</Button>
+						title='Xoá'
+					></Button>
 				</div>
 			),
 		},
 	];
+
+	const handleSearch = (e) => {
+		const value = e.target.value.toLowerCase();
+		if (!value) {
+			setDataCourse(originalDataCourse);
+		} else {
+			const filtered = originalDataCourse.filter((course) => {
+				const nameMatch = course.name.toLowerCase().includes(value);
+				const idMatch = course.id.toString().includes(value); // id là số, nên cần .toString()
+				return nameMatch || idMatch;
+			});
+			setDataCourse(filtered);
+		}
+	};
 
 	const handleAdd = () => {
 		setMode('add');
@@ -130,19 +164,21 @@ function Course() {
 				await createCourse(newCourse);
 				message.success('Thêm học phần thành công!');
 			} else if (mode === 'edit') {
-				// Chuẩn bị dữ liệu để gửi lên server
+
 				const updatedCourse = {
-					...values,
-					status: selectedRecord.status,
+					name: values.name,
+					credits: values.credits,
+					lectureHours: values.lectureHours,
+					practiceHours: values.practiceHours,
+					internshipHours: values.internshipHours,
+					weightingFactor: values.weightingFactor,
 					requirement: values.require ? 1 : 0,
-					knowledgeAreas: {
-						id: values.id_KnowledgeAreas
-					},
-					parent: values.parent_id ? {
-						id: values.parent_id
-					} : null
+					status: selectedRecord.status,
+					knowledgeAreas: { id: values.id_KnowledgeAreas || selectedRecord.id_KnowledgeAreas },
+					parent: selectedRecord.parent_id ? { id: selectedRecord.parent_id } : null
 				};
 
+				console.log(updatedCourse);
 				// Gọi API cập nhật
 				await updateCourse(selectedRecord.id, updatedCourse);
 				message.success('Cập nhật học phần thành công!');
@@ -166,11 +202,13 @@ function Course() {
 	const handleDelete = async () => {
 		try {
 			setConfirmLoading(true);
-			// Gọi API xóa
+
+			// Gọi API cập nhật
 			await deleteCourse(selectedRecord.id);
 			message.success('Đã xoá học phần!');
 			setDeleteModalVisible(false);
-			// Tải lại dữ liệu sau khi xóa
+
+			// Tải lại dữ liệu sau khi xoá
 			await fetchCourses();
 		} catch (error) {
 			console.error('Lỗi khi xóa học phần:', error);
@@ -184,21 +222,30 @@ function Course() {
 	return (
 		<>
 			<div className="p-6">
-				<h1 className="text-2xl font-bold mb-4">Khóa học</h1>
-				<div className="text-right mb-4">
-					<Button
-						className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
-						onClick={handleAdd}
-					>
-						<span className=' text-white px-2 py-1 rounded-md flex items-center  justify-center gap-1'>
-							<FaPlus />Thêm học phần
-						</span>
-					</Button>
-				</div>
-				<Table 
-					dataSource={dataCourse} 
-					columns={columns} 
-					rowKey={(record) => record.id} 
+				<Row justify="space-between" align="middle" className="mb-4">
+					<Col className="mr-5">
+						<Input
+							placeholder="Tìm kiếm học phần"
+							onChange={handleSearch}
+							allowClear
+							style={{ width: 300 }}
+						/>
+					</Col>
+					<Col>
+						<Button type='primary' className='!bg-[var(--dark-pink)] hover:!bg-[var(--medium-pink2)]'
+							onClick={handleAdd}
+						>
+							<span className='text-white px-2 py-1 rounded-md flex items-center justify-center gap-1'>
+								<FaPlus /> Thêm học phần
+							</span>
+						</Button>
+					</Col>
+				</Row>
+
+				<Table
+					dataSource={dataCourse}
+					columns={columns}
+					rowKey={(record) => record.id}
 					loading={loading}
 				/>
 			</div>
@@ -228,13 +275,22 @@ function Course() {
 						internshipHours: 0,
 						weightingFactor: 0,
 					}}>
+
+					{/* Mã học phần trước */}
 					<Form.Item
-						label="Mã học phần"
-						name="id"
+						label="Mã học phần trước"
+						name="parent_id"
 						style={{ marginBottom: '8px' }}
-						rules={[{ required: true, message: 'Vui lòng nhập mã học phần' }]}
 					>
-						<Input disabled={mode === 'edit'} />
+						<Select
+							placeholder="Chọn mã học phần trước"
+							options={originalDataCourse.map((area) => ({
+								label: `${area.id} - ${area.name}`,
+								value: area.id
+							}))}
+							showSearch
+							optionFilterProp="label"
+						/>
 					</Form.Item>
 
 					<Form.Item
@@ -284,12 +340,22 @@ function Course() {
 						</Col>
 					</Row>
 
+					<Form.Item name="id_KnowledgeAreas" hidden>
+						<Input />
+					</Form.Item>
+
 					<Form.Item
 						label="Khối kiến thức"
-						name="name_KnowledgeAreas"
+						name="id_KnowledgeAreas"
 						style={{ marginBottom: '8px' }}
-						rules={[{ required: true, message: 'Vui lòng nhập khối kiến thức'}]}>
-						<Input />
+						rules={[{ required: true, message: 'Vui lòng chọn khối kiến thức' }]}
+					>
+						<Select
+							placeholder="Chọn khối kiến thức"
+							options={knowledgeAreas}
+							showSearch
+							optionFilterProp="label"
+						/>
 					</Form.Item>
 
 					<Form.Item
