@@ -44,4 +44,8 @@ public class LecturerCourseServiceImpl implements LecturerCourseService {
 		return lecturerCourseRepository.saveAll(list);
 	}
 
+	@Override
+	public List<LecturerCourse> findByCourse_Id(Integer courseId) {
+		return lecturerCourseRepository.findByCourse_Id(courseId);
+	}
 }

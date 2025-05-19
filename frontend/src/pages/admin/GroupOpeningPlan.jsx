@@ -245,7 +245,7 @@ function GroupOpeningPlan() {
 
           <Select
             allowClear
-            placeholder="Chọn chương trình đào tạo"
+            placeholder="Chọn chu kỳ đào tạo"
             style={{ width: 250 }}
             value={selectedCycle}
             onChange={handleCycleChange}

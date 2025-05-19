@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.project.CTDT.entity.LecturerCourse;
 import com.project.CTDT.service.LecturerCourseService;
@@ -48,5 +49,10 @@ public class LecturerCourseController {
 	@DeleteMapping("/{id}")
 	public void deleteLecturerCourse(@PathVariable Integer id) {
 		lecturerCourseService.deleteLecturerCourse(id);
+	}
+	
+	@GetMapping(params = "courseId")
+	public List<LecturerCourse> getLecturerCoursesByCourseId(@RequestParam Integer courseId) {
+		return lecturerCourseService.findByCourse_Id(courseId);
 	}
 }

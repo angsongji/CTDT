@@ -14,5 +14,6 @@ public interface LecturerCourseService {
 	void deleteLecturerCourse(Integer id);
 
 	List<LecturerCourse> saveAll(List<LecturerCourse> list);
-
+	
+	List<LecturerCourse> findByCourse_Id(Integer courseId);
 }
