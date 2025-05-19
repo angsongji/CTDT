@@ -12,4 +12,6 @@ public interface LecturerService {
 	Lecturer saveLecturer(Lecturer lecturer);
 
 	void deleteLecturer(Integer id);
+
+	List<Lecturer> saveAll(List<Lecturer> list);
 }

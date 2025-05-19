@@ -54,6 +54,11 @@ public class LecturerController {
 		return lecturerService.saveLecturer(lecturer);
 	}
 
+	@PostMapping("/list")
+	public List<Lecturer> createLecturers(@RequestBody List<Lecturer> lecturers) {
+		return lecturerService.saveAll(lecturers); // lưu toàn bộ
+	}
+
 	// Cập nhật thông tin giảng viên
 	@PutMapping("/{id}")
 	public Lecturer updateLecturer(@PathVariable Integer id, @RequestBody Lecturer lecturer) {

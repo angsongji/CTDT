@@ -3,7 +3,7 @@ package com.project.CTDT.entity;
 import java.util.Date;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -34,10 +34,11 @@ public class Lecturer {
 	private String fullName;
 
 	@Column(name = "dateOfBirth", nullable = false)
-	@Temporal(value = TemporalType.DATE)
+	@Temporal(TemporalType.DATE)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private Date dateOfBirth;
 
-	@Column(name = "academicTitle", nullable = false, length = 255)
+	@Column(name = "academicTitle", nullable = true, length = 255)
 	private String academicTitle;
 
 	@Column(name = "degree", nullable = false, length = 255)
@@ -51,7 +52,6 @@ public class Lecturer {
 
 	@OneToMany(mappedBy = "lecturer", fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "lecturer-lecturerCourses")
-	@JsonIgnore
 	private Set<LecturerCourse> lecturerCourses;
 	// cascade = CascadeType.ALL : Khi bạn xóa một phần tử LecturerCourse khỏi danh
 	// sách lecturerCourses, thì Hibernate sẽ tự động xóa record đó khỏi database.

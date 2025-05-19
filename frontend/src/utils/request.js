@@ -1,4 +1,4 @@
-const API_DOMAIN = `http://localhost:8081/api/`;
+export const API_DOMAIN = `http://localhost:8081/api/`;
 
 export const get = async (path) => {
     const responsive = await fetch(API_DOMAIN + path);
