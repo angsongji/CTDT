@@ -1,6 +1,5 @@
 
 import { get, postWithStatus } from "../utils/request";
-import { postWithStatus } from "../utils/request";
 import { API_DOMAIN } from "../utils/request";
 
 
