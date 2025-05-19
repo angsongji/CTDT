@@ -48,4 +48,5 @@ public class Group {
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference(value = "groups-teachingAssignments")
 	private Set<TeachingAssignment> teachingAssignments;
+	
 }

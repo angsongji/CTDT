@@ -70,4 +70,9 @@ public class GroupOpeningPlan {
 	public Integer getTrainingCycleFacultyId() {
 	    return trainingCycleFaculty != null ? trainingCycleFaculty.getId() : null;
 	}
+	
+	@JsonProperty("courseId")
+    public Integer getCourseId() {
+        return course != null ? course.getId() : null;
+    }
 }

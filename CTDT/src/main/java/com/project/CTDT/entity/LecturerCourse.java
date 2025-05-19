@@ -59,4 +59,9 @@ public class LecturerCourse {
     public String getLecturerName() {
         return lecturer != null ? lecturer.getFullName() : null;
     }
+	
+	@JsonProperty("courseName")
+    public String getCourseName() {
+        return course != null ? course.getName() : null;
+    }
 }

@@ -196,7 +196,7 @@ const TeachingAssignment = () => {
 
   const handleSummaryClick = () => {
     message.info(`Tổng hợp thống kê cho chu kỳ ${selectedCycle}${selectedFaculty ? ` - ngành ${selectedFaculty}` : ''}`);
-	navigate(`/admin/teaching-assignment/statistics`)
+	navigate(`/admin/teaching-assignment/statistics`, { state: { selectedCycle, selectedFaculty } })
   };
 
 
