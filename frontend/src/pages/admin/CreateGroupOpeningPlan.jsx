@@ -19,6 +19,8 @@ function CreateGroupOpeningPlan() {
     const [selectedCycleId, setSelectedCycleId] = useState(null);
     const [selectedMajor, setSelectedMajor] = useState(null);
     const [teachingPlans, setTeachingPlans] = useState([]);
+	const [selectedTraningFacultyId, setSelectedTraningFacultyId] = useState(null);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -36,35 +38,53 @@ function CreateGroupOpeningPlan() {
         setSubmittable(!!courseField && !!semesterField);
     };
 
-    const handleCycleChange = (value) => {
-        setSelectedCycleId(value);
-        form.resetFields(["major", "course_id", "implementationSemester"]);
-        const cycle = trainingCycles.find(c => c.id === value);
-        const faculties = cycle?.faculties || [];
-        const majorsList = faculties.flatMap(faculty =>
-            faculty.trainingCycleFacultyList.map(tcfl => ({
-                value: `${faculty.id}-${tcfl.id}`,
-                label: `${tcfl.generalInformation.name} (${tcfl.generalInformation.language})`,
-                facultyId: faculty.id,
-                majorInfo: tcfl.generalInformation
-            }))
-        );
-        setMajors(majorsList);
-        setCourses([]);
-    };
+	const handleCycleChange = (value) => {
+	    setSelectedCycleId(value);
+	    form.resetFields(["major", "course_id", "implementationSemester"]);
+	    
+	    const cycle = trainingCycles.find(c => c.id === value);
+	    const faculties = cycle?.faculties || [];
+
+	    const majorsList = faculties.flatMap(faculty => 
+	        faculty.trainingCycleFacultyList
+	            .filter(tcfl => tcfl.trainingCycleId === cycle.id)
+	            .map(tcfl => ({
+	                value: `${faculty.id}-${tcfl.generalInformation.id}`,
+	                label: `${tcfl.generalInformation.name}`,
+	                facultyId: faculty.id,
+	                majorInfo: tcfl.generalInformation,
+					traningFacultyId: tcfl.id
+	            }))
+	    );
+		console.log("majorsList",majorsList);
+
+	    setMajors(majorsList);
+	    setCourses([]);
+	};
 
     const handleMajorChange = (value) => {
         setSelectedMajor(value);
+		console.log("Major", value);
         form.resetFields(["course_id", "implementationSemester"]);
 
-        const [facultyId, majorId] = value.split("-").map(Number);
+        const [facultyId, majorId] = value.split("-").map(Number);		
+		
+		const selectedMajorObj = majors.find(m => m.value === value);
+	    if (selectedMajorObj) {
+	        setSelectedTraningFacultyId(selectedMajorObj.traningFacultyId);
+		}			
+		
         const filteredCourses = teachingPlans.filter(tp =>
-            tp.generalInformation.id === majorId
+            tp.generalInformation.id === majorId && 
+			tp.course.groupOpeningPlans.length === 0
         ).map(tp => ({
             value: tp.course.id,
             label: tp.course.name,
             semester: tp.implementationSemester
         }));
+		
+		console.log("teachingPlans",teachingPlans);
+		console.log("filteredCourses", filteredCourses);
 
         setCourses(filteredCourses);
     };
@@ -80,6 +100,7 @@ function CreateGroupOpeningPlan() {
     };
 
 	const onFinish = async (values) => {
+
 	    const bodyData = {
 	        numberOfGroups: values.numberOfGroups,
 	        numberOfStudents: values.numberOfStudents,
@@ -87,7 +108,11 @@ function CreateGroupOpeningPlan() {
 	        course: {
 	            id: values.course_id,
 	        },
+			trainingCycleFaculty: {
+			        id: selectedTraningFacultyId,
+			}
 	    };
+		console.log(bodyData);
 
 	    try {
 	        const result = await createGroupOpenPlan(bodyData);

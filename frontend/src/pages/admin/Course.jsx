@@ -281,7 +281,6 @@ function Course() {
 						label="Mã học phần trước"
 						name="parent_id"
 						style={{ marginBottom: '8px' }}
-						rules={[{ required: true, message: 'Vui lòng chọn mã học phần trước' }]}
 					>
 						<Select
 							placeholder="Chọn mã học phần trước"

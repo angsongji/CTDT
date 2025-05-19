@@ -28,6 +28,8 @@ import CourseOutlineDetail from "../pages/admin/CourseOulineDetail";
 import DetailTrainingCycle from "../pages/admin/DetailTrainingCycle";
 import CurriculumFrameworkDetail from "../pages/admin/CurriculumFrameworkDetail";
 import LecturerStatistics from "../pages/admin/LecturerStatistics";
+import EditTeachingAssignment from "../pages/admin/EditTeachingAssignment";
+import AggregatedAssignmentStatistics from "../pages/admin/AggregatedAssignmentStatistics";
 import { Navigate } from "react-router-dom";
 
 const router = createBrowserRouter([
@@ -72,6 +74,8 @@ const router = createBrowserRouter([
             { path: "teaching-assignment", element: <TeachingAssignment /> },
             { path: "teaching-assignment/assignment", element: <Assignment /> },
             { path: "teaching-assignment/assignment/create", element: <CreateTeachingAssignment /> },
+			{ path: "teaching-assignment/edit/:slug", element: <EditTeachingAssignment /> },
+			{ path: "teaching-assignment/statistics", element: <AggregatedAssignmentStatistics /> },
             { path: "training-cycle", element: <TrainingCycle /> },
             { path: "training-cycle/create", element: <CreateTrainingCycle /> },
             { path: "training-cycle/edit/:id", element: <EditTrainingCycle /> },

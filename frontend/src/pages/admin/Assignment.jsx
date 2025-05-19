@@ -11,49 +11,57 @@ function Assignment() {
 	
 	const [data, setData] = useState([]);
 		
+	const flattenCourses = (courses) => {
+	  const result = [];
+	  
+	  const traverse = (nodes) => {
+	    nodes.forEach(course => {
+	      result.push(course);
+	      if (course.children && course.children.length > 0) {
+	        traverse(course.children);
+	      }
+	    });
+	  };
+
+	  traverse(courses);
+	  return result;
+	};
+
 	useEffect(() => {
 	  const fetchAPI = async () => {
-	    try {
-	      const groupPlans = await getAllGroupOpenPlan();
-	      const courses = await getAllCourses();
+	    const groupPlan = await getAllGroupOpenPlan();
+	    const courses = await getAllCourses();
 
-	      const courseMap = {};
-	      courses.forEach(course => {
-	        course.groupOpeningPlans.forEach(plan => {
-	          courseMap[plan.id] = course;
-	        });
+	    const flatCourses = flattenCourses(courses);
+
+	    const dataNew = groupPlan
+	      .filter(item =>
+	        item.status === 1 &&
+	        item.groups.some(group => group.teachingAssignments.length === 0)
+	      )
+	      .map((item, index) => {
+	        // Tìm học phần chứa group này
+	        const matchedCourse = flatCourses.find(course =>
+	          course.groupOpeningPlans?.some(plan =>
+	            plan.groups?.some(group => item.groups.some(g => g.id === group.id))
+	          )
+	        );
+
+	        return {
+	          ...item,
+	          key: index + 1,
+	          courseId: matchedCourse?.id || null,
+	          nameCourse: matchedCourse?.name || "Không xác định"
+	        };
 	      });
 
-	      const filteredPlans = groupPlans
-	        .filter(plan => plan.status !== 3)
-	        .map((item, index) => {
-
-	          const emptyTeachingGroups = item.groups.filter(
-	            group => group.teachingAssignments.length === 0
-	          );
-
-	          return {
-	            ...item,
-	            key: index + 1,
-	            nameCourse: courseMap[item.id]?.name || "Không có học phần",
-	            course: courseMap[item.id] || null,
-	            groups: emptyTeachingGroups, 
-	          };
-	        })
-
-	        .filter(item => item.groups.length > 0);
-
-	      setData(filteredPlans);
-	    } catch (error) {
-	      console.error("Error fetching data:", error);
-	    }
+	    setData(dataNew);
 	  };
 
 	  fetchAPI();
 	}, []);
-
 		
-	console.log(data);
+	console.log("dataNew",data);
 
     const columns = [
         {

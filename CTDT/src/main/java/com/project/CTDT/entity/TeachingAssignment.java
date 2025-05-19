@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -44,4 +45,14 @@ public class TeachingAssignment {
 	@JoinColumn(name = "lecturer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_teaching_assignment_lecturer"))
 	@JsonBackReference(value = "lecturer-teachingAssignments")
 	private Lecturer lecturer;
+	
+	@JsonProperty("groupId")
+	public Integer getGroupId() {
+	    return group != null ? group.getId() : null;
+	}
+
+	@JsonProperty("lecturerId")
+	public Integer getLecturerId() {
+	    return lecturer != null ? lecturer.getId() : null;
+	}
 }

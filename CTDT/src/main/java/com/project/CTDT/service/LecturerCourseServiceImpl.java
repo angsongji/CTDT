@@ -45,8 +45,13 @@ public class LecturerCourseServiceImpl implements LecturerCourseService {
 	}
 
 	@Override
+	public List<LecturerCourse> findByCourse_Id(Integer courseId) {
+		return lecturerCourseRepository.findByCourse_Id(courseId);
+	}
+
 	public void deleteAll(List<LecturerCourse> lecturerCourses) {
 		lecturerCourseRepository.deleteAll(lecturerCourses);
 	}
+
 
 }
