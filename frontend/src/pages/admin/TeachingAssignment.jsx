@@ -255,7 +255,7 @@ const TeachingAssignment = () => {
   				  )
                     .map(tcf => (
                       <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
-                        {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
+                        {faculty.name} ({tcf.generalInformation?.language})
                       </Option>
                     ));
                 })
