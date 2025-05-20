@@ -1,5 +1,5 @@
 
-import { getWithStatus, postWithStatus, putWithStatus, delWithStatus } from "../utils/request";
+import { getWithStatus, postWithStatus, putWithStatus, delWithStatus, get } from "../utils/request";
 
 // Lấy danh sách tất cả lĩnh vực kiến thức
 export const getAllKnowledgeAreas = async () => {
