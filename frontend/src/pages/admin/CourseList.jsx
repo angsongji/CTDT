@@ -62,13 +62,16 @@ function CourseList() {
           if (!courseMap.has(courseId)) {
             let name_parent_KnowledgeAreas = '';
             let parent_id_KnowledgeAreas = '';
+            let usage_count_parent_KnowledgeAreas = 1;
 
-            if (knowledgeArea.parent_id !== 0) {
+            if (knowledgeArea.parent_id && knowledgeArea.parent_id !== 0) {
               try {
                 const parentKnowledgeArea = await getKnowledgeAreaById(knowledgeArea.parent_id);
                 console.log("parentKnowledgeArea: ", parentKnowledgeArea);
                 name_parent_KnowledgeAreas = parentKnowledgeArea?.name || '';
                 parent_id_KnowledgeAreas = parentKnowledgeArea?.id || '';
+                usage_count_parent_KnowledgeAreas = Number(parentKnowledgeArea.usage_count) === 1 ? 1 : 0;
+
               } catch (error) {
                 console.error("Lỗi khi lấy khối kiến thức cha:", error);
               }
@@ -86,8 +89,11 @@ function CourseList() {
               status: item.status ?? 1,
               id_KnowledgeAreas: knowledgeArea.id || '',
               name_KnowledgeAreas: knowledgeArea.name || '-',
+              usage_count: Number(knowledgeArea.usage_count) === 1 ? 1 : 0,
               name_parent_KnowledgeAreas,
               parent_id_KnowledgeAreas,
+              usage_count_parent_KnowledgeAreas
+
             });
           }
         }
@@ -157,6 +163,8 @@ function CourseList() {
           name: curr.name_KnowledgeAreas,
           parent_id: curr.parent_id_KnowledgeAreas || '',
           parent_name: curr.name_parent_KnowledgeAreas || '',
+          usage_count: curr.usage_count,
+          usage_count_parent_KnowledgeAreas: curr.usage_count_parent_KnowledgeAreas,
         };
       }
 
@@ -179,7 +187,9 @@ function CourseList() {
           key: `parent-${data.parent_id}`,
           isSummary: true,
           isParentHeader: true,
-          name: `${data.parent_name || '(Không rõ tên)'}`,
+          name: Number(data.usage_count_parent_KnowledgeAreas) === 1
+            ? `${data.parent_name}`
+            : `${data.parent_name} (Không tính tín chỉ)`,
           credits: '',
         });
         displayedParents.add(data.parent_id);
@@ -188,7 +198,9 @@ function CourseList() {
       tableData.push({
         key: `area-${area}`,
         isSummary: true,
-        name: `${data.name}`,
+        name: Number(data.usage_count) === 1
+          ? `${data.name}`
+          : `${data.name} (Không tính tín chỉ)`,
         credits: ``,
         isAreaHeader: true,
       });
