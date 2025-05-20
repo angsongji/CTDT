@@ -43,51 +43,79 @@ function GroupOpeningPlan() {
     };
     fetchApi();
   }, [reset]);
-
+  
   useEffect(() => {
-    if (selectedCycle && selectedFaculty) {
-      const selectedCycleObj = trainingCycleList.find(c => c.id === selectedCycle);
-      const selectedFacultyObj = selectedCycleObj?.faculties.find(f => f.id === selectedFaculty.facultyId);
-      const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(
-        tcf => tcf.id === selectedFaculty.tcfId
-      );
+      if (selectedCycle && selectedFaculty) {
+        const selectedCycleObj = trainingCycleList.find(c => c.id === selectedCycle);
+        const selectedFacultyObj = selectedCycleObj?.faculties.find(f => f.id === selectedFaculty.facultyId);
+        const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(
+          tcf => tcf.id === selectedFaculty.tcfId
+        );
 
-      const targetTcfId = selectedTcf?.id;
+        const targetTcfId = selectedTcf?.id;
 
-      const filteredTeachingPlans = teachingPlanList.filter(
-        tp => tp.generalInformation?.trainingCycleFacultyId === targetTcfId
-      );
+  	  console.log("teachingPlanList", teachingPlanList)
+  	  
+  	  const filteredTeachingPlans = teachingPlanList.filter(
+  	     tp => {
+  	       if (tp.generalInformation?.trainingCycleFacultyId !== targetTcfId) {
+  	         return false;
+  	       }
+  	       const planImplementationSemester = tp.implementationSemester;
 
-      const groupPlans = [];
+  		   if (!tp.course?.groupOpeningPlans || tp.course.groupOpeningPlans.length === 0) {
+     		      return false;
+  		  	}
+  	       const hasMatchingGroupOpeningPlan = tp.course?.groupOpeningPlans?.some(gop =>
+  	         gop.implementationSemester === planImplementationSemester
+  	       );
 
-      filteredTeachingPlans.forEach((plan) => {
-        const course = plan.course;
-        const gops = course?.groupOpeningPlans || [];
-		console.log("gops",gops)
+  	       return hasMatchingGroupOpeningPlan; 
+  	     }
+  	   );
+  	  console.log("filteredTeachingPlans", filteredTeachingPlans);
+  	  
+        const groupPlans = [];
+        const processedGopIds = new Set(); 
 
-        gops.forEach(gop => {
-          if (gop.trainingCycleFacultyId === targetTcfId) {
-            groupPlans.push({
-              key: groupPlans.length + 1,
-              id: gop.id,
-              nameCourse: course?.name,
-              idCourse: course?.id,
-              numberOfGroups: gop.numberOfGroups,
-              numberOfStudents: gop.numberOfStudents,
-              status: gop.status,
-			  isAssigned: gop.groups.some(group => group.teachingAssignments && group.teachingAssignments.length > 0)
-            });
-          }
+        filteredTeachingPlans.forEach((plan) => {
+  		console.log("plan đang xử lý:", plan);
+          const course = plan.course;
+          const gops = course?.groupOpeningPlans || [];
+  		console.log("GOPs của plan này:", gops);
+
+          const currentPlanSemester = plan.implementationSemester; 
+          gops.forEach(gop => {
+
+              if (
+                  gop.trainingCycleFacultyId === targetTcfId &&
+                  gop.implementationSemester === currentPlanSemester &&
+                  !processedGopIds.has(gop.id) 
+              ) {
+                  processedGopIds.add(gop.id); 
+
+                  groupPlans.push({
+  	              key: `${plan.id}-${gop.id}`, 
+  	              id: gop.id,
+  	              nameCourse: course?.name,
+  	              idCourse: gop.courseId || course?.id,
+  	              numberOfGroups: gop.numberOfGroups,
+  	              numberOfStudents: gop.numberOfStudents,
+  	              status: gop.status,
+                    implementationSemester: gop.implementationSemester,
+                    isAssigned: gop.groups?.some(group => group.teachingAssignments && group.teachingAssignments.length > 0)
+  	            });
+              }           
+          });
         });
-      });
-	  
-      setFilteredData(groupPlans);
-	  setSearchData(groupPlans);
-    } else {
-      setFilteredData([]);
-	  setSearchData([]);
-    }
-  }, [selectedCycle, selectedFaculty, trainingCycleList, teachingPlanList]);
+  	  
+        setFilteredData(groupPlans);
+  	  setSearchData(groupPlans);
+      } else {
+        setFilteredData([]);
+  	  setSearchData([]);
+      }
+    }, [selectedCycle, selectedFaculty, trainingCycleList, teachingPlanList]); 
 
 
   const handleCycleChange = (value) => {
@@ -296,7 +324,7 @@ function GroupOpeningPlan() {
 				  )
                   .map(tcf => (
                     <Option key={`${faculty.id}-${tcf.id}`} value={`${faculty.id}-${tcf.id}`}>
-                      {tcf.generalInformation?.name} ({tcf.generalInformation?.language})
+                      {faculty.name} ({tcf.generalInformation?.language})
                     </Option>
                   ));
               })

@@ -15,9 +15,9 @@ function CreateGroupOpeningPlan() {
     const [trainingCycles, setTrainingCycles] = useState([]);
     const [majors, setMajors] = useState([]);
     const [courses, setCourses] = useState([]);
-
     const [selectedCycleId, setSelectedCycleId] = useState(null);
     const [selectedMajor, setSelectedMajor] = useState(null);
+	
     const [teachingPlans, setTeachingPlans] = useState([]);
 	const [selectedTraningFacultyId, setSelectedTraningFacultyId] = useState(null);
 
@@ -50,44 +50,62 @@ function CreateGroupOpeningPlan() {
 	            .filter(tcfl => tcfl.trainingCycleId === cycle.id)
 	            .map(tcfl => ({
 	                value: `${faculty.id}-${tcfl.generalInformation.id}`,
-	                label: `${tcfl.generalInformation.name}`,
+	                label: `${faculty.name}`,
 	                facultyId: faculty.id,
 	                majorInfo: tcfl.generalInformation,
 					traningFacultyId: tcfl.id
 	            }))
 	    );
-		console.log("majorsList",majorsList);
 
 	    setMajors(majorsList);
 	    setCourses([]);
 	};
 
-    const handleMajorChange = (value) => {
-        setSelectedMajor(value);
-		console.log("Major", value);
-        form.resetFields(["course_id", "implementationSemester"]);
+	const handleMajorChange = (value) => {
+	    setSelectedMajor(value);
+	    console.log("Major", value);
+	    form.resetFields(["course_id", "implementationSemester"]);
 
-        const [facultyId, majorId] = value.split("-").map(Number);		
-		
-		const selectedMajorObj = majors.find(m => m.value === value);
+	    const [facultyId, majorId] = value.split("-").map(Number);
+
+	    const selectedMajorObj = majors.find(m => m.value === value);
 	    if (selectedMajorObj) {
 	        setSelectedTraningFacultyId(selectedMajorObj.traningFacultyId);
-		}			
-		
-        const filteredCourses = teachingPlans.filter(tp =>
-            tp.generalInformation.id === majorId && 
-			tp.course.groupOpeningPlans.length === 0
-        ).map(tp => ({
-            value: tp.course.id,
-            label: tp.course.name,
-            semester: tp.implementationSemester
-        }));
-		
-		console.log("teachingPlans",teachingPlans);
-		console.log("filteredCourses", filteredCourses);
+	    }
+	    console.log("selectedMajorObj", selectedMajorObj);
+	    console.log("selectedTraningFacultyId (để so sánh với GOPs)", selectedMajorObj?.traningFacultyId);
 
-        setCourses(filteredCourses);
-    };
+	    const filterFaculty = teachingPlans.filter(item =>
+	      item.generalInformation && item.generalInformation.id === majorId
+	    );
+
+	    console.log("filterFaculty (TPs khớp majorId)", filterFaculty);
+
+	    const filteredCourses = filterFaculty.filter(
+	      tp => {
+	        const planImplementationSemester = tp.implementationSemester; 
+
+	        if (!tp.course?.groupOpeningPlans || tp.course.groupOpeningPlans.length === 0) {
+	          return true;
+	        }
+
+	        const hasExcludingGroupOpeningPlan = tp.course.groupOpeningPlans.some(gop =>
+	          gop.trainingCycleFacultyId === selectedMajorObj?.traningFacultyId && 
+	          gop.implementationSemester === planImplementationSemester
+	        );
+
+	        return !hasExcludingGroupOpeningPlan;
+	      }
+	    ).map(tp => ({
+	      value: `${tp.course.id}-${tp.implementationSemester}`,
+	      label: tp.course.name,
+	      semester: tp.implementationSemester
+	    }));
+
+	    console.log("filteredCourses", filteredCourses);
+
+	    setCourses(filteredCourses);
+	};
 
     const handleCourseChange = (value) => {
         const selectedCourse = courses.find(c => c.value === value);
@@ -106,14 +124,13 @@ function CreateGroupOpeningPlan() {
 	        numberOfStudents: values.numberOfStudents,
 	        implementationSemester: values.implementationSemester,
 	        course: {
-	            id: values.course_id,
+	            id: parseInt(values.course_id.split('-')[0], 10),
 	        },
 			trainingCycleFaculty: {
 			        id: selectedTraningFacultyId,
 			}
 	    };
-		console.log(bodyData);
-
+		console.log("bodyData",bodyData);
 	    try {
 	        const result = await createGroupOpenPlan(bodyData);
 			console.log("result", result);
@@ -189,6 +206,7 @@ function CreateGroupOpeningPlan() {
                                     </Select.Option>
                                 ))}
                             </Select>
+													
                         </Form.Item>
                     </div>
 
@@ -197,7 +215,10 @@ function CreateGroupOpeningPlan() {
                         label="Học phần"
                         rules={[{ required: true, message: 'Vui lòng chọn học phần' }]}
                     >
-                        <Select onChange={handleCourseChange} placeholder="Chọn học phần">
+					           
+                        <Select 
+							onChange={handleCourseChange} 
+							placeholder="Chọn học phần">
                             {courses.map(course => (
                                 <Select.Option key={course.value} value={course.value}>
                                     {course.label}
