@@ -29,9 +29,8 @@ function Course() {
 			const response = await getAllCourses();
 
 			const formattedCourses = response.map(course => {
-				const { children, ...rest } = course;
 				return {
-					...rest,
+					...course,
 					key: course.id,
 					require: course.requirement === 1,
 					id_KnowledgeAreas: course.knowledgeArea?.id,
@@ -40,8 +39,12 @@ function Course() {
 				};
 			});
 
-			setDataCourse(formattedCourses);
-			setOriginalDataCourse(formattedCourses); // lưu mảng gốc
+			// mảng hiển thị không có children
+			const flattenedCourses = formattedCourses.map(({ children, ...rest }) => rest);
+
+			setDataCourse(flattenedCourses); // dùng để hiển thị bảng
+			setOriginalDataCourse(formattedCourses); // lưu mảng gốc có children
+			console.log('flattenedCourses:', flattenedCourses);
 		} catch (error) {
 			message.error('Không thể tải danh sách học phần!');
 			console.error('Error fetching courses:', error);
@@ -54,7 +57,6 @@ function Course() {
 	const fetchKnowledgeAreas = async () => {
 		try {
 			const response = await getAllKnowledgeAreas();
-			console.log("response KnowledgeAreas", response);
 			const formattedKnowledgeAreas = response.data.map(area => ({
 				value: area.id,
 				label: `${area.id} - ${area.name}`
@@ -164,6 +166,7 @@ function Course() {
 				await createCourse(newCourse);
 				message.success('Thêm học phần thành công!');
 			} else if (mode === 'edit') {
+				console.log('values:', values);
 
 				const updatedCourse = {
 					name: values.name,
@@ -175,7 +178,7 @@ function Course() {
 					requirement: values.require ? 1 : 0,
 					status: selectedRecord.status,
 					knowledgeAreas: { id: values.id_KnowledgeAreas || selectedRecord.id_KnowledgeAreas },
-					parent: selectedRecord.parent_id ? { id: selectedRecord.parent_id } : null
+					parent: values.parent_id ? { id: values.parent_id } : null
 				};
 
 				console.log(updatedCourse);
@@ -217,6 +220,31 @@ function Course() {
 			setConfirmLoading(false);
 			setSelectedRecord(null);
 		}
+	};
+
+
+	//Lấy danh sach id của các con cháu
+	const getExcludedIds = (recordId) => {
+		if (!recordId || !originalDataCourse) return [];
+
+		// Tìm record trong originalDataCourse có id khớp
+		const record = originalDataCourse.find(item => item.id === recordId);
+		if (!record) return [];
+
+		const ids = [record.id];
+
+		const collectChildrenIds = (node) => {
+			if (node.children && Array.isArray(node.children)) {
+				node.children.forEach(child => {
+					ids.push(child.id);
+					collectChildrenIds(child); // đệ quy nếu con có cháu
+				});
+			}
+		};
+
+		collectChildrenIds(record);
+
+		return ids;
 	};
 
 	return (
@@ -284,10 +312,17 @@ function Course() {
 					>
 						<Select
 							placeholder="Chọn mã học phần trước"
-							options={originalDataCourse.map((area) => ({
-								label: `${area.id} - ${area.name}`,
-								value: area.id
-							}))}
+							options={originalDataCourse
+								.filter(course =>
+									mode === 'edit' && selectedRecord
+										? !getExcludedIds(selectedRecord.id).includes(course.id)
+										: true
+								)
+								.map((course) => ({
+									label: `${course.id} - ${course.name}`,
+									value: course.id
+								}))
+							}
 							showSearch
 							optionFilterProp="label"
 						/>

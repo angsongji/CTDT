@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Form, Row, Col, Input, Select } from 'antd';
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
 import { getByInformationId } from '../../services/teachingPlanServices';
+import { getKnowledgeAreaById } from '../../services/knowledgeAreasServices';
 
 function CourseList() {
   const [dataCourse, setDataCourse] = useState([]);
@@ -10,52 +11,6 @@ function CourseList() {
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [trainingCycles, setTrainingCycles] = useState([]); //Chu kỳ đào tạo
   const [form] = Form.useForm();
-
-
-  // const [dataCourse, setDataCourse] = useState([
-  //   {
-  //     key: '1',
-  //     id: '841302',
-  //     name: 'Cơ sở lập trình',
-  //     credits: 4,
-  //     lectureHours: 45,
-  //     practiceHours: 30,
-  //     internshipHours: 0,
-  //     weightingFactor: 0.8,
-  //     require: true,
-  //     status: 1,
-  //     id_KnowledgeAreas: "II",
-  //     name_KnowledgeAreas: "Chuyên nghiệp",
-  //   },
-  //   {
-  //     key: '2',
-  //     id: '861301',
-  //     name: 'Triết học Mác – Lênin',
-  //     credits: 3,
-  //     lectureHours: 45,
-  //     practiceHours: 0,
-  //     internshipHours: 0,
-  //     weightingFactor: 1,
-  //     require: true,
-  //     status: 1,
-  //     id_KnowledgeAreas: "I",
-  //     name_KnowledgeAreas: "Giáo dục đại cương",
-  //   },
-  //   {
-  //     key: '3',
-  //     id: '861301',
-  //     name: 'Triết học Mác – Lênin',
-  //     credits: 3,
-  //     lectureHours: 45,
-  //     practiceHours: 0,
-  //     internshipHours: 0,
-  //     weightingFactor: 1,
-  //     require: false,
-  //     status: 1,
-  //     id_KnowledgeAreas: "I",
-  //     name_KnowledgeAreas: "Giáo dục đại cương",
-  //   },
-  // ]);
 
   useEffect(() => {
     fetchTrainingCycles();
@@ -85,6 +40,7 @@ function CourseList() {
     setTrainingCycles(result);
   }
 
+
   const fetchData = async (idInformation = []) => {
     if (!idInformation || idInformation.length === 0) {
       setDataCourse([]);
@@ -96,15 +52,28 @@ function CourseList() {
       console.log("response: ", response);
 
       if (Array.isArray(response)) {
-        const courseMap = new Map(); // Map để lưu course theo id, đảm bảo không trùng
+        const courseMap = new Map();
 
-        response.forEach((item) => {
+        for (const item of response) {
           const course = item.course || {};
           const knowledgeArea = course.knowledgeArea || {};
           const courseId = course.id;
 
-          // Chỉ thêm vào map nếu chưa có id này
           if (!courseMap.has(courseId)) {
+            let name_parent_KnowledgeAreas = '';
+            let parent_id_KnowledgeAreas = '';
+
+            if (knowledgeArea.parent_id !== 0) {
+              try {
+                const parentKnowledgeArea = await getKnowledgeAreaById(knowledgeArea.parent_id);
+                console.log("parentKnowledgeArea: ", parentKnowledgeArea);
+                name_parent_KnowledgeAreas = parentKnowledgeArea?.name || '';
+                parent_id_KnowledgeAreas = parentKnowledgeArea?.id || '';
+              } catch (error) {
+                console.error("Lỗi khi lấy khối kiến thức cha:", error);
+              }
+            }
+
             courseMap.set(courseId, {
               id: courseId || '',
               name: course.name || '',
@@ -117,18 +86,18 @@ function CourseList() {
               status: item.status ?? 1,
               id_KnowledgeAreas: knowledgeArea.id || '',
               name_KnowledgeAreas: knowledgeArea.name || '-',
+              name_parent_KnowledgeAreas,
+              parent_id_KnowledgeAreas,
             });
           }
-        });
+        }
 
-        // Chuyển giá trị trong map sang mảng và thêm key, index
         const formattedData = Array.from(courseMap.values()).map((course, index) => ({
           ...course,
           key: course.id || `key-${index}`,
           index: index + 1,
         }));
 
-        console.log("formattedData (dùng Map): ", formattedData);
         setDataCourse(formattedData);
         setFilteredSubjects(formattedData);
       } else {
@@ -140,6 +109,7 @@ function CourseList() {
       setDataCourse([]);
     }
   };
+
 
   const columns = [
     {
@@ -178,51 +148,51 @@ function CourseList() {
 
   // Tính toán dữ liệu tổng hợp
   const processData = () => {
-    // Nhóm theo khối kiến thức
     const groupedByArea = dataCourse.reduce((acc, curr) => {
       const area = curr.id_KnowledgeAreas;
       if (!acc[area]) {
         acc[area] = {
           required: [],
           optional: [],
-          name: curr.name_KnowledgeAreas
+          name: curr.name_KnowledgeAreas,
+          parent_id: curr.parent_id_KnowledgeAreas || '',
+          parent_name: curr.name_parent_KnowledgeAreas || '',
         };
       }
+
       if (curr.require) {
         acc[area].required.push(curr);
       } else {
         acc[area].optional.push(curr);
       }
+
       return acc;
     }, {});
 
-    // Tạo dữ liệu cho bảng
     let tableData = [];
     let index = 1;
+    const displayedParents = new Set();
 
-    // Sắp xếp các khối kiến thức, đưa khối I lên đầu
-    const sortedAreas = Object.entries(groupedByArea).sort(([a], [b]) => {
-      if (a === 'I') return -1;
-      if (b === 'I') return 1;
-      const romanToNumber = (roman) => {
-        const romanNumerals = { 'II': 2, 'III': 3, 'IV': 4, 'V': 5 };
-        return romanNumerals[roman] || 0;
-      };
-      return romanToNumber(a) - romanToNumber(b);
-    });
+    Object.entries(groupedByArea).forEach(([area, data]) => {
+      if (data.parent_id && !displayedParents.has(data.parent_id)) {
+        tableData.push({
+          key: `parent-${data.parent_id}`,
+          isSummary: true,
+          isParentHeader: true,
+          name: `${data.parent_name || '(Không rõ tên)'}`,
+          credits: '',
+        });
+        displayedParents.add(data.parent_id);
+      }
 
-    sortedAreas.forEach(([area, data]) => {
-      // Thêm dòng tổng khối kiến thức
-      const totalCredits = data.required.length + data.optional.length;
       tableData.push({
         key: `area-${area}`,
         isSummary: true,
-        name: `Khối kiến thức ${data.name}`,
-        credits: `${totalCredits}/${totalCredits}`,
-        isAreaHeader: true
+        name: `${data.name}`,
+        credits: ``,
+        isAreaHeader: true,
       });
 
-      // Thêm dòng tổng học phần bắt buộc
       if (data.required.length > 0) {
         const requiredCredits = data.required.reduce((sum, curr) => sum + curr.credits, 0);
         tableData.push({
@@ -230,19 +200,17 @@ function CourseList() {
           isSummary: true,
           name: 'Các học phần bắt buộc',
           credits: `${requiredCredits}/${requiredCredits}`,
-          isRequiredHeader: true
+          isRequiredHeader: true,
         });
 
-        // Thêm các học phần bắt buộc
-        data.required.forEach(course => {
+        data.required.forEach((course) => {
           tableData.push({
             ...course,
-            index: index++
+            index: index++,
           });
         });
       }
 
-      // Thêm dòng tổng học phần tự chọn
       if (data.optional.length > 0) {
         const optionalCredits = data.optional.reduce((sum, curr) => sum + curr.credits, 0);
         tableData.push({
@@ -250,14 +218,13 @@ function CourseList() {
           isSummary: true,
           name: 'Các học phần tự chọn',
           credits: `${optionalCredits}/${optionalCredits}`,
-          isOptionalHeader: true
+          isOptionalHeader: true,
         });
 
-        // Thêm các học phần tự chọn
-        data.optional.forEach(course => {
+        data.optional.forEach((course) => {
           tableData.push({
             ...course,
-            index: index++
+            index: index++,
           });
         });
       }

@@ -187,20 +187,22 @@ function TeachingPlan() {
 	const handleOk = async () => {
 		try {
 			await form.validateFields();
-			const values = form.getFieldsValue(); // Lấy tất cả dữ liệu từ form
+			const values = form.getFieldsValue();
+
+			const implementationSemesters = values.implementationSemesters;
 
 			if (selectedCourse) {
-				const newSemesters = values.implementationSemesters;
+				const oldSemesters = selectedCourse.implementationSemesters;
+				const oldPlans = selectedCourse.id_teachingPlans;
 
-				if (newSemesters.length !== selectedCourse.implementationSemesters.length) {
-					message.error(`Số lượng học kỳ phải bằng ${selectedCourse.implementationSemesters.length}`);
-					return;
-				}
+				const oldLength = oldSemesters.length;
+				const newLength = implementationSemesters.length;
 
-				// Duyệt từng học kỳ cũ, cập nhật với học kỳ mới tương ứng
-				for (let i = 0; i < selectedCourse.implementationSemesters.length; i++) {
-					const idPlan = selectedCourse.id_teachingPlans[i];
-					const updatedSemester = values.implementationSemesters[i];
+				// === Cập nhật các học kỳ tương ứng ===
+				const updateCount = Math.min(oldLength, newLength);
+				for (let i = 0; i < updateCount; i++) {
+					const idPlan = oldPlans[i];
+					const updatedSemester = implementationSemesters[i];
 
 					const updatedData = {
 						generalInformation: { id: selectedCourse.id_information },
@@ -212,38 +214,53 @@ function TeachingPlan() {
 					await updateTeachingPlan(idPlan, updatedData);
 				}
 
-
-				message.success('Đã cập nhật kế hoạch dạy học!');
-
-			} else {
-
-				// Thêm mới học phần
-				if (!selectedCourse) {
-					const implementationSemesters = values.implementationSemesters;
-
-					// Kiểm tra trùng lặp
-					const isDuplicate = dataCourse.some(dc =>
-						dc.id_course === values.id_course &&
-						dc.implementationSemesters.some(sem => implementationSemesters.includes(sem))
-					);
-
-					if (isDuplicate) {
-						message.warning("Học phần đã tồn tại ở ít nhất một học kỳ đã chọn!");
-						return;
+				// === Xóa học kỳ nếu ít hơn trước ===
+				if (newLength < oldLength) {
+					for (let i = newLength; i < oldLength; i++) {
+						await deleteTeachingPlan(oldPlans[i]);
 					}
+				}
 
-					for (const semester of implementationSemesters) {
+				// === Thêm học kỳ mới nếu nhiều hơn trước ===
+				if (newLength > oldLength) {
+					for (let i = oldLength; i < newLength; i++) {
+						const newSemester = implementationSemesters[i];
+
 						const newData = {
-							generalInformation: { id: generalInfoId },
-							course: { id: values.id_course },
-							implementationSemester: semester,
+							generalInformation: { id: selectedCourse.id_information },
+							course: { id: selectedCourse.id_course },
+							implementationSemester: newSemester,
 							status: 1,
 						};
+
 						await createTeachingPlan(newData);
 					}
-
-					message.success('Đã thêm học phần vào kế hoạch dạy học!');
 				}
+
+				message.success("Đã cập nhật kế hoạch dạy học!");
+			} else {
+				// === Thêm mới học phần ===
+				const isDuplicate = dataCourse.some(dc =>
+					dc.id_course === values.id_course &&
+					dc.implementationSemesters.some(sem => implementationSemesters.includes(sem))
+				);
+
+				if (isDuplicate) {
+					message.warning("Học phần đã tồn tại ở ít nhất một học kỳ đã chọn!");
+					return;
+				}
+
+				for (const semester of implementationSemesters) {
+					const newData = {
+						generalInformation: { id: generalInfoId },
+						course: { id: values.id_course },
+						implementationSemester: semester,
+						status: 1,
+					};
+					await createTeachingPlan(newData);
+				}
+
+				message.success("Đã thêm học phần vào kế hoạch dạy học!");
 			}
 
 			await fetchData([selectedCourse?.id_information || generalInfoId]);
