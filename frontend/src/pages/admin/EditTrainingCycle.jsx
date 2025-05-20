@@ -35,7 +35,7 @@ function EditTrainingCycle() {
             if (record) {
                 const selected = record.faculties?.map(fac => fac.id) || [];
                 setSelectedMajors(selected);
-
+				
                 form.setFieldsValue({
                     name: record.name,
                     dates: [

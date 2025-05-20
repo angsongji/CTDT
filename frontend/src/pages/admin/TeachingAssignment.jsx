@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa6";
-import { Input, Button, Table, Select, message } from 'antd';
+import { Input, Button, Table, Select } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
 import { getAll as getTeachingPlan } from "../../services/teachingPlanServices";
