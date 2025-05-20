@@ -12,10 +12,13 @@ import { createLecturerCourse, deleteLecturerCourse } from '../../services/lectu
 import { HiX } from "react-icons/hi";
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx-js-style';
+import { SearchOutlined } from '@ant-design/icons';
 const { confirm } = Modal;
 
 const Lecturer = () => {
   const [lecturers, setLecturers] = useState([]);
+  const [lecturersSearch, setLecturersSearch] = useState([]);
+  const [coursesSearch, setCoursesSearch] = useState([]);
   const [lecturerId, setLecturerId] = useState(0);
   const [showFormAdd, setShowFormAdd] = useState(false);
   const [showFormUpdate, setShowFormUpdate] = useState(false);
@@ -25,6 +28,7 @@ const Lecturer = () => {
     const fetchAPI = async () => {
       const result = await getAllLecturers();
       setLecturers(result);
+      setLecturersSearch(result);
     }
     fetchAPI();
     const fetchCourses = async () => {
@@ -32,7 +36,20 @@ const Lecturer = () => {
       setCourses(result);
     }
     fetchCourses();
-  }, []);
+  }, [showFormAdd, showFormUpdate]);
+
+  useEffect(() => {
+    if (coursesSearch.length === 0) {
+      setLecturersSearch(lecturers);
+      return;
+    }
+    const filteredData = lecturers.filter(item =>
+      item.lecturerCourses.length > 0 && coursesSearch.length > 0 && item.lecturerCourses.some(course => coursesSearch.some(c => c.course.id === course.courseId))
+    );
+    console.log("coursesSearch", coursesSearch);
+    console.log("lecturersSearch", lecturersSearch);
+    setLecturersSearch(filteredData);
+  }, [coursesSearch]);
 
   const columns = [
     {
@@ -229,9 +246,9 @@ const Lecturer = () => {
   const handleImport = async (e) => {
     const titleExcelTable = ['Tên giảng viên', 'Giới tính', 'Ngày sinh', 'Bằng cấp', 'Học vị'];
     const file = e.target.files[0];
-  
+
     if (!file) return;
-  
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       const data = new Uint8Array(event.target.result);
@@ -241,13 +258,13 @@ const Lecturer = () => {
       const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       const firstRow = json[0];
       const isValid = titleExcelTable.every((title, index) => title === firstRow[index]);
-  
+
       if (!isValid) {
         message.error("File excel không đúng định dạng!");
         fileInputRef.current.value = ""; // ✅ reset input
         return;
       }
-  
+
       try {
         const dataAddLecturer = json.slice(1).map((row, index) => {
           const fullName = row[0]?.trim() || "";
@@ -255,12 +272,12 @@ const Lecturer = () => {
           const dateOfBirth = row[2]?.trim() || "";
           const degree = row[3]?.trim() || "";
           const academicTitle = row[4]?.trim() || "";
-  
+
           if (!fullName) throw new Error(`Dòng ${index + 2}: Tên giảng viên không được để trống!`);
           if (!gender) throw new Error(`Dòng ${index + 2}: Giới tính không được để trống!`);
           if (!dateOfBirth) throw new Error(`Dòng ${index + 2}: Ngày sinh không được để trống!`);
           if (!degree) throw new Error(`Dòng ${index + 2}: Bằng cấp không được để trống!`);
-  
+
           return {
             fullName,
             gender,
@@ -270,7 +287,7 @@ const Lecturer = () => {
             status: 1
           };
         });
-  
+
         const result = await addLecturers(dataAddLecturer);
         if (result.status === 200) {
           setLecturers(prev => [...prev, ...result.data]);
@@ -281,15 +298,15 @@ const Lecturer = () => {
       } catch (error) {
         message.error(error.message || "Lỗi xử lý dữ liệu!");
       }
-  
+
       fileInputRef.current.value = ""; // ✅ reset lại input
     };
-  
+
     reader.readAsArrayBuffer(file);
   };
-  
-  
-  
+
+
+
 
 
 
@@ -662,6 +679,7 @@ const Lecturer = () => {
       }
     };
 
+
     return (
       <div className="fixed top-0 left-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center z-10">
         <form onSubmit={handleSubmitForm} className="rounded-lg relative text-sm w-[50vw] flex flex-col gap-5 bg-white p-5 shadow-md">
@@ -767,6 +785,18 @@ const Lecturer = () => {
     );
   };
 
+  const handleSearch = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    if (searchValue === "") {
+      setLecturersSearch(lecturers);
+    } else {
+      const filteredData = lecturers.filter(item =>
+        item.fullName.toLowerCase().includes(searchValue)
+      );
+      setLecturersSearch(filteredData);
+    }
+  };
+
 
   return (
     <div className='flex flex-col gap-5 mt-10'>
@@ -775,6 +805,39 @@ const Lecturer = () => {
           <Link className="text-sm text-white bg-[var(--medium-pink)] p-2 rounded-md" to="/admin/lecturer">Quản lý giảng viên</Link>
           <Link className="text-sm text-gray-400 p-2 rounded-md hover:bg-gray-200" to="/admin/lecturer/statistics">Thống kê</Link>
         </div>
+
+      </div>
+      <div className='flex justify-between items-center'>
+        <div className='flex gap-2 w-[50%] '>
+        <Input
+          type="text"
+          onChange={handleSearch}
+          placeholder="Nhập tên giảng viên"
+          style={{ width: "50%", padding: '0.25rem 0.5rem' }}
+          disabled={false}
+          prefix={<SearchOutlined />}
+          allowClear
+        />
+        <div className='border-gray-200 border-[1px]'></div>
+        <Select
+              mode="multiple"
+              className='flex-1'
+              placeholder="Chọn học phần giảng dạy"
+              onChange={(values) =>
+                setCoursesSearch(
+                  values.map(value => ({ course: { id: value } }))
+                )
+              }
+              optionFilterProp="children"
+            >
+              {courses.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name}
+                </Select.Option>
+              ))}
+            </Select>
+        </div>
+        
         <div className='flex gap-2'>
           <CustomButton icon={<FaPlus />} onClick={() => setShowFormAdd(true)} hoverText="Thêm giảng viên" />
           <CustomButton icon={<CiImport className="text-xl" />} onClick={() => afkBeforeImport()} hoverText="Import" />
@@ -788,9 +851,11 @@ const Lecturer = () => {
           />
         </div>
       </div>
+
+
       <Table
         columns={columns}
-        dataSource={lecturers}
+        dataSource={lecturersSearch}
         pagination={{ pageSize: 5 }}
         scrollToFirstRowOnChange={true}
       />

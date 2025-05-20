@@ -35,7 +35,7 @@ public class Lecturer {
 
 	@Column(name = "dateOfBirth", nullable = false)
 	@Temporal(TemporalType.DATE)
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Ho_Chi_Minh")
 	private Date dateOfBirth;
 
 	@Column(name = "academicTitle", nullable = true, length = 255)
