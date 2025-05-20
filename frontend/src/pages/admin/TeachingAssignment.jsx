@@ -17,6 +17,7 @@ const TeachingAssignment = () => {
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [dataSource, setDataSource] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [selectedTcf, setSelectedTcf] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -50,29 +51,41 @@ const TeachingAssignment = () => {
 		const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(
         	tcf => tcf.id === selectedFaculty.tcfId
       	);  
+		setSelectedTcf(selectedTcf);
 		
-		const teaching = teachingPlans.filter(item => 
-			item.generalInformation.id === selectedTcf.generalInformation.id &&
-			item.course.groupOpeningPlans[0].trainingCycleFacultyId == selectedTcf.generalInformation.trainingCycleFacultyId
-		);		
+		const filterFaculty = teachingPlans.filter(item =>
+		  item.generalInformation.id === selectedTcf.generalInformation.id &&
+		  item.course?.groupOpeningPlans &&
+ 		  item.course.groupOpeningPlans.length !== 0
+	  	);
 		
-		const data = teaching
-		  .filter(item =>
-		    item.course.groupOpeningPlans?.some(group =>
-		      group.groups?.some(g => g.teachingAssignments?.length > 0)
-		    )
-		  )
+		console.log("filterFaculty", filterFaculty);
+		
+		const data = filterFaculty
+		  .filter(item =>{
+			const planImplementationSemester = item.implementationSemester; 
+			return item.course.groupOpeningPlans?.some(group =>
+				group.trainingCycleFacultyId === selectedTcf?.generalInformation.trainingCycleFacultyId &&
+		      	group.groups?.some(g => g.teachingAssignments?.length > 0) &&
+			  	planImplementationSemester == group.implementationSemester 
+		    )})
 		  .map(item => ({
 		    ...item,
 		    Id_Course: item.course.id,
 		    Name_Course: item.course.name,
-		    groups: item.course.groupOpeningPlans?.filter(group =>
-		      group.groups?.some(g => g.teachingAssignments?.length > 0)
-		    ) || [],
-		  }));		  
-
-		setDataSource(data);
-		setFilteredData(data);
+			groups: item.course.groupOpeningPlans 
+               ?.filter(groupOpeningPlan => 
+				groupOpeningPlan.trainingCycleFacultyId === selectedTcf?.generalInformation.trainingCycleFacultyId
+				&& groupOpeningPlan.implementationSemester === item.implementationSemester
+				) 
+               .map(groupOpeningPlan => ({
+                   ...groupOpeningPlan,
+                   groups: groupOpeningPlan.groups?.filter(g => g.teachingAssignments?.length > 0) || [],
+               })) || [],
+		  	}));		  
+		  console.log("data",data);
+		  setDataSource(data);
+		  setFilteredData(data);
 	  }
 	  		
      }

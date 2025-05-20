@@ -147,11 +147,11 @@ function AggregatedAssignmentStatistics() {
     
   useEffect(() => {
      const fetchAPI = async () => {
-       const cycles = await getAllTraningCycle();
-    const teachings = await getTeachingPlan();
+     const cycles = await getAllTraningCycle();
+     const teachings = await getTeachingPlan();
     
        setTrainingCycle(cycles);
-    setTeachingPlans(teachings);
+       setTeachingPlans(teachings);
      };
      fetchAPI();
    }, []);
@@ -165,88 +165,97 @@ function AggregatedAssignmentStatistics() {
          const selectedTcf = selectedFacultyObj?.trainingCycleFacultyList.find(
            tcf => tcf.id === selectedFaculty.tcfId
          );
-
-         const teaching = teachingPlans.filter(item =>
-           item.generalInformation.id === selectedTcf.generalInformation.id &&
-           item.course.groupOpeningPlans[0].trainingCycleFacultyId == selectedTcf.generalInformation.trainingCycleFacultyId
-         );
-
-         const data = teaching
-           .filter(item =>
-             item.course.groupOpeningPlans?.some(group =>
-               group.groups?.some(g => g.teachingAssignments?.length > 0)
-             )
-           )
-           .map(item => ({
-             ...item,
-             Id_Course: item.course.id,
-             Name_Course: item.course.name,
-             groups: item.course.groupOpeningPlans?.map(groupOpeningPlan => ({
-               ...groupOpeningPlan,
-               groups: groupOpeningPlan.groups?.filter(g => g.teachingAssignments?.length > 0) || [],
-             })) || [],
-             lecturers: item.course.lecturers,
-             courseInfo: {
-               id: item.course.id,
-               name: item.course.name,
-               credits: item.course.credits,
-               internshipHours: item.course.internshipHours,
-               lectureHours: item.course.lectureHours,
-               practiceHours: item.course.practiceHours,
-               weightingFactor: item.course.weightingFactor,
-               implementationSemester: item.implementationSemester,
-             },
-           }));
+	 
+		 const teaching = teachingPlans.filter(item =>
+	 		  item.generalInformation.id === selectedTcf.generalInformation.id
+		 );
+		 
+		 console.log("teaching", teaching)		 		
+		   
+		 const data = teaching.filter(item => { 
+		     const planImplementationSemester = item.implementationSemester; 
+		     return item.course.groupOpeningPlans?.some(group =>
+		         group.trainingCycleFacultyId === selectedTcf?.generalInformation.trainingCycleFacultyId &&
+		         group.groups?.some(g => g.teachingAssignments?.length > 0) &&
+		         planImplementationSemester === group.implementationSemester 
+		     );
+		 }).map(item => ({
+	                ...item,
+	                Id_Course: item.course.id,
+	                Name_Course: item.course.name,
+	                groups: item.course.groupOpeningPlans 
+	                   ?.filter(
+							groupOpeningPlan => groupOpeningPlan.trainingCycleFacultyId === selectedTcf?.generalInformation.trainingCycleFacultyId
+							&& groupOpeningPlan.implementationSemester === item.implementationSemester
+						) 
+	                   .map(groupOpeningPlan => ({
+	                       ...groupOpeningPlan,
+	                       groups: groupOpeningPlan.groups?.filter(g => g.teachingAssignments?.length > 0) || [],
+	                   })) || [],
+	                lecturers: item.course.lecturers,
+	                courseInfo: {
+	                  id: item.course.id,
+	                  name: item.course.name,
+	                  credits: item.course.credits,
+	                  internshipHours: item.course.internshipHours,
+	                  lectureHours: item.course.lectureHours,
+	                  practiceHours: item.course.practiceHours,
+	                  weightingFactor: item.course.weightingFactor,
+	                  implementationSemester: item.implementationSemester,
+	                },
+              }));
 		   
 		   console.log("data", data);
 		   
 		   const allLecturersWithGroupCount = data.reduce((acc, currentItem) => {
-		             if (currentItem.lecturers && Array.isArray(currentItem.lecturers)) {
-		               currentItem.lecturers.forEach(lecturer => {
-		                 const lecturerGroupCount = currentItem.groups.reduce((totalGroups, groupOpeningPlan) => {
-		                   const count = groupOpeningPlan.groups?.filter(group =>
-		                     group.teachingAssignments?.some(assignment => assignment.lecturerId === lecturer.id)
-		                   ).length || 0;
-		                   return totalGroups + count;
-		                 }, 0);
+         if (currentItem.lecturers && Array.isArray(currentItem.lecturers)) {
+           currentItem.lecturers.forEach(lecturer => {
+             const lecturerGroupCount = currentItem.groups.reduce((totalGroups, groupOpeningPlan) => {
+               const count = groupOpeningPlan.groups?.filter(group =>
+                 group.teachingAssignments?.some(assignment => assignment.lecturerId === lecturer.id)
+				 
+               ).length || 0;
+               return totalGroups + count;
+             }, 0);
 
-		                 const existingLecturerIndex = acc.findIndex(
-		                   (item) => item.lecturer.id === lecturer.id
-		                 );
+             const existingLecturerIndex = acc.findIndex(
+               (item) => item.lecturer.id === lecturer.id
+             );
 
-		                 const lecturerCourseInfo = {
-		                   courseId: currentItem.courseInfo.id,
-		                   courseName: currentItem.courseInfo.name,
-		                   groupCount: lecturerGroupCount,
-		                 };
+             const lecturerCourseInfo = {
+               courseId: currentItem.courseInfo.id,
+               courseName: currentItem.courseInfo.name,
+               groupCount: lecturerGroupCount,
+             };
+			 console.log("lecturerCourseInfo", lecturerCourseInfo)
 
-		                 if (existingLecturerIndex === -1) {
-		                   acc.push({
-		                     lecturer: { ...lecturer },
-		                     courses: [lecturerCourseInfo],
-		                     courseInfos: [currentItem.courseInfo], 
-		                   });
-		                 } else {
-		                   const existingCourseIndex = acc[existingLecturerIndex].courses.findIndex(
-		                     (course) => course.courseId === currentItem.courseInfo.id
-		                   );
-		                   if (existingCourseIndex === -1) {
-		                     acc[existingLecturerIndex].courses.push(lecturerCourseInfo);
-		                     acc[existingLecturerIndex].courseInfos.push(currentItem.courseInfo);
-		                   } else {
-		                     acc[existingLecturerIndex].courses[existingCourseIndex].groupCount += lecturerGroupCount;
-		                   }
-		                 }
-		               });
-		             }
-		             return acc;
-		           }, []);
+             if (existingLecturerIndex === -1) {
+               acc.push({
+                 lecturer: { ...lecturer },
+                 courses: [lecturerCourseInfo],
+                 courseInfos: [currentItem.courseInfo], 
+               });
+             } else {
+               const existingCourseIndex = acc[existingLecturerIndex].courses.findIndex(
+                 (course) => course.courseId === currentItem.courseInfo.id
+               );
+               if (existingCourseIndex === -1) {
+                 acc[existingLecturerIndex].courses.push(lecturerCourseInfo);
+                 acc[existingLecturerIndex].courseInfos.push(currentItem.courseInfo);
+               } else {
+                 acc[existingLecturerIndex].courses[existingCourseIndex].groupCount += lecturerGroupCount;
+               }
+             }
+           });
+         }
+         return acc;
+       }, []);
 
          const lecturersData = allLecturersWithGroupCount.map((lecturerInfo, index) => {
            const teachingAssign = lecturerInfo.courses.map((course, courseIndex) => {
              const semesterData = {};
              for (let i = 1; i <= 12; i++) {
-               semesterData[i] = 0; // Khởi tạo tất cả các kỳ là 0
+               semesterData[i] = 0; 
              }
              semesterData[lecturerInfo.courseInfos[courseIndex]?.implementationSemester] = course.groupCount;
 
