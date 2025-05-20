@@ -17,6 +17,7 @@ function GroupOpeningPlan() {
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [reset, setReset] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
+  const [searchData, setSearchData] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -81,8 +82,10 @@ function GroupOpeningPlan() {
       });
 	  
       setFilteredData(groupPlans);
+	  setSearchData(groupPlans);
     } else {
       setFilteredData([]);
+	  setSearchData([]);
     }
   }, [selectedCycle, selectedFaculty, trainingCycleList, teachingPlanList]);
 
@@ -230,6 +233,23 @@ function GroupOpeningPlan() {
       ),
     },
   ];
+  
+  useEffect(() => {
+      const lowerSearch = searchTerm.toLowerCase().trim();
+
+      if (lowerSearch === '') {
+        setSearchData(filteredData); 
+      } else {
+        const result = filteredData.filter((item) => {
+          const idMatch = item.idCourse.toString().includes(lowerSearch);
+          const nameMatch = item.nameCourse.toLowerCase().includes(lowerSearch);
+          return idMatch || nameMatch;
+        });
+
+        setSearchData(result);
+      }
+    }, [searchTerm]);
+  console.log("filteredData", filteredData);
 
   return (
     <div className="p-6">
@@ -291,7 +311,7 @@ function GroupOpeningPlan() {
         </div>
 
         <Table
-          dataSource={filteredData}
+          dataSource={searchData}
           columns={columns}
           pagination={{ pageSize: 5 }}
           scrollToFirstRowOnChange

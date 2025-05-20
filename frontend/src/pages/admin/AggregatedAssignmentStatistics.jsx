@@ -1,24 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
 import { getAll as getTeachingPlan } from "../../services/teachingPlanServices";
 import * as XLSX from "xlsx";
 import { message } from "antd";
-
-const semestersOrder = [
-  "DH",
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "11",
-  "12",
-];
 
 function AggregatedAssignmentStatistics() {
 	
@@ -27,6 +12,7 @@ function AggregatedAssignmentStatistics() {
   const [trainingCycle, setTrainingCycle] = useState([]);
   const [teachingPlans, setTeachingPlans] = useState([]);
   const [lecturersData, setLecturersData] = useState([]);
+  const navigate = useNavigate();
 
 
   const semestersOrder = [
@@ -293,14 +279,24 @@ function AggregatedAssignmentStatistics() {
      fetchAPI();
    }, [selectedCycle, selectedFaculty, teachingPlans]);
    
-  console.log("selectedCycle",selectedCycle );
-  console.log("selectedFaculty",selectedFaculty );
+  const handleBack = () => {
+	navigate(`/admin/teaching-assignment`, { state: { selectedCycle, selectedFaculty } })
+  }
   
   return (
 	<>
-		<div className="flex justify-end mb-5">
-		  <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300"
-		  onClick={() => handleExport(lecturersData)}>
+		<div className="flex justify-between mb-5">
+		  <button
+		    className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300"
+		    onClick={handleBack} 
+		  >
+		    Trở lại
+		  </button>
+	
+		  <button
+		    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300"
+		    onClick={() => handleExport(lecturersData)}
+		  >
 		    Xuất Excel
 		  </button>
 		</div>
