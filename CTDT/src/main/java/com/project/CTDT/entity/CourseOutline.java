@@ -6,6 +6,7 @@ import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -14,7 +15,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "course_outline")
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@NoArgsConstructor
 public class CourseOutline {
 
 	@Id
@@ -62,91 +63,4 @@ public class CourseOutline {
 	@JsonIgnoreProperties({"parent"})
 	@JsonProperty("children")
 	private Set<CourseOutline> children = new LinkedHashSet<>();
-
-	// Constructor
-	public CourseOutline() {
-	}
-
-	// Constructor with fields
-	public CourseOutline(String assessmentUnit, String componentScore, String assessmentMethod, Float weight, Integer status) {
-		this.assessmentUnit = assessmentUnit;
-		this.componentScore = componentScore;
-		this.assessmentMethod = assessmentMethod;
-		this.weight = weight;
-		this.status = status;
-	}
-
-	// Getters
-	public Integer getId() {
-		return id;
-	}
-
-	public Course getCourse() {
-		return course;
-	}
-
-	public String getAssessmentUnit() {
-		return assessmentUnit;
-	}
-
-	public String getComponentScore() {
-		return componentScore;
-	}
-
-	public String getAssessmentMethod() {
-		return assessmentMethod;
-	}
-
-	public Float getWeight() {
-		return weight;
-	}
-
-	public Integer getStatus() {
-		return status;
-	}
-
-	public CourseOutline getParent() {
-		return parent;
-	}
-
-	public Set<CourseOutline> getChildren() {
-		return children;
-	}
-
-	// Setters
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	public void setCourse(Course course) {
-		this.course = course;
-	}
-
-	public void setAssessmentUnit(String assessmentUnit) {
-		this.assessmentUnit = assessmentUnit;
-	}
-
-	public void setComponentScore(String componentScore) {
-		this.componentScore = componentScore;
-	}
-
-	public void setAssessmentMethod(String assessmentMethod) {
-		this.assessmentMethod = assessmentMethod;
-	}
-
-	public void setWeight(Float weight) {
-		this.weight = weight;
-	}
-
-	public void setStatus(Integer status) {
-		this.status = status;
-	}
-
-	public void setParent(CourseOutline parent) {
-		this.parent = parent;
-	}
-
-	public void setChildren(Set<CourseOutline> children) {
-		this.children = children;
-	}
 }

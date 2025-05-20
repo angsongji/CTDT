@@ -18,6 +18,7 @@ public class TeachingPlan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Integer id;
 
     // Mối quan hệ N:1 với GeneralInformation
@@ -35,8 +36,10 @@ public class TeachingPlan {
     private Course course;
 
     @Column(name = "implementation_semester", nullable = false)
+    @JsonProperty("implementationSemester")
     private Integer implementationSemester;
 
     @Column(name = "status", nullable = false)
+    @JsonProperty("status")
     private Integer status;
 }

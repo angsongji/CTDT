@@ -1,5 +1,5 @@
 
-import { get, post, patch, del } from "../utils/request";
+import { get, post, put} from "../utils/request";
 
 
 // Lấy danh sách tất cả khoá học
@@ -22,13 +22,14 @@ export const createCourse = async (data) => {
 
 // Cập nhật thông tin khoá học
 export const updateCourse = async (id, data) => {
-    const result = await patch("courses", id, data);
+    const result = await put("courses", id, data);
     return result;
 };
 
-// Xóa khoá học
+
+// Xóa khoá học 
 export const deleteCourse = async (id) => {
-    const result = await del("courses", id);
+    const result = await put("courses/soft-delete", id);
     return result;
 };
 
