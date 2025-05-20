@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa6";
-import { Input, Button, Table, Select, message } from 'antd';
+import { Input, Button, Table, Select } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllTraningCycle } from "../../services/trainingCycleServices";
 import { getAll as getTeachingPlan } from "../../services/teachingPlanServices";
@@ -16,6 +16,7 @@ const TeachingAssignment = () => {
   const [selectedCycle, setSelectedCycle] = useState(null);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [dataSource, setDataSource] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -71,6 +72,7 @@ const TeachingAssignment = () => {
 		  }));		  
 
 		setDataSource(data);
+		setFilteredData(data);
 	  }
 	  		
      }
@@ -155,24 +157,10 @@ const TeachingAssignment = () => {
         <>
           <Button
             type="primary"
-            style={{ backgroundColor: '#007bff', marginRight: '10px' }}
-            onClick={() => handleEdit(record)}
-          >
-            Chi tiết
-          </Button>
-          <Button
-            type="primary"
             style={{ backgroundColor: '#4CAF50', marginRight: '10px' }}
             onClick={() => handleEdit(record)}
           >
             Sửa
-          </Button>
-          <Button
-            type="primary"
-            style={{ backgroundColor: '#F44336' }}
-            onClick={() => handleEdit(record)}
-          >
-            Xóa
           </Button>
         </>
       ),
@@ -195,10 +183,26 @@ const TeachingAssignment = () => {
   };
 
   const handleSummaryClick = () => {
-    message.info(`Tổng hợp thống kê cho chu kỳ ${selectedCycle}${selectedFaculty ? ` - ngành ${selectedFaculty}` : ''}`);
-	navigate(`/admin/teaching-assignment/statistics`)
+	navigate(`/admin/teaching-assignment/statistics`, { state: { selectedCycle, selectedFaculty } })
   };
+  
+  useEffect(() => {
+    const lowerSearch = searchTerm.toLowerCase().trim();
 
+    if (lowerSearch === '') {
+      setFilteredData(dataSource); 
+    } else {
+      const result = dataSource.filter((item) => {
+        const idMatch = item.Id_Course.toString().includes(lowerSearch);
+        const nameMatch = item.Name_Course.toLowerCase().includes(lowerSearch);
+        return idMatch || nameMatch;
+      });
+
+      setFilteredData(result);
+    }
+  }, [searchTerm]);
+
+  console.log("dataSource", dataSource);
 
   return (
     <div className="p-6">
@@ -263,7 +267,7 @@ const TeachingAssignment = () => {
           </Button>
         </div>
         <Table
-          dataSource={dataSource}
+          dataSource={filteredData}
           columns={columns}
           pagination={{ pageSize: 5 }}
           rowKey="Id_Course"
