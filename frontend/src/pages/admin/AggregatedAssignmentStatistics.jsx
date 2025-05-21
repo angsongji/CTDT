@@ -178,6 +178,7 @@ function AggregatedAssignmentStatistics() {
 		         group.trainingCycleFacultyId === selectedTcf?.generalInformation.trainingCycleFacultyId &&
 		         group.groups?.some(g => g.teachingAssignments?.length > 0) &&
 		         planImplementationSemester === group.implementationSemester 
+				 && group.status == 1
 		     );
 		 }).map(item => ({
 	                ...item,
@@ -207,79 +208,112 @@ function AggregatedAssignmentStatistics() {
 		   
 		   console.log("data", data);
 		   
-		   const allLecturersWithGroupCount = data.reduce((acc, currentItem) => {
-         if (currentItem.lecturers && Array.isArray(currentItem.lecturers)) {
-           currentItem.lecturers.forEach(lecturer => {
-             const lecturerGroupCount = currentItem.groups.reduce((totalGroups, groupOpeningPlan) => {
-               const count = groupOpeningPlan.groups?.filter(group =>
-                 group.teachingAssignments?.some(assignment => assignment.lecturerId === lecturer.id)
-				 
-               ).length || 0;
-               return totalGroups + count;
-             }, 0);
+	   
+	   const allLecturersWithGroupCount = data.reduce((acc, currentItem) => {
+	     if (currentItem.lecturers && Array.isArray(currentItem.lecturers)) {
+	       currentItem.lecturers.forEach(lecturer => {
+	         const groupCountsBySemester = {};
 
-             const existingLecturerIndex = acc.findIndex(
-               (item) => item.lecturer.id === lecturer.id
-             );
+	         currentItem.groups.forEach(groupOpeningPlan => {
+	           const semester = groupOpeningPlan.implementationSemester;
 
-             const lecturerCourseInfo = {
-               courseId: currentItem.courseInfo.id,
-               courseName: currentItem.courseInfo.name,
-               groupCount: lecturerGroupCount,
-             };
-			 console.log("lecturerCourseInfo", lecturerCourseInfo)
+	           const count = groupOpeningPlan.groups?.filter(group =>
+	             group.teachingAssignments?.some(
+	               assignment => assignment.lecturerId === lecturer.id
+	             )
+	           ).length || 0;
 
-             if (existingLecturerIndex === -1) {
-               acc.push({
-                 lecturer: { ...lecturer },
-                 courses: [lecturerCourseInfo],
-                 courseInfos: [currentItem.courseInfo], 
-               });
-             } else {
-               const existingCourseIndex = acc[existingLecturerIndex].courses.findIndex(
-                 (course) => course.courseId === currentItem.courseInfo.id
-               );
-               if (existingCourseIndex === -1) {
-                 acc[existingLecturerIndex].courses.push(lecturerCourseInfo);
-                 acc[existingLecturerIndex].courseInfos.push(currentItem.courseInfo);
-               } else {
-                 acc[existingLecturerIndex].courses[existingCourseIndex].groupCount += lecturerGroupCount;
-               }
-             }
-           });
-         }
-         return acc;
-       }, []);
+	           if (semester) {
+	             if (!groupCountsBySemester[semester]) {
+	               groupCountsBySemester[semester] = 0;
+	             }
+	             groupCountsBySemester[semester] += count;
+	           }
+	         });
 
-         const lecturersData = allLecturersWithGroupCount.map((lecturerInfo, index) => {
-           const teachingAssign = lecturerInfo.courses.map((course, courseIndex) => {
-             const semesterData = {};
-             for (let i = 1; i <= 12; i++) {
-               semesterData[i] = 0; 
-             }
-             semesterData[lecturerInfo.courseInfos[courseIndex]?.implementationSemester] = course.groupCount;
+	         const existingLecturerIndex = acc.findIndex(
+	           (item) => item.lecturer.id === lecturer.id
+	         );
 
-             return {
-               courseName: course.courseName,
-               courseCode: lecturerInfo.courseInfos[courseIndex]?.id, // Sử dụng courseId làm courseCode (nếu cần)
-               credits: lecturerInfo.courseInfos[courseIndex]?.credits,
-               teachingHours: lecturerInfo.courseInfos[courseIndex]?.lectureHours + lecturerInfo.courseInfos[courseIndex]?.practiceHours,
-               classCount: course.groupCount,
-               semesters: semesterData,
-               otherHours: lecturerInfo.courseInfos[courseIndex]?.internshipHours, // Ví dụ
-             };
-           });
+	         const lecturerCourseInfo = {
+	           courseId: currentItem.courseInfo.id,
+	           courseName: currentItem.courseInfo.name,
+	           groupCountsBySemester: groupCountsBySemester, 
+	         };
 
-           return {
-             stt: index + 1,
-             code: lecturerInfo.lecturer.id, // Sử dụng id giảng viên làm code
-             lastName: lecturerInfo.lecturer.fullName.split(' ').slice(0, -1).join(' '), // Tách họ
-             firstName: lecturerInfo.lecturer.fullName.split(' ').slice(-1).join(' '), // Tách tên
-             birthYear: new Date(lecturerInfo.lecturer.dateOfBirth).getFullYear(),
-             title: lecturerInfo.lecturer.academicTitle,
-             teachingAssign: teachingAssign,
-           };
-         });
+	         if (existingLecturerIndex === -1) {
+	           acc.push({
+	             lecturer: { ...lecturer },
+	             courses: [lecturerCourseInfo],
+	             courseInfos: [currentItem.courseInfo],
+	           });
+	         } else {
+	           const existingCourseIndex = acc[existingLecturerIndex].courses.findIndex(
+	             (course) => course.courseId === currentItem.courseInfo.id
+	           );
+	           if (existingCourseIndex === -1) {
+	             acc[existingLecturerIndex].courses.push(lecturerCourseInfo);
+	             if (!acc[existingLecturerIndex].courseInfos.some(ci => ci.id === currentItem.courseInfo.id)) {
+	               acc[existingLecturerIndex].courseInfos.push(currentItem.courseInfo);
+	             }
+	           } else {
+	             const existingGroupCounts = acc[existingLecturerIndex].courses[existingCourseIndex].groupCountsBySemester;
+	             for (const semester in groupCountsBySemester) {
+	               if (groupCountsBySemester.hasOwnProperty(semester)) {
+	                 if (!existingGroupCounts[semester]) {
+	                   existingGroupCounts[semester] = 0;
+	                 }
+	                 existingGroupCounts[semester] += groupCountsBySemester[semester];
+	               }
+	             }
+	           }
+	         }
+	       });
+	     }
+	     return acc;
+	   }, []);
+	   
+	   const lecturersData = allLecturersWithGroupCount.map((lecturerInfo, index) => {
+	     const teachingAssign = lecturerInfo.courses.map((course, courseIndex) => {
+	       const semesterData = {};
+	       for (let i = 1; i <= 12; i++) {
+	         semesterData[i] = 0;
+	       }
+
+	       for (const semester in course.groupCountsBySemester) {
+	         if (course.groupCountsBySemester.hasOwnProperty(semester)) {
+	           // Đảm bảo rằng semester là một số hợp lệ để dùng làm key
+	           const numericSemester = parseInt(semester, 10);
+	           if (!isNaN(numericSemester) && numericSemester >= 1 && numericSemester <= 12) {
+	             semesterData[numericSemester] = course.groupCountsBySemester[semester];
+	           }
+	         }
+	       }
+
+
+	       const totalClassCount = Object.values(course.groupCountsBySemester).reduce((sum, count) => sum + count, 0);
+
+	       return {
+	         courseName: course.courseName,
+	         courseCode: lecturerInfo.courseInfos[courseIndex]?.id,
+	         credits: lecturerInfo.courseInfos[courseIndex]?.credits,
+	         teachingHours: (lecturerInfo.courseInfos[courseIndex]?.lectureHours || 0) + (lecturerInfo.courseInfos[courseIndex]?.practiceHours || 0),
+	         classCount: totalClassCount, 
+	         semesters: semesterData, 
+	         otherHours: lecturerInfo.courseInfos[courseIndex]?.internshipHours || 0,
+	       };
+	     });
+
+	     return {
+	       stt: index + 1,
+	       code: lecturerInfo.lecturer.id,
+	       lastName: lecturerInfo.lecturer.fullName.split(' ').slice(0, -1).join(' '),
+	       firstName: lecturerInfo.lecturer.fullName.split(' ').slice(-1).join(' '),
+	       birthYear: lecturerInfo.lecturer.dateOfBirth ? new Date(lecturerInfo.lecturer.dateOfBirth).getFullYear() : null,
+	       title: lecturerInfo.lecturer.academicTitle,
+	       teachingAssign: teachingAssign,
+	     };
+	   });
 
          console.log("lecturersData", lecturersData);
 		 setLecturersData(lecturersData);

@@ -67,7 +67,8 @@ const TeachingAssignment = () => {
 			return item.course.groupOpeningPlans?.some(group =>
 				group.trainingCycleFacultyId === selectedTcf?.generalInformation.trainingCycleFacultyId &&
 		      	group.groups?.some(g => g.teachingAssignments?.length > 0) &&
-			  	planImplementationSemester == group.implementationSemester 
+			  	planImplementationSemester == group.implementationSemester &&
+				group.status == 1
 		    )})
 		  .map(item => ({
 		    ...item,
