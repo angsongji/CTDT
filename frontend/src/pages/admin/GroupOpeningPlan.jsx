@@ -103,7 +103,7 @@ function GroupOpeningPlan() {
   	              numberOfStudents: gop.numberOfStudents,
   	              status: gop.status,
                     implementationSemester: gop.implementationSemester,
-                    isAssigned: gop.groups?.some(group => group.teachingAssignments && group.teachingAssignments.length > 0)
+                  isAssigned: gop.groups?.some(group => group.teachingAssignments && group.teachingAssignments.length > 0)
   	            });
               }           
           });
@@ -129,6 +129,7 @@ function GroupOpeningPlan() {
   };
 
   const handleEdit = (record) => {
+	console.log(record)
     if (record.status === 2) {
       Swal.fire({
         icon: 'warning',
@@ -137,7 +138,14 @@ function GroupOpeningPlan() {
       });
       return;
     }
-
+	if(record.isAssigned) {
+		Swal.fire({
+	        icon: 'warning',
+	        title: 'Không thể sửa',
+	        text: 'Kế hoạch mở lớp đã được phân công.',
+	      });
+	   return;
+	}
     navigate(`/admin/group-opening-plan/edit/${record.id}`, {
       state: { record, selectedCycle, selectedFaculty }
     });
@@ -149,7 +157,16 @@ function GroupOpeningPlan() {
     });
   };
 
-  const handleDel = async (id) => {
+  const handleDel = async (record) => {
+	if(record.isAssigned) {
+		Swal.fire({
+	        icon: 'warning',
+	        title: 'Không thể xóa',
+	        text: 'Kế hoạch mở lớp đã được phân công.',
+	      });
+	   return;
+	}
+	const id = record.id
     const result = await Swal.fire({
       title: 'Bạn có chắc chắn muốn xóa?',
       text: "Hành động này không thể hoàn tác!",
@@ -253,7 +270,7 @@ function GroupOpeningPlan() {
           <Button
             type="primary"
             style={{ backgroundColor: '#F44336' }}
-            onClick={() => handleDel(record.id)}
+            onClick={() => handleDel(record)}
           >
             Xóa
           </Button>
